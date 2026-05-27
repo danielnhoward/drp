@@ -1,10 +1,30 @@
+import { listMyAvailability } from "@/lib/availability";
+import AvailabilityCard from "../components/availability-card";
+import AddAvailability from "./add-availability";
+
+// Reads from the database on every request rather than at build time.
+export const dynamic = "force-dynamic";
+
 export default function CalendarPage() {
+  const slots = listMyAvailability();
+
   return (
-    <main className="flex flex-1 flex-col items-center justify-center gap-2 px-6 text-center">
-      <h1 className="text-3xl font-semibold tracking-tight">Calendar</h1>
-      <p className="max-w-md text-zinc-600 dark:text-zinc-400">
-        Your calendar lives here. This page exists to demo the bottom navigation.
-      </p>
+    <main className="mx-auto w-full max-w-2xl flex-1 px-4 py-6">
+      <h1 className="mb-4 text-2xl font-semibold tracking-tight">My Schedule</h1>
+
+      {slots.length === 0 ? (
+        <p className="text-zinc-500 dark:text-zinc-400">
+          No availability set yet — tap + to add a slot.
+        </p>
+      ) : (
+        <ul className="flex flex-col gap-3">
+          {slots.map((slot) => (
+            <AvailabilityCard key={slot.id} slot={slot} />
+          ))}
+        </ul>
+      )}
+
+      <AddAvailability />
     </main>
   );
 }
