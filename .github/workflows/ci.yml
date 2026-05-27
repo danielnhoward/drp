@@ -9,6 +9,7 @@ on:
 env:
   NODE_VERSION: "20"
   PNPM_VERSION: "9"
+  IMAGE_NAME: danielnhoward/drp
 
 jobs:
   lint:
@@ -31,27 +32,6 @@ jobs:
 
       - name: Lint
         run: pnpm lint
-
-  # test:
-  #   name: Test
-  #   runs-on: ubuntu-latest
-  #   steps:
-  #     - uses: actions/checkout@v4
-
-  #     - uses: pnpm/action-setup@v4
-  #       with:
-  #         version: ${{ env.PNPM_VERSION }}
-
-  #     - uses: actions/setup-node@v4
-  #       with:
-  #         node-version: ${{ env.NODE_VERSION }}
-  #         cache: pnpm
-
-  #     - name: Install dependencies
-  #       run: pnpm install --frozen-lockfile
-
-  #     - name: Test
-  #       run: pnpm test
 
   build:
     name: Build
@@ -77,8 +57,9 @@ jobs:
   deploy:
     name: Deploy
     runs-on: ubuntu-latest
-    needs: [lint, test, build]
+    needs: [lint, build]
     if: github.ref == 'refs/heads/master' && github.event_name == 'push'
+    environment: master
     steps:
       - uses: actions/checkout@v4
 
@@ -95,6 +76,14 @@ jobs:
         with:
           context: .
           push: true
-          tags: danielnhoward/drp:latest
+          tags: ${{ env.IMAGE_NAME }}:latest
           cache-from: type=gha
           cache-to: type=gha,mode=max
+
+      - name: Trigger deployment update
+        env:
+          UPDATE_TOKEN: ${{ secrets.WUD_UPDATE_TOKEN }}
+        run: |
+          # -f makes curl exit non-zero on an HTTP error, so a failed update fails the deploy.
+          curl -fsS -X POST "https://wud.danielhoward.me/update" \
+            -H "Authorization: Bearer $UPDATE_TOKEN"
