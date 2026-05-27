@@ -9,7 +9,27 @@ CREATE TABLE IF NOT EXISTS users (
   -- so "Sam@x.com" and "sam@x.com" are treated as the same address.
   email      TEXT NOT NULL UNIQUE COLLATE NOCASE,
   name       TEXT NOT NULL,
+  avatar     TEXT,                     -- URL of the user's profile picture
   created_at TEXT NOT NULL DEFAULT (datetime('now'))
+);
+
+CREATE TABLE IF NOT EXISTS runs (
+  id          INTEGER PRIMARY KEY AUTOINCREMENT,
+  time        TEXT NOT NULL,            -- start time of day, e.g. "10:00"
+  distance_km REAL NOT NULL,
+  meet_at     TEXT NOT NULL,            -- meeting point address
+  lat         REAL NOT NULL,
+  lon         REAL NOT NULL,
+  created_at  TEXT NOT NULL DEFAULT (datetime('now'))
+);
+
+-- Join table linking runs to the users running together. ON DELETE CASCADE
+-- clears the links when either side is removed (foreign keys enabled in db.ts).
+CREATE TABLE IF NOT EXISTS run_participants (
+  run_id   INTEGER NOT NULL REFERENCES runs(id) ON DELETE CASCADE,
+  user_id  INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  position INTEGER NOT NULL DEFAULT 0, -- preserves display order
+  PRIMARY KEY (run_id, user_id)
 );
 `;
 
@@ -17,6 +37,7 @@ export type User = {
   id: number;
   email: string;
   name: string;
+  avatar: string | null;
   created_at: string;
 };
 
