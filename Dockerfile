@@ -1,6 +1,6 @@
 # Node 22+ is required for the stable built-in node:sqlite module.
 FROM node:24-alpine AS base
-RUN corepack enable && corepack prepare pnpm@9 --activate
+RUN corepack enable && corepack prepare pnpm@11.3.0 --activate
 
 FROM base AS deps
 WORKDIR /app
