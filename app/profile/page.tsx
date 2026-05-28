@@ -1,5 +1,7 @@
+import { isGender } from "@/lib/gender";
 import { requireUser } from "@/lib/users";
 import { logoutAction } from "../login/actions";
+import ProfileForm from "./profile-form";
 
 // Reads cookies, so it can't be rendered statically.
 export const dynamic = "force-dynamic";
@@ -7,14 +9,28 @@ export const dynamic = "force-dynamic";
 export default async function ProfilePage() {
   const user = await requireUser();
 
+  // Narrow the stored string to the Gender union for the form. Any legacy or
+  // out-of-band value falls back to "unset" rather than crashing the page.
+  const gender =
+    user.gender !== null && isGender(user.gender) ? user.gender : null;
+
   return (
-    <main className="mx-auto flex w-full max-w-md flex-1 flex-col gap-6 px-6 py-10">
-      <header className="text-center">
-        <h1 className="text-3xl font-semibold tracking-tight">{user.name}</h1>
+    <main className="mx-auto w-full max-w-md flex-1 px-6 py-8">
+      <header className="mb-6">
+        <h1 className="text-2xl font-semibold tracking-tight">Profile</h1>
         <p className="mt-1 text-sm text-zinc-600 dark:text-zinc-400">
           {user.email}
         </p>
       </header>
+
+      <ProfileForm
+        initialName={user.name}
+        initialDateOfBirth={user.dateOfBirth}
+        initialGender={gender}
+        initialPreferredPaceSeconds={user.preferredPaceSeconds}
+      />
+
+      <hr className="my-8 border-black/10 dark:border-white/15" />
 
       <form action={logoutAction} className="flex justify-center">
         <button

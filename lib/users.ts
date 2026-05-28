@@ -5,6 +5,7 @@ import { redirect } from "next/navigation";
 import { cache } from "react";
 
 import { db } from "./db";
+import type { Gender } from "./gender";
 import type { User } from "./schema";
 
 // Name of the cookie that holds the logged-in user's id. There's no password
@@ -21,8 +22,14 @@ type UserRow = {
   email: string;
   name: string;
   avatar: string | null;
+  date_of_birth: string | null;
+  gender: string | null;
+  preferred_pace_seconds: number | null;
   created_at: string;
 };
+
+const USER_COLUMNS =
+  "id, email, name, avatar, date_of_birth, gender, preferred_pace_seconds, created_at";
 
 function rowToUser(row: UserRow): User {
   return {
@@ -30,8 +37,36 @@ function rowToUser(row: UserRow): User {
     email: row.email,
     name: row.name,
     avatar: row.avatar,
+    dateOfBirth: row.date_of_birth,
+    gender: row.gender,
+    preferredPaceSeconds: row.preferred_pace_seconds,
     created_at: row.created_at,
   };
+}
+
+export type ProfileUpdate = {
+  name: string;
+  dateOfBirth: string | null;
+  gender: Gender | null;
+  preferredPaceSeconds: number | null;
+};
+
+/** Persists user-editable profile fields. */
+export function updateUserProfile(userId: number, fields: ProfileUpdate): void {
+  db.prepare(
+    `UPDATE users
+        SET name = ?,
+            date_of_birth = ?,
+            gender = ?,
+            preferred_pace_seconds = ?
+      WHERE id = ?`,
+  ).run(
+    fields.name,
+    fields.dateOfBirth,
+    fields.gender,
+    fields.preferredPaceSeconds,
+    userId,
+  );
 }
 
 /** Reads the session cookie. Returns the user id, or null if not set. */
@@ -50,7 +85,7 @@ export const getCurrentUser = cache(async (): Promise<User | null> => {
   const id = await getSessionUserId();
   if (id === null) return null;
   const row = db
-    .prepare("SELECT id, email, name, avatar, created_at FROM users WHERE id = ?")
+    .prepare(`SELECT ${USER_COLUMNS} FROM users WHERE id = ?`)
     .get(id) as UserRow | undefined;
   return row ? rowToUser(row) : null;
 });
@@ -69,7 +104,7 @@ export async function requireUser(): Promise<User> {
 export function listUsers(): User[] {
   const rows = db
     .prepare(
-      "SELECT id, email, name, avatar, created_at FROM users ORDER BY created_at DESC, id DESC",
+      `SELECT ${USER_COLUMNS} FROM users ORDER BY created_at DESC, id DESC`,
     )
     .all() as UserRow[];
   return rows.map(rowToUser);
@@ -84,7 +119,7 @@ export function findOrCreateUser(email: string, name: string): User {
     "INSERT INTO users (email, name) VALUES (?, ?) ON CONFLICT(email) DO NOTHING",
   ).run(email, name);
   const row = db
-    .prepare("SELECT id, email, name, avatar, created_at FROM users WHERE email = ?")
+    .prepare(`SELECT ${USER_COLUMNS} FROM users WHERE email = ?`)
     .get(email) as UserRow;
   return rowToUser(row);
 }
