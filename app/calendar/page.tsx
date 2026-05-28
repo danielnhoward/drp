@@ -5,8 +5,8 @@ import AddAvailability from "./add-availability";
 // Reads from the database on every request rather than at build time.
 export const dynamic = "force-dynamic";
 
-export default function CalendarPage() {
-  const slots = listMyAvailability();
+export default async function CalendarPage() {
+  const slots = await listMyAvailability();
 
   return (
     <main className="mx-auto w-full max-w-2xl flex-1 px-4 py-6">
