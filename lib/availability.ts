@@ -1,6 +1,6 @@
 import "server-only";
 
-import { db } from "./db";
+import { getDb } from "./db";
 import { requireUser } from "./users";
 
 export type Availability = {
@@ -59,7 +59,7 @@ function ensureSeeded(userId: number): void {
   if (seedChecked) return;
   seedChecked = true;
 
-  const { count } = db
+  const { count } = getDb()
     .prepare("SELECT COUNT(*) AS count FROM availability")
     .get() as { count: number };
   if (count > 0) return;
@@ -68,7 +68,7 @@ function ensureSeeded(userId: number): void {
 }
 
 function insertAvailability(userId: number, input: NewAvailability): void {
-  db.prepare(
+  getDb().prepare(
     `INSERT INTO availability
        (user_id, start_time, end_time, distance_km, pace_min_seconds, pace_max_seconds, lat, lon)
      VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
@@ -89,7 +89,7 @@ export async function listMyAvailability(): Promise<Availability[]> {
   const userId = await currentUserId();
   ensureSeeded(userId);
 
-  const rows = db
+  const rows = getDb()
     .prepare(
       `SELECT id, start_time, end_time, distance_km, pace_min_seconds, pace_max_seconds, lat, lon
        FROM availability
@@ -116,7 +116,7 @@ export async function createAvailability(input: NewAvailability): Promise<void> 
 
 /** Deletes a slot, scoped to the current user so you can't remove someone else's. */
 export async function deleteAvailability(id: number): Promise<void> {
-  db.prepare("DELETE FROM availability WHERE id = ? AND user_id = ?").run(
+  getDb().prepare("DELETE FROM availability WHERE id = ? AND user_id = ?").run(
     id,
     await currentUserId(),
   );

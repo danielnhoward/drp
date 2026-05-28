@@ -4,7 +4,7 @@ import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { cache } from "react";
 
-import { db } from "./db";
+import { getDb } from "./db";
 import type { Gender } from "./gender";
 import type { User } from "./schema";
 
@@ -82,7 +82,7 @@ export type ProfileUpdate = {
 
 /** Looks up a user by email. Returns null if there's no such account. */
 export function findUserByEmail(email: string): User | null {
-  const row = db
+  const row = getDb()
     .prepare(`SELECT ${USER_COLUMNS} FROM users WHERE email = ?`)
     .get(email) as UserRow | undefined;
   return row ? rowToUser(row) : null;
@@ -90,7 +90,7 @@ export function findUserByEmail(email: string): User | null {
 
 /** Creates a brand-new user with all required profile fields supplied. */
 export function createUser(input: NewUser): User {
-  const { lastInsertRowid } = db
+  const { lastInsertRowid } = getDb()
     .prepare(
       `INSERT INTO users (email, name, date_of_birth, gender, preferred_pace_seconds)
        VALUES (?, ?, ?, ?, ?)`,
@@ -102,7 +102,7 @@ export function createUser(input: NewUser): User {
       input.gender,
       input.preferredPaceSeconds,
     );
-  const row = db
+  const row = getDb()
     .prepare(`SELECT ${USER_COLUMNS} FROM users WHERE id = ?`)
     .get(Number(lastInsertRowid)) as UserRow;
   return rowToUser(row);
@@ -110,7 +110,7 @@ export function createUser(input: NewUser): User {
 
 /** Persists user-editable profile fields. */
 export function updateUserProfile(userId: number, fields: ProfileUpdate): void {
-  db.prepare(
+  getDb().prepare(
     `UPDATE users
         SET name = ?,
             date_of_birth = ?,
@@ -141,7 +141,7 @@ async function getSessionUserId(): Promise<number | null> {
 export const getCurrentUser = cache(async (): Promise<User | null> => {
   const id = await getSessionUserId();
   if (id === null) return null;
-  const row = db
+  const row = getDb()
     .prepare(`SELECT ${USER_COLUMNS} FROM users WHERE id = ?`)
     .get(id) as UserRow | undefined;
   return row ? rowToUser(row) : null;
@@ -171,7 +171,7 @@ export async function requireCompleteUser(): Promise<CompleteUser> {
 
 /** Lists all users in the database, newest first. Used by the admin page. */
 export function listUsers(): User[] {
-  const rows = db
+  const rows = getDb()
     .prepare(
       `SELECT ${USER_COLUMNS} FROM users ORDER BY created_at DESC, id DESC`,
     )

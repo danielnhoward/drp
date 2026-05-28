@@ -1,6 +1,6 @@
 import "server-only";
 
-import { db } from "./db";
+import { getDb } from "./db";
 
 export type Runner = {
   /** Display name, from the users table. */
@@ -38,7 +38,7 @@ type RunRow = {
 // is "Next run:" and the partners list reads "Running with:", so showing the
 // viewer's own name there would be redundant.
 function partnersForRun(runId: number, currentUserId: number): Runner[] {
-  return db
+  return getDb()
     .prepare(
       `SELECT users.name AS name, users.avatar AS avatar
        FROM run_participants
@@ -51,7 +51,7 @@ function partnersForRun(runId: number, currentUserId: number): Runner[] {
 
 /** Returns the next upcoming run the given user is part of, or null. */
 export function getNextRun(userId: number): Run | null {
-  const row = db
+  const row = getDb()
     .prepare(
       `SELECT runs.id, runs.time, runs.distance_km, runs.meet_at, runs.lat, runs.lon
        FROM runs
