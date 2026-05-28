@@ -2,6 +2,7 @@
 
 import { useActionState, useEffect, useState } from "react";
 
+import MapLocationPicker from "../components/map-location-picker";
 import RangeSlider from "../components/range-slider";
 import { addAvailabilityAction, type AddAvailabilityState } from "./actions";
 
@@ -191,27 +192,15 @@ function AvailabilityForm({ onClose }: { onClose: () => void }) {
           </span>
         </div>
 
-        <div className="grid grid-cols-2 gap-3">
-          <Field label="Latitude">
-            <input
-              className={fieldClass}
-              type="number"
-              name="lat"
-              step="any"
-              defaultValue={51.5073}
-              required
-            />
-          </Field>
-          <Field label="Longitude">
-            <input
-              className={fieldClass}
-              type="number"
-              name="lon"
-              step="any"
-              defaultValue={-0.1657}
-              required
-            />
-          </Field>
+        {/* Not a <Field> because Field renders a <label>, which would
+            associate every click inside it (including on the map itself)
+            with the picker's first labelable descendant — the geolocate
+            button — and re-fire it on every pan. */}
+        <div className="flex flex-col gap-1.5">
+          <span className="text-sm font-medium text-zinc-600 dark:text-zinc-400">
+            Location
+          </span>
+          <MapLocationPicker initialLat={51.5073} initialLon={-0.1657} />
         </div>
 
         {state.error ? (
