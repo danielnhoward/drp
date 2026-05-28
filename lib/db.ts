@@ -27,8 +27,18 @@ const globalForDb = globalThis as typeof globalThis & {
   __db?: DatabaseSync;
 };
 
-export const db = globalForDb.__db ?? createConnection();
+let cached: DatabaseSync | undefined;
 
-if (process.env.NODE_ENV !== "production") {
-  globalForDb.__db = db;
+// Lazy so that merely importing this module doesn't open the file. `next build`
+// loads every page module across 9 worker processes to collect page data; if
+// the connection opened at import time, all 9 workers would race to create the
+// DB and run schema migrations, producing SQLITE_BUSY ("database is locked").
+export function getDb(): DatabaseSync {
+  if (globalForDb.__db) return globalForDb.__db;
+  if (cached) return cached;
+  cached = createConnection();
+  if (process.env.NODE_ENV !== "production") {
+    globalForDb.__db = cached;
+  }
+  return cached;
 }
