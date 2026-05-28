@@ -4,13 +4,21 @@ import type { DatabaseSync } from "node:sqlite";
 // schema to an existing database is a no-op — safe to run on every connection.
 const SCHEMA = `
 CREATE TABLE IF NOT EXISTS users (
-  id         INTEGER PRIMARY KEY AUTOINCREMENT,
+  id                     INTEGER PRIMARY KEY AUTOINCREMENT,
   -- COLLATE NOCASE makes lookups and the UNIQUE constraint case-insensitive,
   -- so "Sam@x.com" and "sam@x.com" are treated as the same address.
-  email      TEXT NOT NULL UNIQUE COLLATE NOCASE,
-  name       TEXT NOT NULL,
-  avatar     TEXT,                     -- URL of the user's profile picture
-  created_at TEXT NOT NULL DEFAULT (datetime('now'))
+  email                  TEXT NOT NULL UNIQUE COLLATE NOCASE,
+  name                   TEXT NOT NULL,
+  avatar                 TEXT,                          -- URL of the user's profile picture
+  -- NOT NULL on fresh databases. On existing databases these columns were
+  -- added later by migrateUserColumns as nullable (SQLite can't ALTER to
+  -- NOT NULL without rebuilding the table), so legacy rows may still hold
+  -- NULL. The /welcome onboarding gate redirects any such user to fill them
+  -- in before they can use the rest of the site.
+  date_of_birth          TEXT NOT NULL,                 -- ISO yyyy-mm-dd; age is derived
+  gender                 TEXT NOT NULL,                 -- one of GENDERS in lib/gender.ts
+  preferred_pace_seconds INTEGER NOT NULL,              -- typical comfortable pace, seconds per km
+  created_at             TEXT NOT NULL DEFAULT (datetime('now'))
 );
 
 CREATE TABLE IF NOT EXISTS runs (
@@ -57,9 +65,39 @@ export type User = {
   email: string;
   name: string;
   avatar: string | null;
+  /** ISO date string (yyyy-mm-dd) or null if not set. */
+  dateOfBirth: string | null;
+  /** One of the values in GENDERS (lib/users.ts), or null. */
+  gender: string | null;
+  /** Typical comfortable pace, in seconds per kilometre, or null. */
+  preferredPaceSeconds: number | null;
   created_at: string;
 };
 
+// Columns added after the initial release. SQLite's CREATE TABLE IF NOT EXISTS
+// is a no-op when the table is already there, so new columns wouldn't appear
+// on an existing database without an explicit ALTER. Each entry is applied
+// idempotently in initSchema by checking PRAGMA table_info first.
+const USER_COLUMN_MIGRATIONS: ReadonlyArray<[string, string]> = [
+  ["date_of_birth", "TEXT"],
+  ["gender", "TEXT"],
+  ["preferred_pace_seconds", "INTEGER"],
+];
+
+function migrateUserColumns(connection: DatabaseSync): void {
+  const existing = new Set(
+    (connection.prepare("PRAGMA table_info(users)").all() as { name: string }[]).map(
+      (c) => c.name,
+    ),
+  );
+  for (const [name, type] of USER_COLUMN_MIGRATIONS) {
+    if (!existing.has(name)) {
+      connection.exec(`ALTER TABLE users ADD COLUMN ${name} ${type}`);
+    }
+  }
+}
+
 export function initSchema(connection: DatabaseSync): void {
   connection.exec(SCHEMA);
+  migrateUserColumns(connection);
 }

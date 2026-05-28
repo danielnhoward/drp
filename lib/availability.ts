@@ -1,6 +1,7 @@
 import "server-only";
 
 import { db } from "./db";
+import { requireUser } from "./users";
 
 export type Availability = {
   id: number;
@@ -33,18 +34,9 @@ type AvailabilityRow = {
   lon: number;
 };
 
-// There's no auth yet, so a single fixed account stands in for "you". It's
-// upserted lazily so availability always has a valid owner to reference.
-const CURRENT_USER = { email: "sam@scorbett123.dev", name: "Sam" };
-
-function currentUserId(): number {
-  db.prepare(
-    "INSERT INTO users (email, name) VALUES (?, ?) ON CONFLICT(email) DO NOTHING",
-  ).run(CURRENT_USER.email, CURRENT_USER.name);
-  const { id } = db
-    .prepare("SELECT id FROM users WHERE email = ?")
-    .get(CURRENT_USER.email) as { id: number };
-  return id;
+async function currentUserId(): Promise<number> {
+  const user = await requireUser();
+  return user.id;
 }
 
 // Example slot matching the wireframe, inserted once on startup when there's no
@@ -93,8 +85,8 @@ function insertAvailability(userId: number, input: NewAvailability): void {
 }
 
 /** Returns the current user's availability slots, earliest start time first. */
-export function listMyAvailability(): Availability[] {
-  const userId = currentUserId();
+export async function listMyAvailability(): Promise<Availability[]> {
+  const userId = await currentUserId();
   ensureSeeded(userId);
 
   const rows = db
@@ -118,14 +110,14 @@ export function listMyAvailability(): Availability[] {
   }));
 }
 
-export function createAvailability(input: NewAvailability): void {
-  insertAvailability(currentUserId(), input);
+export async function createAvailability(input: NewAvailability): Promise<void> {
+  insertAvailability(await currentUserId(), input);
 }
 
 /** Deletes a slot, scoped to the current user so you can't remove someone else's. */
-export function deleteAvailability(id: number): void {
+export async function deleteAvailability(id: number): Promise<void> {
   db.prepare("DELETE FROM availability WHERE id = ? AND user_id = ?").run(
     id,
-    currentUserId(),
+    await currentUserId(),
   );
 }

@@ -20,6 +20,16 @@ const items: NavItem[] = [
 export default function BottomNav() {
   const pathname = usePathname();
 
+  // Routes that aren't part of the signed-in nav surface (login flow, admin
+  // impersonation tool) — nothing in the nav is reachable from them.
+  if (
+    pathname === "/login" ||
+    pathname === "/admin" ||
+    pathname.startsWith("/admin/")
+  ) {
+    return null;
+  }
+
   return (
     <nav
       aria-label="Primary"

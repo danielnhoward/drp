@@ -55,7 +55,7 @@ export async function addAvailabilityAction(
   const paceMinSeconds = Math.round(fiveKMinSeconds / 5);
   const paceMaxSeconds = Math.round(fiveKMaxSeconds / 5);
 
-  createAvailability({
+  await createAvailability({
     startTime,
     endTime,
     distanceKm,
@@ -74,7 +74,7 @@ export async function deleteAvailabilityAction(
 ): Promise<void> {
   const id = Number(formData.get("id"));
   if (Number.isFinite(id)) {
-    deleteAvailability(id);
+    await deleteAvailability(id);
     revalidatePath("/calendar");
   }
 }
