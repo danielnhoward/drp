@@ -50,7 +50,7 @@ export default function AddAvailability() {
         type="button"
         onClick={() => setOpen(true)}
         aria-label="Add availability"
-        className="fixed right-4 bottom-[calc(4rem+1rem+env(safe-area-inset-bottom))] z-40 flex h-14 w-14 items-center justify-center rounded-full bg-blue-600 text-white shadow-lg transition-colors hover:bg-blue-700"
+        className="fixed right-4 bottom-[calc(4rem_+_1rem_+_env(safe-area-inset-bottom))] z-40 flex h-14 w-14 items-center justify-center rounded-full bg-blue-600 text-white shadow-lg transition-colors hover:bg-blue-700"
       >
         <svg
           viewBox="0 0 24 24"
@@ -70,7 +70,7 @@ export default function AddAvailability() {
           role="dialog"
           aria-modal="true"
           aria-label="Add availability"
-          className="fixed inset-0 z-50 flex items-end justify-center p-0 sm:items-center sm:p-4"
+          className="fixed inset-0 z-[60] flex items-center justify-center p-4"
         >
           {/* Backdrop — click to dismiss. */}
           <button
@@ -107,7 +107,7 @@ function AvailabilityForm({ onClose }: { onClose: () => void }) {
   }, [state.ok, onClose]);
 
   return (
-    <div className="relative z-10 flex max-h-[90vh] w-full max-w-lg flex-col overflow-hidden rounded-t-2xl bg-white shadow-xl sm:rounded-2xl dark:bg-zinc-900">
+    <div className="relative z-10 flex max-h-[90vh] w-full max-w-lg flex-col overflow-hidden rounded-2xl bg-white shadow-xl dark:bg-zinc-900">
       <div className="flex items-center justify-between gap-2 border-b border-black/10 p-4 dark:border-white/15">
         <h2 className="text-lg font-semibold tracking-tight">Add availability</h2>
         <button
