@@ -23,41 +23,32 @@ export async function updateProfileAction(
   const user = await requireUser();
 
   const name = String(formData.get("name") ?? "").trim();
-  const dateOfBirthRaw = String(formData.get("dateOfBirth") ?? "").trim();
+  const dateOfBirth = String(formData.get("dateOfBirth") ?? "").trim();
   const genderRaw = String(formData.get("gender") ?? "").trim();
   const fiveKRaw = String(formData.get("fiveKTime") ?? "").trim();
 
   if (!name) return { error: "Enter your name." };
 
-  // Empty date input is allowed (clears the field). When present, the browser
-  // already enforces yyyy-mm-dd via <input type="date">, but check anyway.
-  let dateOfBirth: string | null = null;
-  if (dateOfBirthRaw) {
-    if (!/^\d{4}-\d{2}-\d{2}$/.test(dateOfBirthRaw)) {
-      return { error: "Enter a valid date of birth." };
-    }
-    if (dateOfBirthRaw > new Date().toISOString().slice(0, 10)) {
-      return { error: "Date of birth can't be in the future." };
-    }
-    dateOfBirth = dateOfBirthRaw;
+  if (!dateOfBirth) return { error: "Enter your date of birth." };
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(dateOfBirth)) {
+    return { error: "Enter a valid date of birth." };
+  }
+  if (dateOfBirth > new Date().toISOString().slice(0, 10)) {
+    return { error: "Date of birth can't be in the future." };
   }
 
-  let gender: Gender | null = null;
-  if (genderRaw) {
-    if (!isGender(genderRaw)) return { error: "Pick a valid gender option." };
-    gender = genderRaw;
-  }
+  if (!genderRaw) return { error: "Pick a gender." };
+  if (!isGender(genderRaw)) return { error: "Pick a valid gender option." };
+  const gender: Gender = genderRaw;
 
-  // Pace is entered as a 5k time (mm:ss) to match the availability form, then
-  // divided by 5 to get the seconds-per-km value we actually store.
-  let preferredPaceSeconds: number | null = null;
-  if (fiveKRaw) {
-    const fiveK = parseMMSS(fiveKRaw);
-    if (fiveK === null || fiveK <= 0) {
-      return { error: "Enter your 5k time as mm:ss (e.g. 22:30)." };
-    }
-    preferredPaceSeconds = Math.round(fiveK / 5);
+  if (!fiveKRaw) return { error: "Enter your comfortable 5k time." };
+  const fiveK = parseMMSS(fiveKRaw);
+  if (fiveK === null || fiveK <= 0) {
+    return { error: "Enter your 5k time as mm:ss (e.g. 22:30)." };
   }
+  // Pace is collected as a 5k time and stored as seconds-per-km, mirroring
+  // the availability form.
+  const preferredPaceSeconds = Math.round(fiveK / 5);
 
   updateUserProfile(user.id, {
     name,

@@ -44,12 +44,69 @@ function rowToUser(row: UserRow): User {
   };
 }
 
+/**
+ * A user whose profile fields are all set. Pages behind the onboarding gate
+ * receive this narrower type so they don't have to handle nullable fields.
+ */
+export type CompleteUser = Omit<
+  User,
+  "dateOfBirth" | "gender" | "preferredPaceSeconds"
+> & {
+  dateOfBirth: string;
+  gender: string;
+  preferredPaceSeconds: number;
+};
+
+export function isProfileComplete(user: User): user is CompleteUser {
+  return (
+    user.dateOfBirth !== null &&
+    user.gender !== null &&
+    user.preferredPaceSeconds !== null
+  );
+}
+
+export type NewUser = {
+  email: string;
+  name: string;
+  dateOfBirth: string;
+  gender: Gender;
+  preferredPaceSeconds: number;
+};
+
 export type ProfileUpdate = {
   name: string;
-  dateOfBirth: string | null;
-  gender: Gender | null;
-  preferredPaceSeconds: number | null;
+  dateOfBirth: string;
+  gender: Gender;
+  preferredPaceSeconds: number;
 };
+
+/** Looks up a user by email. Returns null if there's no such account. */
+export function findUserByEmail(email: string): User | null {
+  const row = db
+    .prepare(`SELECT ${USER_COLUMNS} FROM users WHERE email = ?`)
+    .get(email) as UserRow | undefined;
+  return row ? rowToUser(row) : null;
+}
+
+/** Creates a brand-new user with all required profile fields supplied. */
+export function createUser(input: NewUser): User {
+  const { lastInsertRowid } = db
+    .prepare(
+      `INSERT INTO users (email, name, date_of_birth, gender, preferred_pace_seconds)
+       VALUES (?, ?, ?, ?, ?)`,
+    )
+    .run(
+      input.email,
+      input.name,
+      input.dateOfBirth,
+      input.gender,
+      input.preferredPaceSeconds,
+    );
+  const row = db
+    .prepare(`SELECT ${USER_COLUMNS} FROM users WHERE id = ?`)
+    .get(Number(lastInsertRowid)) as UserRow;
+  return rowToUser(row);
+}
 
 /** Persists user-editable profile fields. */
 export function updateUserProfile(userId: number, fields: ProfileUpdate): void {
@@ -92,11 +149,23 @@ export const getCurrentUser = cache(async (): Promise<User | null> => {
 
 /**
  * Returns the current user or redirects to /login. Use this in Server
- * Components and Server Actions that require an authenticated user.
+ * Components and Server Actions that need an authenticated user but don't
+ * require the profile to be fully filled in (e.g. the /welcome page itself).
  */
 export async function requireUser(): Promise<User> {
   const user = await getCurrentUser();
   if (!user) redirect("/login");
+  return user;
+}
+
+/**
+ * Returns the current user only if they've finished onboarding. Redirects
+ * to /login (which also serves as the signup / finish-profile page) when
+ * the visitor isn't signed in or hasn't filled in every profile field.
+ */
+export async function requireCompleteUser(): Promise<CompleteUser> {
+  const user = await getCurrentUser();
+  if (!user || !isProfileComplete(user)) redirect("/login");
   return user;
 }
 
@@ -108,20 +177,6 @@ export function listUsers(): User[] {
     )
     .all() as UserRow[];
   return rows.map(rowToUser);
-}
-
-/**
- * Looks up a user by email, creating them if they don't exist. The name is
- * only used on creation; subsequent logins keep the stored name.
- */
-export function findOrCreateUser(email: string, name: string): User {
-  db.prepare(
-    "INSERT INTO users (email, name) VALUES (?, ?) ON CONFLICT(email) DO NOTHING",
-  ).run(email, name);
-  const row = db
-    .prepare(`SELECT ${USER_COLUMNS} FROM users WHERE email = ?`)
-    .get(email) as UserRow;
-  return rowToUser(row);
 }
 
 /** Writes the session cookie. */

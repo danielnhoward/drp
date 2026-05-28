@@ -1,4 +1,5 @@
 import { listMyAvailability } from "@/lib/availability";
+import { requireCompleteUser } from "@/lib/users";
 import AvailabilityCard from "../components/availability-card";
 import AddAvailability from "./add-availability";
 
@@ -6,6 +7,7 @@ import AddAvailability from "./add-availability";
 export const dynamic = "force-dynamic";
 
 export default async function CalendarPage() {
+  await requireCompleteUser();
   const slots = await listMyAvailability();
 
   return (

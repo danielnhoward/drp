@@ -1,10 +1,12 @@
 import RunCard from "./components/run-card";
 import { getNextRun } from "@/lib/runs";
+import { requireCompleteUser } from "@/lib/users";
 
 // Reads from the database on every request rather than at build time.
 export const dynamic = "force-dynamic";
 
-export default function Home() {
+export default async function Home() {
+  await requireCompleteUser();
   const nextRun = getNextRun();
 
   return (

@@ -10,9 +10,14 @@ CREATE TABLE IF NOT EXISTS users (
   email                  TEXT NOT NULL UNIQUE COLLATE NOCASE,
   name                   TEXT NOT NULL,
   avatar                 TEXT,                          -- URL of the user's profile picture
-  date_of_birth          TEXT,                          -- ISO yyyy-mm-dd; age is derived
-  gender                 TEXT,                          -- one of GENDERS in lib/users.ts
-  preferred_pace_seconds INTEGER,                       -- typical comfortable pace, seconds per km
+  -- NOT NULL on fresh databases. On existing databases these columns were
+  -- added later by migrateUserColumns as nullable (SQLite can't ALTER to
+  -- NOT NULL without rebuilding the table), so legacy rows may still hold
+  -- NULL. The /welcome onboarding gate redirects any such user to fill them
+  -- in before they can use the rest of the site.
+  date_of_birth          TEXT NOT NULL,                 -- ISO yyyy-mm-dd; age is derived
+  gender                 TEXT NOT NULL,                 -- one of GENDERS in lib/gender.ts
+  preferred_pace_seconds INTEGER NOT NULL,              -- typical comfortable pace, seconds per km
   created_at             TEXT NOT NULL DEFAULT (datetime('now'))
 );
 

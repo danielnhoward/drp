@@ -7,10 +7,12 @@ import { updateProfileAction, type ProfileFormState } from "./actions";
 
 type Props = {
   initialName: string;
-  initialDateOfBirth: string | null;
-  initialGender: Gender | null;
-  /** Comfortable pace in seconds per km, or null. */
-  initialPreferredPaceSeconds: number | null;
+  initialDateOfBirth: string;
+  // "" only appears as a fallback when the stored value isn't a known Gender
+  // — the <select> is `required` so submission still forces a real choice.
+  initialGender: Gender | "";
+  /** Comfortable pace in seconds per km. */
+  initialPreferredPaceSeconds: number;
 };
 
 const INITIAL_STATE: ProfileFormState = {};
@@ -35,10 +37,7 @@ export default function ProfileForm({
 
   // Convert stored pace (seconds/km) back to a 5k time for the input, since
   // the form collects 5k time to match the availability flow.
-  const initialFiveK =
-    initialPreferredPaceSeconds !== null
-      ? formatMMSS(initialPreferredPaceSeconds * 5)
-      : "";
+  const initialFiveK = formatMMSS(initialPreferredPaceSeconds * 5);
 
   return (
     <form action={action} className="flex flex-col gap-4">
@@ -58,7 +57,8 @@ export default function ProfileForm({
           className={fieldClass}
           type="date"
           name="dateOfBirth"
-          defaultValue={initialDateOfBirth ?? ""}
+          required
+          defaultValue={initialDateOfBirth}
           max={new Date().toISOString().slice(0, 10)}
         />
       </Field>
@@ -67,9 +67,12 @@ export default function ProfileForm({
         <select
           className={fieldClass}
           name="gender"
-          defaultValue={initialGender ?? ""}
+          required
+          defaultValue={initialGender}
         >
-          <option value="">Prefer not to say</option>
+          <option value="" disabled>
+            Select…
+          </option>
           {GENDERS.map((g) => (
             <option key={g} value={g}>
               {GENDER_LABELS[g]}
@@ -83,6 +86,7 @@ export default function ProfileForm({
           className={fieldClass}
           type="text"
           name="fiveKTime"
+          required
           placeholder="22:30"
           pattern="\d{1,2}:[0-5]\d"
           inputMode="numeric"

@@ -1,5 +1,5 @@
 import { isGender } from "@/lib/gender";
-import { requireUser } from "@/lib/users";
+import { requireCompleteUser } from "@/lib/users";
 import { logoutAction } from "../login/actions";
 import ProfileForm from "./profile-form";
 
@@ -7,12 +7,13 @@ import ProfileForm from "./profile-form";
 export const dynamic = "force-dynamic";
 
 export default async function ProfilePage() {
-  const user = await requireUser();
+  // requireCompleteUser bounces incomplete users to /welcome, so we know all
+  // profile fields are present once we get here.
+  const user = await requireCompleteUser();
 
-  // Narrow the stored string to the Gender union for the form. Any legacy or
-  // out-of-band value falls back to "unset" rather than crashing the page.
-  const gender =
-    user.gender !== null && isGender(user.gender) ? user.gender : null;
+  // Narrow the stored string to the Gender union for the form. Anything that
+  // somehow isn't a known value falls back to no selection.
+  const gender = isGender(user.gender) ? user.gender : "";
 
   return (
     <main className="mx-auto w-full max-w-md flex-1 px-6 py-8">
