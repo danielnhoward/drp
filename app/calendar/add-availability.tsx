@@ -46,12 +46,13 @@ export default function AddAvailability() {
 
   return (
     <>
-      <button
-        type="button"
-        onClick={() => setOpen(true)}
-        aria-label="Add availability"
-        className="fixed right-4 bottom-[calc(4rem_+_1rem_+_env(safe-area-inset-bottom))] z-40 flex h-14 w-14 items-center justify-center rounded-full bg-blue-600 text-white shadow-lg transition-colors hover:bg-blue-700"
-      >
+      <div className="mt-4 flex justify-end">
+        <button
+          type="button"
+          onClick={() => setOpen(true)}
+          aria-label="Add availability"
+          className="flex h-14 w-14 items-center justify-center rounded-full bg-blue-600 text-white shadow-lg transition-colors hover:bg-blue-700"
+        >
         <svg
           viewBox="0 0 24 24"
           fill="none"
@@ -63,7 +64,8 @@ export default function AddAvailability() {
         >
           <path d="M12 5v14M5 12h14" />
         </svg>
-      </button>
+        </button>
+      </div>
 
       {isOpen && (
         <div
