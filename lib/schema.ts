@@ -32,20 +32,21 @@ CREATE TABLE IF NOT EXISTS run_participants (
   PRIMARY KEY (run_id, user_id)
 );
 
--- A user's availability slots, set on the "My Schedule" page: when they're free
--- to run, how far, at what level, who with, and where they currently are. The
--- actual meeting point is chosen later by the matching system, not stored here.
+-- A user's availability slots, set on the "My Schedule" page: when they're
+-- free to run, how far, how fast, and roughly where they'll be (lat/lon, so we
+-- can match them with nearby partners). The actual meeting point is chosen
+-- later by the matching system, not stored here.
 CREATE TABLE IF NOT EXISTS availability (
-  id           INTEGER PRIMARY KEY AUTOINCREMENT,
-  user_id      INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-  start_time   TEXT NOT NULL,            -- start of the window, e.g. "10:00"
-  end_time     TEXT NOT NULL,            -- end of the window, e.g. "13:00"
-  distance_km  REAL NOT NULL,
-  skill_level  TEXT NOT NULL,            -- "Beginner" | "Intermediate" | "Advanced"
-  partner_pref TEXT NOT NULL,            -- who to match with, e.g. "Random"
-  lat          REAL NOT NULL,            -- the runner's current location
-  lon          REAL NOT NULL,
-  created_at   TEXT NOT NULL DEFAULT (datetime('now'))
+  id                  INTEGER PRIMARY KEY AUTOINCREMENT,
+  user_id             INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  start_time          TEXT NOT NULL,            -- start of the window, e.g. "10:00"
+  end_time            TEXT NOT NULL,            -- end of the window, e.g. "13:00"
+  distance_km         REAL NOT NULL,
+  five_k_min_seconds  INTEGER NOT NULL,         -- fastest 5k time they'll match with, in seconds
+  five_k_max_seconds  INTEGER NOT NULL,         -- slowest 5k time they'll match with, in seconds
+  lat                 REAL NOT NULL,            -- coordinates for the map preview
+  lon                 REAL NOT NULL,
+  created_at          TEXT NOT NULL DEFAULT (datetime('now'))
 );
 
 CREATE INDEX IF NOT EXISTS idx_availability_user ON availability (user_id);

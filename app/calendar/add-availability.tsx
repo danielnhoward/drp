@@ -1,12 +1,21 @@
 "use client";
 
-import { useActionState, useCallback, useEffect, useState } from "react";
-import type { SVGProps } from "react";
+import { useActionState, useEffect, useState } from "react";
 
+import RangeSlider from "../components/range-slider";
 import { addAvailabilityAction, type AddAvailabilityState } from "./actions";
 
-const SKILL_OPTIONS = ["Beginner", "Intermediate", "Advanced"];
-const PARTNER_OPTIONS = ["Random", "Friends"];
+// Plausible 5k-time range for the slider, in seconds. Lower = faster: roughly
+// elite at the bottom, easy/walk-jog at the top. 30-second granularity keeps
+// the slider usable without being fiddly.
+const FIVE_K_MIN_SECONDS = 12 * 60; // 12:00
+const FIVE_K_MAX_SECONDS = 50 * 60; // 50:00
+const FIVE_K_STEP_SECONDS = 30;
+const FIVE_K_DEFAULT_RANGE: [number, number] = [22 * 60, 28 * 60]; // 22:00 – 28:00
+
+function formatMMSS(seconds: number): string {
+  return `${Math.floor(seconds / 60)}:${String(seconds % 60).padStart(2, "0")}`;
+}
 
 const fieldClass =
   "h-10 rounded-lg border border-black/10 bg-white px-3 text-sm text-black outline-none focus:border-black/40 dark:border-white/15 dark:bg-zinc-900 dark:text-zinc-50 dark:focus:border-white/50";
@@ -72,52 +81,19 @@ export default function AddAvailability() {
   );
 }
 
-type GeoStatus = "loading" | "ready" | "error";
-
 function AvailabilityForm({ onClose }: { onClose: () => void }) {
   const [state, formAction, pending] = useActionState<
     AddAvailabilityState,
     FormData
   >(addAvailabilityAction, {});
 
-  const [coords, setCoords] = useState<{ lat: number; lon: number } | null>(
-    null,
+  // Track the 5k-time range (in seconds) so we can show the bounds next to the
+  // label as the user drags either thumb. Both values are submitted with the
+  // form via hidden inputs inside the RangeSlider.
+  const [fiveKRange, setFiveKRange] = useState<[number, number]>(
+    FIVE_K_DEFAULT_RANGE,
   );
-  // This form only mounts client-side (after the + is clicked), so reading
-  // navigator here is safe and avoids a synchronous setState in the effect.
-  const [geoStatus, setGeoStatus] = useState<GeoStatus>(() =>
-    typeof navigator !== "undefined" && navigator.geolocation
-      ? "loading"
-      : "error",
-  );
-
-  // Read the browser's current position. Only the async callbacks set state, so
-  // this can be called from the mount effect without triggering cascading
-  // renders. The meet-up point is decided later by matching; here we just need
-  // where the runner is right now.
-  const requestLocation = useCallback(() => {
-    navigator.geolocation.getCurrentPosition(
-      (pos) => {
-        setCoords({ lat: pos.coords.latitude, lon: pos.coords.longitude });
-        setGeoStatus("ready");
-      },
-      () => setGeoStatus("error"),
-      { enableHighAccuracy: true, timeout: 10_000 },
-    );
-  }, []);
-
-  const retryLocation = useCallback(() => {
-    if (typeof navigator === "undefined" || !navigator.geolocation) return;
-    setGeoStatus("loading");
-    requestLocation();
-  }, [requestLocation]);
-
-  // Ask for the position once when the form opens.
-  useEffect(() => {
-    if (typeof navigator !== "undefined" && navigator.geolocation) {
-      requestLocation();
-    }
-  }, [requestLocation]);
+  const [fiveKMinSeconds, fiveKMaxSeconds] = fiveKRange;
 
   // Close once the slot has been saved.
   useEffect(() => {
@@ -173,50 +149,63 @@ function AvailabilityForm({ onClose }: { onClose: () => void }) {
           </Field>
         </div>
 
-        <div className="grid grid-cols-2 gap-3">
-          <Field label="Distance (km)">
-            <input
-              className={fieldClass}
-              type="number"
-              name="distanceKm"
-              min={0.5}
-              step={0.5}
-              defaultValue={5}
-              required
-            />
-          </Field>
-          <Field label="Skill level">
-            <select className={fieldClass} name="skillLevel" defaultValue="Beginner">
-              {SKILL_OPTIONS.map((level) => (
-                <option key={level} value={level}>
-                  {level}
-                </option>
-              ))}
-            </select>
-          </Field>
-        </div>
-
-        <Field label="Match with">
-          <select className={fieldClass} name="partnerPref" defaultValue="Random">
-            {PARTNER_OPTIONS.map((pref) => (
-              <option key={pref} value={pref}>
-                {pref}
-              </option>
-            ))}
-          </select>
+        <Field label="Distance (km)">
+          <input
+            className={fieldClass}
+            type="number"
+            name="distanceKm"
+            min={0.5}
+            step={0.5}
+            defaultValue={5}
+            required
+          />
         </Field>
 
         <div className="flex flex-col gap-1.5">
-          <span className="text-sm font-medium text-zinc-600 dark:text-zinc-400">
-            Current location
+          <span className="flex items-baseline justify-between text-sm font-medium text-zinc-600 dark:text-zinc-400">
+            <span>5k time range</span>
+            <span className="tabular-nums text-zinc-900 dark:text-zinc-100">
+              {formatMMSS(fiveKMinSeconds)} – {formatMMSS(fiveKMaxSeconds)}
+            </span>
           </span>
-          <LocationStatus status={geoStatus} coords={coords} onRetry={retryLocation} />
-          {coords && (
-            <>
-              <input type="hidden" name="lat" value={coords.lat} />
-              <input type="hidden" name="lon" value={coords.lon} />
-            </>
-          )}
+          <RangeSlider
+            min={FIVE_K_MIN_SECONDS}
+            max={FIVE_K_MAX_SECONDS}
+            step={FIVE_K_STEP_SECONDS}
+            values={fiveKRange}
+            onChange={setFiveKRange}
+            nameMin="fiveKMinSeconds"
+            nameMax="fiveKMaxSeconds"
+            ariaLabelMin="Fastest 5k time"
+            ariaLabelMax="Slowest 5k time"
+          />
+          <span className="flex justify-between text-xs text-zinc-400 dark:text-zinc-500">
+            <span>{formatMMSS(FIVE_K_MIN_SECONDS)}</span>
+            <span>{formatMMSS(FIVE_K_MAX_SECONDS)}</span>
+          </span>
+        </div>
+
+        <div className="grid grid-cols-2 gap-3">
+          <Field label="Latitude">
+            <input
+              className={fieldClass}
+              type="number"
+              name="lat"
+              step="any"
+              defaultValue={51.5073}
+              required
+            />
+          </Field>
+          <Field label="Longitude">
+            <input
+              className={fieldClass}
+              type="number"
+              name="lon"
+              step="any"
+              defaultValue={-0.1657}
+              required
+            />
+          </Field>
         </div>
 
         {state.error ? (
@@ -225,86 +214,13 @@ function AvailabilityForm({ onClose }: { onClose: () => void }) {
 
         <button
           type="submit"
-          disabled={pending || !coords}
+          disabled={pending}
           className="mt-1 flex h-11 items-center justify-center rounded-full bg-blue-600 text-sm font-medium text-white transition-colors hover:bg-blue-700 disabled:opacity-50"
         >
           {pending ? "Saving…" : "Save availability"}
         </button>
       </form>
     </div>
-  );
-}
-
-function LocationStatus({
-  status,
-  coords,
-  onRetry,
-}: {
-  status: GeoStatus;
-  coords: { lat: number; lon: number } | null;
-  onRetry: () => void;
-}) {
-  const boxClass =
-    "flex items-center justify-between gap-3 rounded-lg border border-black/10 bg-black/[.02] px-3 py-2.5 text-sm dark:border-white/15 dark:bg-white/[.03]";
-
-  if (status === "ready" && coords) {
-    return (
-      <div className={boxClass}>
-        <span className="flex items-center gap-2 text-zinc-700 dark:text-zinc-300">
-          <PinIcon className="h-4 w-4 shrink-0 text-blue-600 dark:text-blue-400" />
-          Using your location ({coords.lat.toFixed(4)}, {coords.lon.toFixed(4)})
-        </span>
-        <button
-          type="button"
-          onClick={onRetry}
-          className="shrink-0 font-medium text-blue-600 hover:underline dark:text-blue-400"
-        >
-          Update
-        </button>
-      </div>
-    );
-  }
-
-  if (status === "error") {
-    return (
-      <div className={boxClass}>
-        <span className="text-red-600 dark:text-red-400">
-          Couldn&apos;t get your location.
-        </span>
-        <button
-          type="button"
-          onClick={onRetry}
-          className="shrink-0 font-medium text-blue-600 hover:underline dark:text-blue-400"
-        >
-          Try again
-        </button>
-      </div>
-    );
-  }
-
-  return (
-    <div className={boxClass}>
-      <span className="text-zinc-500 dark:text-zinc-400">
-        Getting your location…
-      </span>
-    </div>
-  );
-}
-
-function PinIcon(props: SVGProps<SVGSVGElement>) {
-  return (
-    <svg
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth={1.8}
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      {...props}
-    >
-      <path d="M12 21s7-5.5 7-11a7 7 0 1 0-14 0c0 5.5 7 11 7 11Z" />
-      <circle cx={12} cy={10} r={2.5} />
-    </svg>
   );
 }
 
@@ -324,3 +240,4 @@ function Field({
     </label>
   );
 }
+

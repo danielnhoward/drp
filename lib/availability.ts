@@ -2,9 +2,6 @@ import "server-only";
 
 import { db } from "./db";
 
-export const SKILL_LEVELS = ["Beginner", "Intermediate", "Advanced"] as const;
-export type SkillLevel = (typeof SKILL_LEVELS)[number];
-
 export type Availability = {
   id: number;
   /** Start of the window, e.g. "10:00". */
@@ -13,11 +10,11 @@ export type Availability = {
   endTime: string;
   /** Distance in kilometres. */
   distanceKm: number;
-  /** Pace/experience level the runner wants to be matched at. */
-  skillLevel: string;
-  /** Who to match with, e.g. "Random". */
-  partnerPref: string;
-  /** The runner's current location, captured when the slot was set. */
+  /** Fastest 5k time they'll match with, in seconds (range lower bound). */
+  fiveKMinSeconds: number;
+  /** Slowest 5k time they'll match with, in seconds (range upper bound). */
+  fiveKMaxSeconds: number;
+  /** Coordinates of where they'll be, used to render the map preview. */
   lat: number;
   lon: number;
 };
@@ -30,8 +27,8 @@ type AvailabilityRow = {
   start_time: string;
   end_time: string;
   distance_km: number;
-  skill_level: string;
-  partner_pref: string;
+  five_k_min_seconds: number;
+  five_k_max_seconds: number;
   lat: number;
   lon: number;
 };
@@ -58,8 +55,8 @@ const SEED: NewAvailability = {
   startTime: "10:00",
   endTime: "13:00",
   distanceKm: 5,
-  skillLevel: "Beginner",
-  partnerPref: "Random",
+  fiveKMinSeconds: 22 * 60, // 22:00
+  fiveKMaxSeconds: 28 * 60, // 28:00
   lat: 51.5073,
   lon: -0.1657,
 };
@@ -81,15 +78,15 @@ function ensureSeeded(userId: number): void {
 function insertAvailability(userId: number, input: NewAvailability): void {
   db.prepare(
     `INSERT INTO availability
-       (user_id, start_time, end_time, distance_km, skill_level, partner_pref, lat, lon)
+       (user_id, start_time, end_time, distance_km, five_k_min_seconds, five_k_max_seconds, lat, lon)
      VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
   ).run(
     userId,
     input.startTime,
     input.endTime,
     input.distanceKm,
-    input.skillLevel,
-    input.partnerPref,
+    input.fiveKMinSeconds,
+    input.fiveKMaxSeconds,
     input.lat,
     input.lon,
   );
@@ -102,7 +99,7 @@ export function listMyAvailability(): Availability[] {
 
   const rows = db
     .prepare(
-      `SELECT id, start_time, end_time, distance_km, skill_level, partner_pref, lat, lon
+      `SELECT id, start_time, end_time, distance_km, five_k_min_seconds, five_k_max_seconds, lat, lon
        FROM availability
        WHERE user_id = ?
        ORDER BY start_time ASC, id ASC`,
@@ -114,8 +111,8 @@ export function listMyAvailability(): Availability[] {
     startTime: row.start_time,
     endTime: row.end_time,
     distanceKm: row.distance_km,
-    skillLevel: row.skill_level,
-    partnerPref: row.partner_pref,
+    fiveKMinSeconds: row.five_k_min_seconds,
+    fiveKMaxSeconds: row.five_k_max_seconds,
     lat: row.lat,
     lon: row.lon,
   }));

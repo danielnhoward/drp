@@ -2,12 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 
-import {
-  createAvailability,
-  deleteAvailability,
-  SKILL_LEVELS,
-  type SkillLevel,
-} from "@/lib/availability";
+import { createAvailability, deleteAvailability } from "@/lib/availability";
 
 export type AddAvailabilityState = { error?: string; ok?: boolean };
 
@@ -18,8 +13,8 @@ export async function addAvailabilityAction(
   const startTime = String(formData.get("startTime") ?? "").trim();
   const endTime = String(formData.get("endTime") ?? "").trim();
   const distanceKm = Number(formData.get("distanceKm"));
-  const skillLevel = String(formData.get("skillLevel") ?? "");
-  const partnerPref = String(formData.get("partnerPref") ?? "").trim() || "Random";
+  const fiveKMinSeconds = Number(formData.get("fiveKMinSeconds"));
+  const fiveKMaxSeconds = Number(formData.get("fiveKMaxSeconds"));
   const latRaw = formData.get("lat");
   const lonRaw = formData.get("lon");
   const lat = Number(latRaw);
@@ -35,23 +30,29 @@ export async function addAvailabilityAction(
   if (!Number.isFinite(distanceKm) || distanceKm <= 0) {
     return { error: "Enter a distance greater than 0 km." };
   }
-  if (!SKILL_LEVELS.includes(skillLevel as SkillLevel)) {
-    return { error: "Choose a skill level." };
+  if (
+    !Number.isInteger(fiveKMinSeconds) ||
+    !Number.isInteger(fiveKMaxSeconds) ||
+    fiveKMinSeconds <= 0 ||
+    fiveKMaxSeconds <= 0
+  ) {
+    return { error: "Enter a valid 5k time range." };
+  }
+  if (fiveKMinSeconds >= fiveKMaxSeconds) {
+    return { error: "The faster end of the 5k range must be lower than the slower end." };
   }
   // A missing field reads back as null; Number(null) is 0, which would slip
   // through a plain isFinite check, so reject empty values explicitly.
   if (!latRaw || !lonRaw || !Number.isFinite(lat) || !Number.isFinite(lon)) {
-    return {
-      error: "We couldn't read your current location — allow location access and try again.",
-    };
+    return { error: "Enter a valid latitude and longitude." };
   }
 
   createAvailability({
     startTime,
     endTime,
     distanceKm,
-    skillLevel,
-    partnerPref,
+    fiveKMinSeconds,
+    fiveKMaxSeconds,
     lat,
     lon,
   });

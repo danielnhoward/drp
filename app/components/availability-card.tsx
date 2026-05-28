@@ -13,23 +13,20 @@ export default function AvailabilityCard({ slot }: { slot: Availability }) {
           <Detail Icon={ClockIcon} label="Availability">
             {slot.startTime} – {slot.endTime}
           </Detail>
-          <Detail Icon={PersonIcon} label="Match with">
-            {slot.partnerPref}
-          </Detail>
           <div className="flex flex-wrap items-center gap-x-6 gap-y-2">
             <Detail Icon={RouteIcon} label="Distance">
               {slot.distanceKm} km
             </Detail>
-            <Detail Icon={RunnerIcon} label="Skill level">
-              {slot.skillLevel}
+            <Detail Icon={RunnerIcon} label="5k time">
+              {formatMMSS(slot.fiveKMinSeconds)} – {formatMMSS(slot.fiveKMaxSeconds)}
             </Detail>
           </div>
         </dl>
 
-        {/* Middle: where the runner currently is (the meet-up point is decided
-            later by matching, not shown here). */}
+        {/* Middle: roughly where they'll be (the meet-up point itself is
+            decided later by matching, not stored on the slot). */}
         <div className="w-28 shrink-0 sm:w-36">
-          <RunMap lat={slot.lat} lon={slot.lon} label="Your current location" />
+          <RunMap lat={slot.lat} lon={slot.lon} label="Run location" />
         </div>
 
         {/* Right: edit (deferred) and delete actions. */}
@@ -99,13 +96,8 @@ function ClockIcon(props: SVGProps<SVGSVGElement>) {
   );
 }
 
-function PersonIcon(props: SVGProps<SVGSVGElement>) {
-  return (
-    <svg {...iconBase} {...props}>
-      <circle cx={12} cy={8} r={4} />
-      <path d="M4 20c0-3.3 3.6-6 8-6s8 2.7 8 6" />
-    </svg>
-  );
+function formatMMSS(seconds: number): string {
+  return `${Math.floor(seconds / 60)}:${String(seconds % 60).padStart(2, "0")}`;
 }
 
 function RouteIcon(props: SVGProps<SVGSVGElement>) {
