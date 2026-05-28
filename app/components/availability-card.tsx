@@ -1,0 +1,142 @@
+import type { SVGProps } from "react";
+
+import type { Availability } from "@/lib/availability";
+import { deleteAvailabilityAction } from "@/app/calendar/actions";
+import RunMap from "./run-map";
+
+export default function AvailabilityCard({ slot }: { slot: Availability }) {
+  return (
+    <li className="rounded-2xl border border-black/10 bg-white p-4 shadow-sm dark:border-white/15 dark:bg-zinc-900">
+      <div className="flex items-start gap-3">
+        {/* Left: the slot details. */}
+        <dl className="flex min-w-0 flex-1 flex-col gap-2 text-base">
+          <Detail Icon={ClockIcon} label="Availability">
+            {slot.startTime} – {slot.endTime}
+          </Detail>
+          <div className="flex flex-wrap items-center gap-x-6 gap-y-2">
+            <Detail Icon={RouteIcon} label="Distance">
+              {slot.distanceKm} km
+            </Detail>
+            <Detail Icon={RunnerIcon} label="Pace">
+              {formatMMSS(slot.paceMinSeconds)} – {formatMMSS(slot.paceMaxSeconds)} /km
+            </Detail>
+          </div>
+        </dl>
+
+        {/* Middle: roughly where they'll be (the meet-up point itself is
+            decided later by matching, not stored on the slot). */}
+        <div className="w-28 shrink-0 sm:w-36">
+          <RunMap lat={slot.lat} lon={slot.lon} label="Run location" />
+        </div>
+
+        {/* Right: edit (deferred) and delete actions. */}
+        <div className="flex shrink-0 flex-col gap-2">
+          <button
+            type="button"
+            disabled
+            aria-label="Edit availability (coming soon)"
+            title="Editing is coming soon"
+            className="rounded-full border border-black/10 p-2 text-zinc-400 dark:border-white/15 dark:text-zinc-600"
+          >
+            <PencilIcon className="h-4 w-4" aria-hidden="true" />
+          </button>
+
+          <form action={deleteAvailabilityAction}>
+            <input type="hidden" name="id" value={slot.id} />
+            <button
+              type="submit"
+              aria-label="Delete availability"
+              className="rounded-full border border-black/10 p-2 text-zinc-500 transition-colors hover:border-red-500/40 hover:bg-red-500/10 hover:text-red-600 dark:border-white/15 dark:text-zinc-400 dark:hover:text-red-400"
+            >
+              <TrashIcon className="h-4 w-4" aria-hidden="true" />
+            </button>
+          </form>
+        </div>
+      </div>
+    </li>
+  );
+}
+
+function Detail({
+  Icon,
+  label,
+  children,
+}: {
+  Icon: (props: SVGProps<SVGSVGElement>) => React.ReactElement;
+  label: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <div className="flex items-center gap-2">
+      <Icon
+        className="h-5 w-5 shrink-0 text-zinc-500 dark:text-zinc-400"
+        aria-hidden="true"
+      />
+      <span className="sr-only">{label}:</span>
+      <span className="truncate font-medium">{children}</span>
+    </div>
+  );
+}
+
+const iconBase: SVGProps<SVGSVGElement> = {
+  viewBox: "0 0 24 24",
+  fill: "none",
+  stroke: "currentColor",
+  strokeWidth: 1.8,
+  strokeLinecap: "round",
+  strokeLinejoin: "round",
+};
+
+function ClockIcon(props: SVGProps<SVGSVGElement>) {
+  return (
+    <svg {...iconBase} {...props}>
+      <circle cx={12} cy={12} r={9} />
+      <path d="M12 7.5V12l3 2" />
+    </svg>
+  );
+}
+
+function formatMMSS(seconds: number): string {
+  return `${Math.floor(seconds / 60)}:${String(seconds % 60).padStart(2, "0")}`;
+}
+
+function RouteIcon(props: SVGProps<SVGSVGElement>) {
+  return (
+    <svg {...iconBase} {...props}>
+      <path d="M3 13c2.5-3 4.5-3 7 0s4.5 3 7 0" />
+      <circle cx={4} cy={18} r={1.4} />
+      <circle cx={20} cy={8} r={1.4} />
+    </svg>
+  );
+}
+
+function RunnerIcon(props: SVGProps<SVGSVGElement>) {
+  return (
+    <svg {...iconBase} {...props}>
+      <circle cx={15.5} cy={5} r={1.6} />
+      <path d="M14 9l-3.5 2 2 2.5V19" />
+      <path d="M10.5 11 7 12l-2 3" />
+      <path d="m12.5 13.5 3 1.5 2 3.5" />
+    </svg>
+  );
+}
+
+function PencilIcon(props: SVGProps<SVGSVGElement>) {
+  return (
+    <svg {...iconBase} {...props}>
+      <path d="M12 20h9" />
+      <path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z" />
+    </svg>
+  );
+}
+
+function TrashIcon(props: SVGProps<SVGSVGElement>) {
+  return (
+    <svg {...iconBase} {...props}>
+      <path d="M3 6h18" />
+      <path d="M8 6V4a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v2" />
+      <path d="M19 6l-1 14a1 1 0 0 1-1 1H7a1 1 0 0 1-1-1L5 6" />
+      <path d="M10 11v6M14 11v6" />
+    </svg>
+  );
+}

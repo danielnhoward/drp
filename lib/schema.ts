@@ -31,6 +31,25 @@ CREATE TABLE IF NOT EXISTS run_participants (
   position INTEGER NOT NULL DEFAULT 0, -- preserves display order
   PRIMARY KEY (run_id, user_id)
 );
+
+-- A user's availability slots, set on the "My Schedule" page: when they're
+-- free to run, how far, how fast, and roughly where they'll be (lat/lon, so we
+-- can match them with nearby partners). The actual meeting point is chosen
+-- later by the matching system, not stored here.
+CREATE TABLE IF NOT EXISTS availability (
+  id                  INTEGER PRIMARY KEY AUTOINCREMENT,
+  user_id             INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  start_time          TEXT NOT NULL,            -- start of the window, e.g. "10:00"
+  end_time            TEXT NOT NULL,            -- end of the window, e.g. "13:00"
+  distance_km         REAL NOT NULL,
+  pace_min_seconds    INTEGER NOT NULL,         -- lower bound of pace range, in seconds/km (= fastest pace)
+  pace_max_seconds    INTEGER NOT NULL,         -- upper bound of pace range, in seconds/km (= slowest pace)
+  lat                 REAL NOT NULL,            -- coordinates for the map preview
+  lon                 REAL NOT NULL,
+  created_at          TEXT NOT NULL DEFAULT (datetime('now'))
+);
+
+CREATE INDEX IF NOT EXISTS idx_availability_user ON availability (user_id);
 `;
 
 export type User = {

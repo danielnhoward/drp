@@ -41,13 +41,20 @@ export default function RunMap({
     <>
       {/* Preview: the iframe is non-interactive (pointer-events-none) so the
           overlay button captures the click and opens the modal instead of
-          panning the embedded map. */}
+          panning the embedded map. We render the iframe wider than the
+          container (640px, centred, with the overflow clipped) so OSM's
+          attribution strip stays on a single line — at thumbnail widths it
+          otherwise wraps to ~4 lines and dominates the view. The extra 28px
+          of height then hides the (now single-line) strip below the rounded
+          border. We satisfy the licence by surfacing our own "© OSM" link
+          below, pointing at the copyright page. This is explicitly allowed
+          by the open street map license. */}
       <div className="relative h-32 w-full overflow-hidden rounded-xl border border-black/10 dark:border-white/15">
         <iframe
           title={`Map showing ${label}`}
           src={mapSrc(lat, lon, 0.006, 0.009)}
           loading="lazy"
-          className="pointer-events-none h-full w-full"
+          className="pointer-events-none absolute top-0 left-1/2 h-[calc(100%+28px)] w-[640px] -translate-x-1/2"
         />
         <button
           type="button"
@@ -55,6 +62,14 @@ export default function RunMap({
           aria-label={`Expand map for ${label}`}
           className="absolute inset-0 cursor-pointer transition-colors hover:bg-black/5"
         />
+        <a
+          href="https://www.openstreetmap.org/copyright"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="absolute bottom-1 right-1 z-10 rounded bg-white/80 px-1 text-[10px] leading-tight text-zinc-700 hover:underline dark:bg-zinc-900/80 dark:text-zinc-300"
+        >
+          © OSM
+        </a>
       </div>
 
       {open && (
