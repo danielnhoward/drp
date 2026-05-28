@@ -11,7 +11,12 @@ export default async function Home() {
 
   return (
     <main className="mx-auto w-full max-w-2xl flex-1 px-4 py-6">
-      <h1 className="mb-4 text-2xl font-semibold tracking-tight">Next run:</h1>
+      <header className="mb-4">
+        <h1 className="text-2xl font-semibold tracking-tight">Next run:</h1>
+        <p className="mt-1 text-sm text-zinc-600 dark:text-zinc-400">
+          Your upcoming confirmed run with another runner.
+        </p>
+      </header>
       {nextRun ? (
         <RunCard run={nextRun} />
       ) : (
