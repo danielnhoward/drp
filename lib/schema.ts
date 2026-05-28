@@ -42,8 +42,8 @@ CREATE TABLE IF NOT EXISTS availability (
   start_time          TEXT NOT NULL,            -- start of the window, e.g. "10:00"
   end_time            TEXT NOT NULL,            -- end of the window, e.g. "13:00"
   distance_km         REAL NOT NULL,
-  five_k_min_seconds  INTEGER NOT NULL,         -- fastest 5k time they'll match with, in seconds
-  five_k_max_seconds  INTEGER NOT NULL,         -- slowest 5k time they'll match with, in seconds
+  pace_min_seconds    INTEGER NOT NULL,         -- lower bound of pace range, in seconds/km (= fastest pace)
+  pace_max_seconds    INTEGER NOT NULL,         -- upper bound of pace range, in seconds/km (= slowest pace)
   lat                 REAL NOT NULL,            -- coordinates for the map preview
   lon                 REAL NOT NULL,
   created_at          TEXT NOT NULL DEFAULT (datetime('now'))

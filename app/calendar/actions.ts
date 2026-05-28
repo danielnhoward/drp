@@ -13,6 +13,9 @@ export async function addAvailabilityAction(
   const startTime = String(formData.get("startTime") ?? "").trim();
   const endTime = String(formData.get("endTime") ?? "").trim();
   const distanceKm = Number(formData.get("distanceKm"));
+  // The form collects 5k times (more familiar to runners); we store pace
+  // (seconds per kilometre) since that's what the matching system uses, so
+  // divide by 5 below.
   const fiveKMinSeconds = Number(formData.get("fiveKMinSeconds"));
   const fiveKMaxSeconds = Number(formData.get("fiveKMaxSeconds"));
   const latRaw = formData.get("lat");
@@ -47,12 +50,17 @@ export async function addAvailabilityAction(
     return { error: "Enter a valid latitude and longitude." };
   }
 
+  // 5 km in 5k time, so pace (seconds per km) = 5k time / 5. Rounded to a
+  // whole second to match the INTEGER column.
+  const paceMinSeconds = Math.round(fiveKMinSeconds / 5);
+  const paceMaxSeconds = Math.round(fiveKMaxSeconds / 5);
+
   createAvailability({
     startTime,
     endTime,
     distanceKm,
-    fiveKMinSeconds,
-    fiveKMaxSeconds,
+    paceMinSeconds,
+    paceMaxSeconds,
     lat,
     lon,
   });

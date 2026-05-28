@@ -17,8 +17,8 @@ export default function AvailabilityCard({ slot }: { slot: Availability }) {
             <Detail Icon={RouteIcon} label="Distance">
               {slot.distanceKm} km
             </Detail>
-            <Detail Icon={RunnerIcon} label="5k time">
-              {formatMMSS(slot.fiveKMinSeconds)} – {formatMMSS(slot.fiveKMaxSeconds)}
+            <Detail Icon={RunnerIcon} label="Pace">
+              {formatMMSS(slot.paceMinSeconds)} – {formatMMSS(slot.paceMaxSeconds)} /km
             </Detail>
           </div>
         </dl>

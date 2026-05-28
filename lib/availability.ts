@@ -10,10 +10,10 @@ export type Availability = {
   endTime: string;
   /** Distance in kilometres. */
   distanceKm: number;
-  /** Fastest 5k time they'll match with, in seconds (range lower bound). */
-  fiveKMinSeconds: number;
-  /** Slowest 5k time they'll match with, in seconds (range upper bound). */
-  fiveKMaxSeconds: number;
+  /** Lower bound of pace range, in seconds per kilometre (= fastest pace). */
+  paceMinSeconds: number;
+  /** Upper bound of pace range, in seconds per kilometre (= slowest pace). */
+  paceMaxSeconds: number;
   /** Coordinates of where they'll be, used to render the map preview. */
   lat: number;
   lon: number;
@@ -27,8 +27,8 @@ type AvailabilityRow = {
   start_time: string;
   end_time: string;
   distance_km: number;
-  five_k_min_seconds: number;
-  five_k_max_seconds: number;
+  pace_min_seconds: number;
+  pace_max_seconds: number;
   lat: number;
   lon: number;
 };
@@ -55,8 +55,8 @@ const SEED: NewAvailability = {
   startTime: "10:00",
   endTime: "13:00",
   distanceKm: 5,
-  fiveKMinSeconds: 22 * 60, // 22:00
-  fiveKMaxSeconds: 28 * 60, // 28:00
+  paceMinSeconds: 4 * 60 + 30, // 4:30/km
+  paceMaxSeconds: 5 * 60 + 30, // 5:30/km
   lat: 51.5073,
   lon: -0.1657,
 };
@@ -78,15 +78,15 @@ function ensureSeeded(userId: number): void {
 function insertAvailability(userId: number, input: NewAvailability): void {
   db.prepare(
     `INSERT INTO availability
-       (user_id, start_time, end_time, distance_km, five_k_min_seconds, five_k_max_seconds, lat, lon)
+       (user_id, start_time, end_time, distance_km, pace_min_seconds, pace_max_seconds, lat, lon)
      VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
   ).run(
     userId,
     input.startTime,
     input.endTime,
     input.distanceKm,
-    input.fiveKMinSeconds,
-    input.fiveKMaxSeconds,
+    input.paceMinSeconds,
+    input.paceMaxSeconds,
     input.lat,
     input.lon,
   );
@@ -99,7 +99,7 @@ export function listMyAvailability(): Availability[] {
 
   const rows = db
     .prepare(
-      `SELECT id, start_time, end_time, distance_km, five_k_min_seconds, five_k_max_seconds, lat, lon
+      `SELECT id, start_time, end_time, distance_km, pace_min_seconds, pace_max_seconds, lat, lon
        FROM availability
        WHERE user_id = ?
        ORDER BY start_time ASC, id ASC`,
@@ -111,8 +111,8 @@ export function listMyAvailability(): Availability[] {
     startTime: row.start_time,
     endTime: row.end_time,
     distanceKm: row.distance_km,
-    fiveKMinSeconds: row.five_k_min_seconds,
-    fiveKMaxSeconds: row.five_k_max_seconds,
+    paceMinSeconds: row.pace_min_seconds,
+    paceMaxSeconds: row.pace_max_seconds,
     lat: row.lat,
     lon: row.lon,
   }));

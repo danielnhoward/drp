@@ -6,12 +6,18 @@ import RangeSlider from "../components/range-slider";
 import { addAvailabilityAction, type AddAvailabilityState } from "./actions";
 
 // Plausible 5k-time range for the slider, in seconds. Lower = faster: roughly
-// elite at the bottom, easy/walk-jog at the top. 30-second granularity keeps
-// the slider usable without being fiddly.
-const FIVE_K_MIN_SECONDS = 12 * 60; // 12:00
-const FIVE_K_MAX_SECONDS = 50 * 60; // 50:00
+// elite at the bottom, easy/walk-jog at the top. 30-second granularity (= 6
+// seconds per km of pace) keeps the slider usable without being fiddly.
+//
+// The form collects 5k times because that's what runners tend to know off the
+// top of their head; the action divides by 5 to convert to pace before storing.
+const FIVE_K_MIN_SECONDS = 12 * 60; // 12:00 (= 2:24/km)
+const FIVE_K_MAX_SECONDS = 50 * 60; // 50:00 (= 10:00/km)
 const FIVE_K_STEP_SECONDS = 30;
-const FIVE_K_DEFAULT_RANGE: [number, number] = [22 * 60, 28 * 60]; // 22:00 – 28:00
+const FIVE_K_DEFAULT_RANGE: [number, number] = [
+  22 * 60 + 30, // 22:30 (= 4:30/km)
+  27 * 60 + 30, // 27:30 (= 5:30/km)
+];
 
 function formatMMSS(seconds: number): string {
   return `${Math.floor(seconds / 60)}:${String(seconds % 60).padStart(2, "0")}`;
