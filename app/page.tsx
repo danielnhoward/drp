@@ -6,8 +6,8 @@ import { requireCompleteUser } from "@/lib/users";
 export const dynamic = "force-dynamic";
 
 export default async function Home() {
-  await requireCompleteUser();
-  const nextRun = getNextRun();
+  const user = await requireCompleteUser();
+  const nextRun = getNextRun(user.id);
 
   return (
     <main className="mx-auto w-full max-w-2xl flex-1 px-4 py-6">
