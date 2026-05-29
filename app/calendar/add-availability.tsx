@@ -6,18 +6,15 @@ import MapLocationPicker from "../components/map-location-picker";
 import RangeSlider from "../components/range-slider";
 import { addAvailabilityAction, type AddAvailabilityState } from "./actions";
 
-// Plausible 5k-time range for the slider, in seconds. Lower = faster: roughly
-// elite at the bottom, easy/walk-jog at the top. 30-second granularity (= 6
-// seconds per km of pace) keeps the slider usable without being fiddly.
-//
-// The form collects 5k times because that's what runners tend to know off the
-// top of their head; the action divides by 5 to convert to pace before storing.
-const FIVE_K_MIN_SECONDS = 12 * 60; // 12:00 (= 2:24/km)
-const FIVE_K_MAX_SECONDS = 50 * 60; // 50:00 (= 10:00/km)
-const FIVE_K_STEP_SECONDS = 30;
-const FIVE_K_DEFAULT_RANGE: [number, number] = [
-  22 * 60 + 30, // 22:30 (= 4:30/km)
-  27 * 60 + 30, // 27:30 (= 5:30/km)
+// Plausible pace range for the slider, in seconds per kilometre. Lower =
+// faster: roughly elite at the bottom, easy/walk-jog at the top. 6-second
+// granularity keeps the slider usable without being fiddly.
+const PACE_MIN_SECONDS = 2 * 60 + 24; // 2:24/km
+const PACE_MAX_SECONDS = 10 * 60; // 10:00/km
+const PACE_STEP_SECONDS = 6;
+const PACE_DEFAULT_RANGE: [number, number] = [
+  4 * 60 + 30, // 4:30/km
+  5 * 60 + 30, // 5:30/km
 ];
 
 function formatMMSS(seconds: number): string {
@@ -96,13 +93,13 @@ function AvailabilityForm({ onClose }: { onClose: () => void }) {
     FormData
   >(addAvailabilityAction, {});
 
-  // Track the 5k-time range (in seconds) so we can show the bounds next to the
-  // label as the user drags either thumb. Both values are submitted with the
-  // form via hidden inputs inside the RangeSlider.
-  const [fiveKRange, setFiveKRange] = useState<[number, number]>(
-    FIVE_K_DEFAULT_RANGE,
+  // Track the pace range (in seconds per km) so we can show the bounds next to
+  // the label as the user drags either thumb. Both values are submitted with
+  // the form via hidden inputs inside the RangeSlider.
+  const [paceRange, setPaceRange] = useState<[number, number]>(
+    PACE_DEFAULT_RANGE,
   );
-  const [fiveKMinSeconds, fiveKMaxSeconds] = fiveKRange;
+  const [paceMinSeconds, paceMaxSeconds] = paceRange;
 
   // Close once the slot has been saved.
   useEffect(() => {
@@ -172,25 +169,25 @@ function AvailabilityForm({ onClose }: { onClose: () => void }) {
 
         <div className="flex flex-col gap-1.5">
           <span className="flex items-baseline justify-between text-sm font-medium text-zinc-600 dark:text-zinc-400">
-            <span>5k time range</span>
+            <span>Pace range (per km)</span>
             <span className="tabular-nums text-zinc-900 dark:text-zinc-100">
-              {formatMMSS(fiveKMinSeconds)} – {formatMMSS(fiveKMaxSeconds)}
+              {formatMMSS(paceMinSeconds)} – {formatMMSS(paceMaxSeconds)} /km
             </span>
           </span>
           <RangeSlider
-            min={FIVE_K_MIN_SECONDS}
-            max={FIVE_K_MAX_SECONDS}
-            step={FIVE_K_STEP_SECONDS}
-            values={fiveKRange}
-            onChange={setFiveKRange}
-            nameMin="fiveKMinSeconds"
-            nameMax="fiveKMaxSeconds"
-            ariaLabelMin="Fastest 5k time"
-            ariaLabelMax="Slowest 5k time"
+            min={PACE_MIN_SECONDS}
+            max={PACE_MAX_SECONDS}
+            step={PACE_STEP_SECONDS}
+            values={paceRange}
+            onChange={setPaceRange}
+            nameMin="paceMinSeconds"
+            nameMax="paceMaxSeconds"
+            ariaLabelMin="Fastest pace"
+            ariaLabelMax="Slowest pace"
           />
           <span className="flex justify-between text-xs text-zinc-400 dark:text-zinc-500">
-            <span>{formatMMSS(FIVE_K_MIN_SECONDS)}</span>
-            <span>{formatMMSS(FIVE_K_MAX_SECONDS)}</span>
+            <span>{formatMMSS(PACE_MIN_SECONDS)} /km</span>
+            <span>{formatMMSS(PACE_MAX_SECONDS)} /km</span>
           </span>
         </div>
 
