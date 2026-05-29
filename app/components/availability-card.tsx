@@ -87,7 +87,7 @@ const iconBase: SVGProps<SVGSVGElement> = {
   strokeLinejoin: "round",
 };
 
-function ClockIcon(props: SVGProps<SVGSVGElement>) {
+export function ClockIcon(props: SVGProps<SVGSVGElement>) {
   return (
     <svg {...iconBase} {...props}>
       <circle cx={12} cy={12} r={9} />
@@ -100,7 +100,7 @@ function formatMMSS(seconds: number): string {
   return `${Math.floor(seconds / 60)}:${String(seconds % 60).padStart(2, "0")}`;
 }
 
-function RouteIcon(props: SVGProps<SVGSVGElement>) {
+export function RouteIcon(props: SVGProps<SVGSVGElement>) {
   return (
     <svg {...iconBase} {...props}>
       <path d="M3 13c2.5-3 4.5-3 7 0s4.5 3 7 0" />
@@ -110,7 +110,7 @@ function RouteIcon(props: SVGProps<SVGSVGElement>) {
   );
 }
 
-function RunnerIcon(props: SVGProps<SVGSVGElement>) {
+export function RunnerIcon(props: SVGProps<SVGSVGElement>) {
   return (
     <svg {...iconBase} {...props}>
       <circle cx={15.5} cy={5} r={1.6} />
