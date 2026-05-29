@@ -44,6 +44,9 @@ export default async function LoginPage() {
         <h1 className="text-3xl font-semibold tracking-tight">
           {isFinishingProfile ? "Finish your profile" : "Sign in"}
         </h1>
+        <h1 className="text-2xl tracking-tight">
+          Hello Bob!
+        </h1>
         <p className="mt-2 text-sm text-zinc-600 dark:text-zinc-400">
           {isFinishingProfile
             ? "A few details are missing before you can start matching with runners."
