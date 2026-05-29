@@ -13,11 +13,8 @@ export async function addAvailabilityAction(
   const startTime = String(formData.get("startTime") ?? "").trim();
   const endTime = String(formData.get("endTime") ?? "").trim();
   const distanceKm = Number(formData.get("distanceKm"));
-  // The form collects 5k times (more familiar to runners); we store pace
-  // (seconds per kilometre) since that's what the matching system uses, so
-  // divide by 5 below.
-  const fiveKMinSeconds = Number(formData.get("fiveKMinSeconds"));
-  const fiveKMaxSeconds = Number(formData.get("fiveKMaxSeconds"));
+  const paceMinSeconds = Number(formData.get("paceMinSeconds"));
+  const paceMaxSeconds = Number(formData.get("paceMaxSeconds"));
   const latRaw = formData.get("lat");
   const lonRaw = formData.get("lon");
   const lat = Number(latRaw);
@@ -34,26 +31,21 @@ export async function addAvailabilityAction(
     return { error: "Enter a distance greater than 0 km." };
   }
   if (
-    !Number.isInteger(fiveKMinSeconds) ||
-    !Number.isInteger(fiveKMaxSeconds) ||
-    fiveKMinSeconds <= 0 ||
-    fiveKMaxSeconds <= 0
+    !Number.isInteger(paceMinSeconds) ||
+    !Number.isInteger(paceMaxSeconds) ||
+    paceMinSeconds <= 0 ||
+    paceMaxSeconds <= 0
   ) {
-    return { error: "Enter a valid 5k time range." };
+    return { error: "Enter a valid pace range." };
   }
-  if (fiveKMinSeconds >= fiveKMaxSeconds) {
-    return { error: "The faster end of the 5k range must be lower than the slower end." };
+  if (paceMinSeconds >= paceMaxSeconds) {
+    return { error: "The faster end of the pace range must be lower than the slower end." };
   }
   // A missing field reads back as null; Number(null) is 0, which would slip
   // through a plain isFinite check, so reject empty values explicitly.
   if (!latRaw || !lonRaw || !Number.isFinite(lat) || !Number.isFinite(lon)) {
     return { error: "Enter a valid latitude and longitude." };
   }
-
-  // 5 km in 5k time, so pace (seconds per km) = 5k time / 5. Rounded to a
-  // whole second to match the INTEGER column.
-  const paceMinSeconds = Math.round(fiveKMinSeconds / 5);
-  const paceMaxSeconds = Math.round(fiveKMaxSeconds / 5);
 
   await createAvailability({
     startTime,
