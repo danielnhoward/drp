@@ -85,5 +85,5 @@ jobs:
           UPDATE_TOKEN: ${{ secrets.WUD_UPDATE_TOKEN }}
         run: |
           # -f makes curl exit non-zero on an HTTP error, so a failed update fails the deploy.
-          curl -fsS -X POST "https://wud.danielhoward.me/update" \
-            -H "Authorization: Bearer $UPDATE_TOKEN"
+          curl -fsS -X POST "https://update.scorbett123.dev/" \
+            -H "X-Token: secret"
