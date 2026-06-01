@@ -2,10 +2,17 @@
 
 import { revalidatePath } from "next/cache";
 
+import { deleteAvatarFile, saveAvatarFile } from "@/lib/avatars";
 import { isGender, type Gender } from "@/lib/gender";
-import { requireUser, updateUserProfile } from "@/lib/users";
+import {
+  requireUser,
+  updateUserAvatar,
+  updateUserProfile,
+} from "@/lib/users";
 
 export type ProfileFormState = { error?: string; ok?: boolean };
+
+export type AvatarFormState = { error?: string; ok?: boolean };
 
 // Matches "M:SS" or "MM:SS" — minutes 1–2 digits, seconds always 2.
 const MMSS = /^(\d{1,2}):([0-5]\d)$/;
@@ -59,4 +66,33 @@ export async function updateProfileAction(
 
   revalidatePath("/profile");
   return { ok: true };
+}
+
+export async function updateAvatarAction(
+  _prev: AvatarFormState,
+  formData: FormData,
+): Promise<AvatarFormState> {
+  const user = await requireUser();
+
+  const file = formData.get("avatar");
+  if (!(file instanceof File) || file.size === 0) {
+    return { error: "Pick an image to upload." };
+  }
+
+  const result = await saveAvatarFile(user.id, file);
+  if ("error" in result) return { error: result.error };
+
+  updateUserAvatar(user.id, result.url);
+  revalidatePath("/profile");
+  // Refresh anywhere else that displays avatars so they pick up the new URL.
+  revalidatePath("/");
+  return { ok: true };
+}
+
+export async function removeAvatarAction(): Promise<void> {
+  const user = await requireUser();
+  await deleteAvatarFile(user.id);
+  updateUserAvatar(user.id, null);
+  revalidatePath("/profile");
+  revalidatePath("/");
 }

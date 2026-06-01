@@ -108,6 +108,11 @@ export function createUser(input: NewUser): User {
   return rowToUser(row);
 }
 
+/** Sets or clears the user's avatar URL. */
+export function updateUserAvatar(userId: number, avatar: string | null): void {
+  db.prepare(`UPDATE users SET avatar = ? WHERE id = ?`).run(avatar, userId);
+}
+
 /** Persists user-editable profile fields. */
 export function updateUserProfile(userId: number, fields: ProfileUpdate): void {
   getDb().prepare(

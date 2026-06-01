@@ -21,7 +21,11 @@ const PUBLIC_ROUTES = new Set(["/login", "/admin"]);
 function isPublic(pathname: string): boolean {
   if (PUBLIC_ROUTES.has(pathname)) return true;
   // Treat nested admin routes (e.g. /admin/anything) as public too.
-  return pathname.startsWith("/admin/");
+  if (pathname.startsWith("/admin/")) return true;
+  // Avatar files are public so next/image's internal optimizer fetch (which
+  // doesn't forward the session cookie) can load them; they're also already
+  // exposed in shared views like the run card.
+  return pathname.startsWith("/avatars/");
 }
 
 function unauthorized(): NextResponse {

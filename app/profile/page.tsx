@@ -1,6 +1,7 @@
 import { isGender } from "@/lib/gender";
 import { requireCompleteUser } from "@/lib/users";
 import { logoutAction } from "../login/actions";
+import AvatarForm from "./avatar-form";
 import ProfileForm from "./profile-form";
 
 // Reads cookies, so it can't be rendered statically.
@@ -27,6 +28,8 @@ export default async function ProfilePage() {
           {user.email}
         </p>
       </header>
+
+      <AvatarForm name={user.name} initialAvatar={user.avatar} />
 
       <ProfileForm
         initialName={user.name}
