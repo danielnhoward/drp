@@ -1,6 +1,18 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 
+const BASIC_AUTH_USERNAME = process.env.BASIC_AUTH_USERNAME;
+const BASIC_AUTH_PASSWORD = process.env.BASIC_AUTH_PASSWORD;
+
+// Optional bypass key: if `BASIC_AUTH_BYPASS_KEY` is set, a matching value
+// supplied as a query param (name `BASIC_AUTH_BYPASS_PARAM` or `access_key`
+// by default) will set a long-lived cookie so subsequent requests don't need
+// the query param. This allows QR codes to grant temporary access.
+const BASIC_AUTH_BYPASS_KEY = process.env.BASIC_AUTH_BYPASS_KEY;
+const BASIC_AUTH_BYPASS_PARAM = process.env.BASIC_AUTH_BYPASS_PARAM ?? "access_key";
+const BASIC_AUTH_BYPASS_COOKIE = process.env.BASIC_AUTH_BYPASS_COOKIE ?? "bypass_key";
+const BASIC_AUTH_BYPASS_MAX_AGE = Number(process.env.BASIC_AUTH_BYPASS_MAX_AGE ?? 1 * 60 * 60);
+
 // Routes that don't require a session. Everything else gets redirected to
 // /login when the session cookie is missing. The admin page is intentionally
 // open so it can be used to recover access by impersonating any account.
@@ -12,7 +24,72 @@ function isPublic(pathname: string): boolean {
   return pathname.startsWith("/admin/");
 }
 
+function unauthorized(): NextResponse {
+  return new NextResponse("Authentication required.", {
+    status: 401,
+    headers: {
+      "WWW-Authenticate": 'Basic realm="Protected area", charset="UTF-8"',
+    },
+  });
+}
+
+function hasValidBasicAuth(request: NextRequest): boolean {
+  if (!BASIC_AUTH_USERNAME || !BASIC_AUTH_PASSWORD) return true;
+
+  const authHeader = request.headers.get("authorization");
+  if (!authHeader?.startsWith("Basic ")) return false;
+
+  const encodedCredentials = authHeader.slice("Basic ".length);
+
+  try {
+    const credentials = Buffer.from(encodedCredentials, "base64")
+      .toString("utf8")
+      .split(":");
+
+    const username = credentials.shift() ?? "";
+    const password = credentials.join(":");
+
+    return username === BASIC_AUTH_USERNAME && password === BASIC_AUTH_PASSWORD;
+  } catch {
+    return false;
+  }
+}
+
+function hasValidBypassCookie(request: NextRequest): boolean {
+  if (!BASIC_AUTH_BYPASS_KEY) return false;
+  const cookie = request.cookies.get(BASIC_AUTH_BYPASS_COOKIE)?.value;
+  if (!cookie) return false;
+  return cookie === BASIC_AUTH_BYPASS_KEY;
+}
+
 export function proxy(request: NextRequest) {
+  // If a bypass key is present in the query params and matches the configured
+  // key, set a cookie and redirect to the same URL without the param so the
+  // secret isn't visible in logs or the address bar.
+  try {
+    const url = new URL(request.url);
+    const provided = url.searchParams.get(BASIC_AUTH_BYPASS_PARAM);
+    if (BASIC_AUTH_BYPASS_KEY && provided && provided === BASIC_AUTH_BYPASS_KEY) {
+      url.searchParams.delete(BASIC_AUTH_BYPASS_PARAM);
+      const res = NextResponse.redirect(url);
+      const parts = [
+        `${BASIC_AUTH_BYPASS_COOKIE}=${encodeURIComponent(BASIC_AUTH_BYPASS_KEY)}`,
+        `Path=/`,
+        `Max-Age=${BASIC_AUTH_BYPASS_MAX_AGE}`,
+        `SameSite=Lax`,
+      ];
+      if (process.env.NODE_ENV === "production") parts.push("Secure");
+      parts.push("HttpOnly");
+      res.headers.append("Set-Cookie", parts.join("; "));
+      return res;
+    }
+  } catch {
+    // ignore URL parse errors and continue to auth checks
+  }
+
+  // Allow bypass cookie as alternative to Basic Auth
+  if (!hasValidBypassCookie(request) && !hasValidBasicAuth(request)) return unauthorized();
+
   const { pathname } = request.nextUrl;
 
   if (isPublic(pathname)) return NextResponse.next();
