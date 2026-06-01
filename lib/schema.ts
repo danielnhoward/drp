@@ -23,6 +23,7 @@ CREATE TABLE IF NOT EXISTS users (
 
 CREATE TABLE IF NOT EXISTS runs (
   id          INTEGER PRIMARY KEY AUTOINCREMENT,
+  date        TEXT,                     -- ISO yyyy-mm-dd; nullable until the matching system sets it
   time        TEXT NOT NULL,            -- start time of day, e.g. "10:00"
   distance_km REAL NOT NULL,
   meet_at     TEXT NOT NULL,            -- meeting point address
@@ -47,6 +48,7 @@ CREATE TABLE IF NOT EXISTS run_participants (
 CREATE TABLE IF NOT EXISTS availability (
   id                  INTEGER PRIMARY KEY AUTOINCREMENT,
   user_id             INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  date                TEXT NOT NULL,            -- ISO yyyy-mm-dd, the day this slot applies to
   start_time          TEXT NOT NULL,            -- start of the window, e.g. "10:00"
   end_time            TEXT NOT NULL,            -- end of the window, e.g. "13:00"
   distance_km         REAL NOT NULL,
@@ -78,26 +80,44 @@ export type User = {
 // is a no-op when the table is already there, so new columns wouldn't appear
 // on an existing database without an explicit ALTER. Each entry is applied
 // idempotently in initSchema by checking PRAGMA table_info first.
+//
+// Columns are added nullable here even where the CREATE TABLE above declares
+// them NOT NULL: SQLite can't ALTER ADD a NOT NULL column without a default, so
+// legacy rows may hold NULL until backfilled (see the date_of_birth note above).
 const USER_COLUMN_MIGRATIONS: ReadonlyArray<[string, string]> = [
   ["date_of_birth", "TEXT"],
   ["gender", "TEXT"],
   ["preferred_pace_seconds", "INTEGER"],
 ];
 
-function migrateUserColumns(connection: DatabaseSync): void {
+const AVAILABILITY_COLUMN_MIGRATIONS: ReadonlyArray<[string, string]> = [
+  ["date", "TEXT"],
+];
+
+const RUN_COLUMN_MIGRATIONS: ReadonlyArray<[string, string]> = [["date", "TEXT"]];
+
+// Adds any columns from `migrations` the table doesn't already have. The table
+// name is a hardcoded constant (never user input), so interpolating it is safe.
+function addMissingColumns(
+  connection: DatabaseSync,
+  table: string,
+  migrations: ReadonlyArray<[string, string]>,
+): void {
   const existing = new Set(
-    (connection.prepare("PRAGMA table_info(users)").all() as { name: string }[]).map(
+    (connection.prepare(`PRAGMA table_info(${table})`).all() as { name: string }[]).map(
       (c) => c.name,
     ),
   );
-  for (const [name, type] of USER_COLUMN_MIGRATIONS) {
+  for (const [name, type] of migrations) {
     if (!existing.has(name)) {
-      connection.exec(`ALTER TABLE users ADD COLUMN ${name} ${type}`);
+      connection.exec(`ALTER TABLE ${table} ADD COLUMN ${name} ${type}`);
     }
   }
 }
 
 export function initSchema(connection: DatabaseSync): void {
   connection.exec(SCHEMA);
-  migrateUserColumns(connection);
+  addMissingColumns(connection, "users", USER_COLUMN_MIGRATIONS);
+  addMissingColumns(connection, "availability", AVAILABILITY_COLUMN_MIGRATIONS);
+  addMissingColumns(connection, "runs", RUN_COLUMN_MIGRATIONS);
 }

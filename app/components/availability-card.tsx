@@ -3,6 +3,7 @@ import Link from "next/link";
 
 import type { Availability } from "@/lib/availability";
 import { deleteAvailabilityAction } from "@/app/calendar/actions";
+import { formatDate } from "@/lib/format-date";
 import RunMap from "./run-map";
 
 export default function AvailabilityCard({ slot }: { slot: Availability }) {
@@ -11,6 +12,9 @@ export default function AvailabilityCard({ slot }: { slot: Availability }) {
       <div className="flex items-start gap-3">
         {/* Left: the slot details. */}
         <dl className="flex min-w-0 flex-1 flex-col gap-2 text-base">
+          <Detail Icon={CalendarIcon} label="Date">
+            {formatDate(slot.date)}
+          </Detail>
           <Detail Icon={ClockIcon} label="Availability">
             {slot.startTime} – {slot.endTime}
           </Detail>
@@ -85,6 +89,15 @@ const iconBase: SVGProps<SVGSVGElement> = {
   strokeLinecap: "round",
   strokeLinejoin: "round",
 };
+
+export function CalendarIcon(props: SVGProps<SVGSVGElement>) {
+  return (
+    <svg {...iconBase} {...props}>
+      <rect x={3} y={4.5} width={18} height={16} rx={2} />
+      <path d="M3 9h18M8 3v3M16 3v3" />
+    </svg>
+  );
+}
 
 export function ClockIcon(props: SVGProps<SVGSVGElement>) {
   return (

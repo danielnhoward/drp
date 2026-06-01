@@ -3,6 +3,7 @@ import type { SVGProps } from "react";
 import { listMyAvailability } from "@/lib/availability";
 import { requireCompleteUser } from "@/lib/users";
 import AvailabilityCard, {
+  CalendarIcon,
   ClockIcon,
   RouteIcon,
   RunnerIcon,
@@ -13,6 +14,7 @@ const KEY_ITEMS: {
   Icon: (props: SVGProps<SVGSVGElement>) => React.ReactElement;
   label: string;
 }[] = [
+  { Icon: CalendarIcon, label: "Date" },
   { Icon: ClockIcon, label: "Availability window" },
   { Icon: RouteIcon, label: "Distance" },
   { Icon: RunnerIcon, label: "Pace per km" },
