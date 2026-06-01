@@ -1,10 +1,14 @@
 import "server-only";
 
 import { getDb } from "./db";
+import { isoDateInDays, isoToday } from "./format-date";
 import { requireUser } from "./users";
 
 export type Availability = {
   id: number;
+  /** ISO date (yyyy-mm-dd) the slot applies to. Always populated: legacy rows
+   *  created before the date column get a dummy fallback in listMyAvailability. */
+  date: string;
   /** Start of the window, e.g. "10:00". */
   startTime: string;
   /** End of the window, e.g. "13:00". */
@@ -25,6 +29,7 @@ export type NewAvailability = Omit<Availability, "id">;
 // Row shape as returned by SQLite (snake_case columns).
 type AvailabilityRow = {
   id: number;
+  date: string | null;
   start_time: string;
   end_time: string;
   distance_km: number;
@@ -44,6 +49,7 @@ async function currentUserId(): Promise<number> {
 // slots are being created. Guarded by a process-level flag (not just an empty
 // check) so deleting your last slot doesn't make it reappear on the next load.
 const SEED: NewAvailability = {
+  date: isoDateInDays(2), // a couple of days out so it isn't in the past
   startTime: "10:00",
   endTime: "13:00",
   distanceKm: 5,
@@ -70,10 +76,11 @@ function ensureSeeded(userId: number): void {
 function insertAvailability(userId: number, input: NewAvailability): void {
   getDb().prepare(
     `INSERT INTO availability
-       (user_id, start_time, end_time, distance_km, pace_min_seconds, pace_max_seconds, lat, lon)
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+       (user_id, date, start_time, end_time, distance_km, pace_min_seconds, pace_max_seconds, lat, lon)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
   ).run(
     userId,
+    input.date,
     input.startTime,
     input.endTime,
     input.distanceKm,
@@ -91,15 +98,17 @@ export async function listMyAvailability(): Promise<Availability[]> {
 
   const rows = getDb()
     .prepare(
-      `SELECT id, start_time, end_time, distance_km, pace_min_seconds, pace_max_seconds, lat, lon
+      `SELECT id, date, start_time, end_time, distance_km, pace_min_seconds, pace_max_seconds, lat, lon
        FROM availability
        WHERE user_id = ?
-       ORDER BY start_time ASC, id ASC`,
+       ORDER BY date IS NULL, date ASC, start_time ASC, id ASC`,
     )
     .all(userId) as AvailabilityRow[];
 
   return rows.map((row) => ({
     id: row.id,
+    // Dummy fallback for legacy rows created before the date column existed.
+    date: row.date ?? isoToday(),
     startTime: row.start_time,
     endTime: row.end_time,
     distanceKm: row.distance_km,

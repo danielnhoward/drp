@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 
 import { createAvailability, deleteAvailability } from "@/lib/availability";
+import { isoToday } from "@/lib/format-date";
 
 export type AddAvailabilityState = { error?: string; ok?: boolean };
 
@@ -10,6 +11,7 @@ export async function addAvailabilityAction(
   _prev: AddAvailabilityState,
   formData: FormData,
 ): Promise<AddAvailabilityState> {
+  const date = String(formData.get("date") ?? "").trim();
   const startTime = String(formData.get("startTime") ?? "").trim();
   const endTime = String(formData.get("endTime") ?? "").trim();
   const distanceKm = Number(formData.get("distanceKm"));
@@ -20,6 +22,16 @@ export async function addAvailabilityAction(
   const lat = Number(latRaw);
   const lon = Number(lonRaw);
 
+  if (!date) {
+    return { error: "Pick a date." };
+  }
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) {
+    return { error: "Enter a valid date." };
+  }
+  // ISO yyyy-mm-dd strings compare correctly lexicographically.
+  if (date < isoToday()) {
+    return { error: "The date can't be in the past." };
+  }
   if (!startTime || !endTime) {
     return { error: "Pick both a start and end time." };
   }
@@ -48,6 +60,7 @@ export async function addAvailabilityAction(
   }
 
   await createAvailability({
+    date,
     startTime,
     endTime,
     distanceKm,

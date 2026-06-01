@@ -1,6 +1,7 @@
 import Image from "next/image";
 import RunMap from "./run-map";
 import type { Run } from "@/lib/runs";
+import { formatDate } from "@/lib/format-date";
 
 export default function RunCard({ run }: { run: Run }) {
   return (
@@ -8,6 +9,7 @@ export default function RunCard({ run }: { run: Run }) {
       <div className="flex flex-col gap-4 sm:flex-row">
         {/* Left column: the run details. */}
         <dl className="flex flex-1 flex-col gap-2 text-base">
+          <Detail label="Date">{formatDate(run.date)}</Detail>
           <Detail label="Time">{run.time}</Detail>
           <Detail label="Distance">{run.distanceKm} km</Detail>
           <div>

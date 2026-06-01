@@ -2,6 +2,7 @@
 
 import { useActionState, useEffect, useState } from "react";
 
+import { isoToday } from "@/lib/format-date";
 import MapLocationPicker from "../components/map-location-picker";
 import RangeSlider from "../components/range-slider";
 import { addAvailabilityAction, type AddAvailabilityState } from "./actions";
@@ -101,6 +102,9 @@ function AvailabilityForm({ onClose }: { onClose: () => void }) {
   );
   const [paceMinSeconds, paceMaxSeconds] = paceRange;
 
+  // Default the date to today and block earlier dates in the picker.
+  const today = isoToday();
+
   // Close once the slot has been saved.
   useEffect(() => {
     if (state.ok) onClose();
@@ -134,6 +138,17 @@ function AvailabilityForm({ onClose }: { onClose: () => void }) {
         action={formAction}
         className="flex flex-col gap-4 overflow-y-auto p-4"
       >
+        <Field label="Date">
+          <input
+            className={fieldClass}
+            type="date"
+            name="date"
+            defaultValue={today}
+            min={today}
+            required
+          />
+        </Field>
+
         <div className="grid grid-cols-2 gap-3">
           <Field label="From">
             <input
