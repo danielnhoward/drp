@@ -24,7 +24,11 @@ export type Runner = {
   hobbies: string | null;
   /** Optional free text: other interests / conversation starters, or null. */
   interests: string | null;
+  /** URLs of the user's most recent run photos, newest first. */
+  recentRunPhotos: string[];
 };
+
+type RunnerRow = Omit<Runner, "recentRunPhotos">;
 
 export type Run = {
   id: number;
@@ -91,7 +95,7 @@ function partnersForRun(runId: number, currentUserId: number): Runner[] {
        WHERE run_participants.run_id = ? AND run_participants.user_id != ?
        ORDER BY run_participants.position ASC`,
     )
-    .all(runId, currentUserId) as Runner[];
+    .all(runId, currentUserId) as RunnerRow[];
   // node:sqlite rows have a null prototype, which can't cross the
   // Server→Client Component boundary — copy each into a plain object.
   return rows.map((row) => ({
@@ -104,7 +108,27 @@ function partnersForRun(runId: number, currentUserId: number): Runner[] {
     whyRun: row.whyRun,
     hobbies: row.hobbies,
     interests: row.interests,
+    recentRunPhotos: recentRunPhotosForRunner(row.id),
   }));
+}
+
+const RECENT_RUN_PHOTO_LIMIT = 3;
+
+function recentRunPhotosForRunner(userId: number): string[] {
+  const rows = getDb()
+    .prepare(
+      `SELECT runs.photo AS photo
+       FROM run_participants
+       JOIN runs ON runs.id = run_participants.run_id
+       WHERE run_participants.user_id = ?
+         AND run_participants.visible = 0
+         AND runs.photo IS NOT NULL
+       ORDER BY runs.date DESC, runs.id DESC
+       LIMIT ?`,
+    )
+    .all(userId, RECENT_RUN_PHOTO_LIMIT) as { photo: string }[];
+
+  return rows.map((row) => row.photo);
 }
 
 /**
