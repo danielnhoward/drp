@@ -34,6 +34,7 @@ CREATE TABLE IF NOT EXISTS runs (
   meet_at     TEXT NOT NULL,            -- meeting point address
   lat         REAL NOT NULL,
   lon         REAL NOT NULL,
+  photo       TEXT,                     -- URL of the run's group photo, set when the run is finished
   created_at  TEXT NOT NULL DEFAULT (datetime('now'))
 );
 
@@ -109,7 +110,10 @@ const AVAILABILITY_COLUMN_MIGRATIONS: ReadonlyArray<[string, string]> = [
   ["date", "TEXT"],
 ];
 
-const RUN_COLUMN_MIGRATIONS: ReadonlyArray<[string, string]> = [["date", "TEXT"]];
+const RUN_COLUMN_MIGRATIONS: ReadonlyArray<[string, string]> = [
+  ["date", "TEXT"],
+  ["photo", "TEXT"],
+];
 
 const RUN_PARTICIPANT_COLUMN_MIGRATIONS: ReadonlyArray<[string, string]> = [["visible", "INTEGER"]];
 
