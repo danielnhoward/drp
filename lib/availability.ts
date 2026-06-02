@@ -2,6 +2,7 @@ import "server-only";
 
 import { getDb } from "./db";
 import { isoDateInDays, isoToday } from "./format-date";
+import { recomputeRuns } from "./runs";
 import { requireUser } from "./users";
 
 export type Availability = {
@@ -70,10 +71,10 @@ function ensureSeeded(userId: number): void {
     .get() as { count: number };
   if (count > 0) return;
 
-  insertAvailability(userId, SEED);
+  createAvailabilityFor(userId, SEED);
 }
 
-function insertAvailability(userId: number, input: NewAvailability): void {
+export function createAvailabilityFor(userId: number, input: NewAvailability): void {
   getDb().prepare(
     `INSERT INTO availability
        (user_id, date, start_time, end_time, distance_km, pace_min_seconds, pace_max_seconds, lat, lon)
@@ -120,7 +121,9 @@ export async function listMyAvailability(): Promise<Availability[]> {
 }
 
 export async function createAvailability(input: NewAvailability): Promise<void> {
-  insertAvailability(await currentUserId(), input);
+  createAvailabilityFor(await currentUserId(), input);
+  // Re-match everyone now that the pool of availability has changed.
+  await recomputeRuns();
 }
 
 /** Deletes a slot, scoped to the current user so you can't remove someone else's. */
@@ -129,4 +132,6 @@ export async function deleteAvailability(id: number): Promise<void> {
     id,
     await currentUserId(),
   );
+  // Re-match everyone now that the pool of availability has changed.
+  await recomputeRuns();
 }
