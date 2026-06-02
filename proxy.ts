@@ -22,10 +22,10 @@ function isPublic(pathname: string): boolean {
   if (PUBLIC_ROUTES.has(pathname)) return true;
   // Treat nested admin routes (e.g. /admin/anything) as public too.
   if (pathname.startsWith("/admin/")) return true;
-  // Avatar files are public so next/image's internal optimizer fetch (which
-  // doesn't forward the session cookie) can load them; they're also already
-  // exposed in shared views like the run card.
-  return pathname.startsWith("/avatars/");
+  // Avatar and run-photo files are public so next/image's internal optimizer
+  // fetch (which doesn't forward the session cookie) can load them; both are
+  // already exposed in shared views like the run card and profile popup.
+  return pathname.startsWith("/avatars/") || pathname.startsWith("/run-photos/");
 }
 
 function unauthorized(): NextResponse {
