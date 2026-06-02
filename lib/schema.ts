@@ -43,6 +43,7 @@ CREATE TABLE IF NOT EXISTS run_participants (
   run_id   INTEGER NOT NULL REFERENCES runs(id) ON DELETE CASCADE,
   user_id  INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
   position INTEGER NOT NULL DEFAULT 0, -- preserves display order
+  visible  INTEGER NOT NULL DEFAULT 1,
   PRIMARY KEY (run_id, user_id)
 );
 
@@ -110,6 +111,8 @@ const AVAILABILITY_COLUMN_MIGRATIONS: ReadonlyArray<[string, string]> = [
 
 const RUN_COLUMN_MIGRATIONS: ReadonlyArray<[string, string]> = [["date", "TEXT"]];
 
+const RUN_PARTICIPANT_COLUMN_MIGRATIONS: ReadonlyArray<[string, string]> = [["visible", "INTEGER"]];
+
 // Adds any columns from `migrations` the table doesn't already have. The table
 // name is a hardcoded constant (never user input), so interpolating it is safe.
 function addMissingColumns(
@@ -134,4 +137,5 @@ export function initSchema(connection: DatabaseSync): void {
   addMissingColumns(connection, "users", USER_COLUMN_MIGRATIONS);
   addMissingColumns(connection, "availability", AVAILABILITY_COLUMN_MIGRATIONS);
   addMissingColumns(connection, "runs", RUN_COLUMN_MIGRATIONS);
+  addMissingColumns(connection, "run_participants", RUN_PARTICIPANT_COLUMN_MIGRATIONS);
 }
