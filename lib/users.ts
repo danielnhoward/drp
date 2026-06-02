@@ -88,6 +88,14 @@ export function findUserByEmail(email: string): User | null {
   return row ? rowToUser(row) : null;
 }
 
+/** Looks up a user by id. Returns null if there's no such account. */
+export function findUserById(id: number): User | null {
+  const row = getDb()
+    .prepare(`SELECT ${USER_COLUMNS} FROM users WHERE id = ?`)
+    .get(id) as UserRow | undefined;
+  return row ? rowToUser(row) : null;
+}
+
 /** Creates a brand-new user with all required profile fields supplied. */
 export function createUser(input: NewUser): User {
   const { lastInsertRowid } = getDb()

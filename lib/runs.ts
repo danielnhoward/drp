@@ -4,6 +4,8 @@ import { getDb } from "./db";
 import { isoDateInDays } from "./format-date";
 
 export type Runner = {
+  /** The user's id, used to link to their runner profile. */
+  id: number;
   /** Display name, from the users table. */
   name: string;
   /** URL of the user's profile picture, or null if they have none. */
@@ -45,7 +47,7 @@ type RunRow = {
 function partnersForRun(runId: number, currentUserId: number): Runner[] {
   return getDb()
     .prepare(
-      `SELECT users.name AS name, users.avatar AS avatar
+      `SELECT users.id AS id, users.name AS name, users.avatar AS avatar
        FROM run_participants
        JOIN users ON users.id = run_participants.user_id
        WHERE run_participants.run_id = ? AND run_participants.user_id != ?
