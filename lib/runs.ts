@@ -40,6 +40,8 @@ export type Run = {
   /** Map centre used to render the embedded map. */
   lat: number;
   lon: number;
+  /** URL of the run's group photo, or null until one is uploaded. */
+  photo: string | null;
 };
 
 // Row shapes as returned by SQLite (snake_case columns).
@@ -51,6 +53,7 @@ type RunRow = {
   meet_at: string;
   lat: number;
   lon: number;
+  photo: string | null;
 };
 
 // Returns everyone in the run *except* the current user — the home page header
@@ -93,7 +96,7 @@ function partnersForRun(runId: number, currentUserId: number): Runner[] {
 export function getNextRun(userId: number): Run | null {
   const row = getDb()
     .prepare(
-      `SELECT runs.id, runs.date, runs.time, runs.distance_km, runs.meet_at, runs.lat, runs.lon
+      `SELECT runs.id, runs.date, runs.time, runs.distance_km, runs.meet_at, runs.lat, runs.lon, runs.photo
        FROM runs
        JOIN run_participants ON run_participants.run_id = runs.id
        WHERE run_participants.user_id = ?
@@ -113,8 +116,14 @@ export function getNextRun(userId: number): Run | null {
     meetAt: row.meet_at,
     lat: row.lat,
     lon: row.lon,
+    photo: row.photo,
     partners: partnersForRun(row.id, userId),
   };
+}
+
+/** Stores (or clears, with null) the URL of a run's group photo. */
+export function updateRunPhoto(runId: number, photo: string | null): void {
+  getDb().prepare(`UPDATE runs SET photo = ? WHERE id = ?`).run(photo, runId);
 }
 
 export async function finishRun(runId: number, userId: number): Promise<void> {
