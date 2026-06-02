@@ -222,8 +222,7 @@ export function getRunsWithin24Hours(userId: number): Run[] {
        JOIN run_participants ON run_participants.run_id = runs.id
        WHERE run_participants.user_id = ?
          AND (run_participants.visible IS NULL OR run_participants.visible = 1)
-       ORDER BY runs.date IS NULL, runs.date ASC, runs.time ASC, runs.id ASC
-       LIMIT 1`,
+       ORDER BY runs.date IS NULL, runs.date ASC, runs.time ASC, runs.id ASC`,
     )
     .all(userId) as RunRow[];
 
