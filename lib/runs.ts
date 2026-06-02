@@ -62,6 +62,7 @@ export function getNextRun(userId: number): Run | null {
        FROM runs
        JOIN run_participants ON run_participants.run_id = runs.id
        WHERE run_participants.user_id = ?
+         AND (run_participants.visible IS NULL OR run_participants.visible = 1)
        ORDER BY runs.date IS NULL, runs.date ASC, runs.time ASC, runs.id ASC
        LIMIT 1`,
     )
@@ -79,4 +80,10 @@ export function getNextRun(userId: number): Run | null {
     lon: row.lon,
     partners: partnersForRun(row.id, userId),
   };
+}
+
+export async function finishRun(runId: number, userId: number): Promise<void> {
+  getDb()
+    .prepare(`UPDATE run_participants SET visible = 0 WHERE run_id = ? AND user_id = ?`)
+    .run(runId, userId);
 }

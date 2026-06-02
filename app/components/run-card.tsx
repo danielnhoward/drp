@@ -1,5 +1,6 @@
 import Image from "next/image";
 import RunMap from "./run-map";
+import FinishRun from "./finish-run";
 import type { Run } from "@/lib/runs";
 import { formatDate } from "@/lib/format-date";
 
@@ -50,6 +51,9 @@ export default function RunCard({ run }: { run: Run }) {
           </div>
 
           <RunMap lat={run.lat} lon={run.lon} label={run.meetAt} />
+          <div className="flex justify-end">
+            <FinishRun runId={run.id} />
+          </div>
         </div>
       </div>
     </div>
