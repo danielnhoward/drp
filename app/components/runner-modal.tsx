@@ -52,7 +52,7 @@ export default function RunnerModal({ runner }: { runner: Runner }) {
         type="button"
         onClick={() => setOpen(true)}
         aria-label={`View ${runner.name}'s profile`}
-        className="-mx-1 flex w-full items-center gap-2 rounded-lg px-1 py-0.5 hover:bg-zinc-50 dark:hover:bg-zinc-800"
+        className="-mx-1 flex w-full cursor-pointer items-center gap-2 rounded-lg px-1 py-0.5 hover:bg-zinc-50 dark:hover:bg-zinc-800"
       >
         <Avatar
           avatar={runner.avatar}
@@ -69,7 +69,7 @@ export default function RunnerModal({ runner }: { runner: Runner }) {
           role="dialog"
           aria-modal="true"
           aria-label={`${runner.name}'s profile`}
-          className="fixed inset-0 z-50 flex items-center justify-center p-4"
+           className="fixed inset-0 z-60 flex items-center justify-center p-4"
         >
           {/* Backdrop — click to dismiss. */}
           <button
