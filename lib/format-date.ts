@@ -16,6 +16,22 @@ export function formatDate(iso: string): string {
   });
 }
 
+/**
+ * Whole years between an ISO date of birth (yyyy-mm-dd) and today, in local
+ * time. Subtracts one from the year difference until the birthday has passed
+ * this year.
+ */
+export function ageFromDateOfBirth(iso: string): number {
+  const dob = new Date(`${iso}T00:00:00`);
+  const now = new Date();
+  let age = now.getFullYear() - dob.getFullYear();
+  const monthDiff = now.getMonth() - dob.getMonth();
+  if (monthDiff < 0 || (monthDiff === 0 && now.getDate() < dob.getDate())) {
+    age -= 1;
+  }
+  return age;
+}
+
 /** Today's date as an ISO string (yyyy-mm-dd), in the local time zone. */
 export function isoToday(): string {
   return isoDateInDays(0);

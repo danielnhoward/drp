@@ -1,5 +1,6 @@
-import Image from "next/image";
 import RunMap from "./run-map";
+import FinishRun from "./finish-run";
+import RunnerModal from "./runner-modal";
 import type { Run } from "@/lib/runs";
 import { formatDate } from "@/lib/format-date";
 
@@ -24,32 +25,17 @@ export default function RunCard({ run }: { run: Run }) {
             <p className="text-zinc-500 dark:text-zinc-400">Running with:</p>
             <ul className="mt-1.5 flex flex-col gap-2">
               {run.partners.map((partner) => (
-                <li key={partner.name} className="flex items-center gap-2">
-                  {partner.avatar ? (
-                    <Image
-                      src={partner.avatar}
-                      alt={`${partner.name}'s profile picture`}
-                      width={36}
-                      height={36}
-                      className="h-9 w-9 shrink-0 rounded-full border border-black/10 object-cover dark:border-white/15"
-                    />
-                  ) : (
-                    <span
-                      aria-hidden="true"
-                      className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-black/10 bg-zinc-100 text-sm font-semibold text-zinc-500 dark:border-white/15 dark:bg-zinc-800 dark:text-zinc-400"
-                    >
-                      {partner.name.charAt(0)}
-                    </span>
-                  )}
-                  <span className="truncate text-lg font-semibold tracking-tight">
-                    {partner.name}
-                  </span>
+                <li key={partner.id}>
+                  <RunnerModal runner={partner} />
                 </li>
               ))}
             </ul>
           </div>
 
           <RunMap lat={run.lat} lon={run.lon} label={run.meetAt} />
+          <div className="flex justify-end">
+            <FinishRun runId={run.id} />
+          </div>
         </div>
       </div>
     </div>

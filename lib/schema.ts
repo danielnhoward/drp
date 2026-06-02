@@ -18,6 +18,11 @@ CREATE TABLE IF NOT EXISTS users (
   date_of_birth          TEXT NOT NULL,                 -- ISO yyyy-mm-dd; age is derived
   gender                 TEXT NOT NULL,                 -- one of GENDERS in lib/gender.ts
   preferred_pace_seconds INTEGER NOT NULL,              -- typical comfortable pace, seconds per km
+  -- Optional, free-text "get to know me" fields. Never required: they exist so
+  -- runners can share more than bare stats and break the ice before a first run.
+  why_run                TEXT,                          -- why they like running with others
+  hobbies                TEXT,                          -- recent non-running hobbies
+  interests              TEXT,                          -- other interests / talking points
   created_at             TEXT NOT NULL DEFAULT (datetime('now'))
 );
 
@@ -38,6 +43,7 @@ CREATE TABLE IF NOT EXISTS run_participants (
   run_id   INTEGER NOT NULL REFERENCES runs(id) ON DELETE CASCADE,
   user_id  INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
   position INTEGER NOT NULL DEFAULT 0, -- preserves display order
+  visible  INTEGER NOT NULL DEFAULT 1,
   PRIMARY KEY (run_id, user_id)
 );
 
@@ -73,6 +79,12 @@ export type User = {
   gender: string | null;
   /** Typical comfortable pace, in seconds per kilometre, or null. */
   preferredPaceSeconds: number | null;
+  /** Optional free text: why they enjoy running with others, or null. */
+  whyRun: string | null;
+  /** Optional free text: recent non-running hobbies, or null. */
+  hobbies: string | null;
+  /** Optional free text: other interests / conversation starters, or null. */
+  interests: string | null;
   created_at: string;
 };
 
@@ -88,6 +100,9 @@ const USER_COLUMN_MIGRATIONS: ReadonlyArray<[string, string]> = [
   ["date_of_birth", "TEXT"],
   ["gender", "TEXT"],
   ["preferred_pace_seconds", "INTEGER"],
+  ["why_run", "TEXT"],
+  ["hobbies", "TEXT"],
+  ["interests", "TEXT"],
 ];
 
 const AVAILABILITY_COLUMN_MIGRATIONS: ReadonlyArray<[string, string]> = [
@@ -95,6 +110,8 @@ const AVAILABILITY_COLUMN_MIGRATIONS: ReadonlyArray<[string, string]> = [
 ];
 
 const RUN_COLUMN_MIGRATIONS: ReadonlyArray<[string, string]> = [["date", "TEXT"]];
+
+const RUN_PARTICIPANT_COLUMN_MIGRATIONS: ReadonlyArray<[string, string]> = [["visible", "INTEGER"]];
 
 // Adds any columns from `migrations` the table doesn't already have. The table
 // name is a hardcoded constant (never user input), so interpolating it is safe.
@@ -120,4 +137,5 @@ export function initSchema(connection: DatabaseSync): void {
   addMissingColumns(connection, "users", USER_COLUMN_MIGRATIONS);
   addMissingColumns(connection, "availability", AVAILABILITY_COLUMN_MIGRATIONS);
   addMissingColumns(connection, "runs", RUN_COLUMN_MIGRATIONS);
+  addMissingColumns(connection, "run_participants", RUN_PARTICIPANT_COLUMN_MIGRATIONS);
 }
