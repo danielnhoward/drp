@@ -4,10 +4,24 @@ import { getDb } from "./db";
 import { isoDateInDays } from "./format-date";
 
 export type Runner = {
+  /** The user's id. */
+  id: number;
   /** Display name, from the users table. */
   name: string;
   /** URL of the user's profile picture, or null if they have none. */
   avatar: string | null;
+  /** ISO date of birth (yyyy-mm-dd); age is derived for display. */
+  dateOfBirth: string;
+  /** One of the values in GENDERS (lib/gender.ts). */
+  gender: string;
+  /** Comfortable pace in seconds per kilometre. */
+  preferredPaceSeconds: number;
+  /** Optional free text: why they enjoy running with others, or null. */
+  whyRun: string | null;
+  /** Optional free text: recent non-running hobbies, or null. */
+  hobbies: string | null;
+  /** Optional free text: other interests / conversation starters, or null. */
+  interests: string | null;
 };
 
 export type Run = {
@@ -43,15 +57,36 @@ type RunRow = {
 // is "Next run:" and the partners list reads "Running with:", so showing the
 // viewer's own name there would be redundant.
 function partnersForRun(runId: number, currentUserId: number): Runner[] {
-  return getDb()
+  const rows = getDb()
     .prepare(
-      `SELECT users.name AS name, users.avatar AS avatar
+      `SELECT users.id AS id,
+              users.name AS name,
+              users.avatar AS avatar,
+              users.date_of_birth AS dateOfBirth,
+              users.gender AS gender,
+              users.preferred_pace_seconds AS preferredPaceSeconds,
+              users.why_run AS whyRun,
+              users.hobbies AS hobbies,
+              users.interests AS interests
        FROM run_participants
        JOIN users ON users.id = run_participants.user_id
        WHERE run_participants.run_id = ? AND run_participants.user_id != ?
        ORDER BY run_participants.position ASC`,
     )
     .all(runId, currentUserId) as Runner[];
+  // node:sqlite rows have a null prototype, which can't cross the
+  // Server→Client Component boundary — copy each into a plain object.
+  return rows.map((row) => ({
+    id: row.id,
+    name: row.name,
+    avatar: row.avatar,
+    dateOfBirth: row.dateOfBirth,
+    gender: row.gender,
+    preferredPaceSeconds: row.preferredPaceSeconds,
+    whyRun: row.whyRun,
+    hobbies: row.hobbies,
+    interests: row.interests,
+  }));
 }
 
 /** Returns the next upcoming run the given user is part of, or null. */

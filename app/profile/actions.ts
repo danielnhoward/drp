@@ -23,6 +23,24 @@ function parseMMSS(value: string): number | null {
   return Number(match[1]) * 60 + Number(match[2]);
 }
 
+// Optional free-text fields are capped so a single profile can't store an
+// unbounded blob. Generous enough for a few sentences each.
+const MAX_ABOUT_LENGTH = 500;
+
+// Trims an optional text field to null when blank. Returns the field's error
+// message if it exceeds the length cap, otherwise the cleaned value.
+function parseOptionalText(
+  value: string,
+  label: string,
+): { value: string | null } | { error: string } {
+  const trimmed = value.trim();
+  if (!trimmed) return { value: null };
+  if (trimmed.length > MAX_ABOUT_LENGTH) {
+    return { error: `Keep ${label} under ${MAX_ABOUT_LENGTH} characters.` };
+  }
+  return { value: trimmed };
+}
+
 export async function updateProfileAction(
   _prev: ProfileFormState,
   formData: FormData,
@@ -33,6 +51,9 @@ export async function updateProfileAction(
   const dateOfBirth = String(formData.get("dateOfBirth") ?? "").trim();
   const genderRaw = String(formData.get("gender") ?? "").trim();
   const fiveKRaw = String(formData.get("fiveKTime") ?? "").trim();
+  const whyRunRaw = String(formData.get("whyRun") ?? "");
+  const hobbiesRaw = String(formData.get("hobbies") ?? "");
+  const interestsRaw = String(formData.get("interests") ?? "");
 
   if (!name) return { error: "Enter your name." };
 
@@ -57,11 +78,21 @@ export async function updateProfileAction(
   // the availability form.
   const preferredPaceSeconds = Math.round(fiveK / 5);
 
+  const whyRun = parseOptionalText(whyRunRaw, "why you run with others");
+  if ("error" in whyRun) return { error: whyRun.error };
+  const hobbies = parseOptionalText(hobbiesRaw, "your hobbies");
+  if ("error" in hobbies) return { error: hobbies.error };
+  const interests = parseOptionalText(interestsRaw, "your interests");
+  if ("error" in interests) return { error: interests.error };
+
   updateUserProfile(user.id, {
     name,
     dateOfBirth,
     gender,
     preferredPaceSeconds,
+    whyRun: whyRun.value,
+    hobbies: hobbies.value,
+    interests: interests.value,
   });
 
   revalidatePath("/profile");
