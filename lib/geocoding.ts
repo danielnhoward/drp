@@ -1,7 +1,5 @@
 import "server-only";
 
-import { formatCoords } from "./matching";
-
 const NOMINATIM_BASE =
   "https://nominatim.openstreetmap.org/reverse";
 const USER_AGENT =
@@ -9,6 +7,10 @@ const USER_AGENT =
 
 // Round to 3 decimal places → ~111 m buckets, good enough for a meeting point.
 const CACHE_PRECISION = 3;
+
+function formatCoords(lat: number, lon: number): string {
+  return `${lat.toFixed(5)}, ${lon.toFixed(5)}`;
+}
 
 const cache = new Map<string, string>();
 let lastRequestMs = 0;

@@ -15,8 +15,6 @@ import {
 
 import { makeFakeAvailability } from "./harness";
 
-// Wraps makeFakeAvailability with a user id, producing the MatchableAvailability
-// shape computeRuns consumes. By default two of these are mutually compatible.
 function avail(
   userId: number,
   overrides: Partial<NewAvailability> = {},

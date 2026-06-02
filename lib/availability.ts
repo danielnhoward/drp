@@ -74,7 +74,6 @@ function ensureSeeded(userId: number): void {
   createAvailabilityFor(userId, SEED);
 }
 
-/** Inserts an availability slot for a specific user. */
 export function createAvailabilityFor(userId: number, input: NewAvailability): void {
   getDb().prepare(
     `INSERT INTO availability

@@ -12,7 +12,6 @@ describe("users data layer", () => {
     expect(alice.id).toBeGreaterThan(0);
     expect(bob.id).toBeGreaterThan(alice.id);
 
-    // Query back through the backend function (runs a SELECT internally).
     const listed = listUsers();
     expect(listed).toHaveLength(2);
     expect(listed.map((u) => u.email).sort()).toEqual([
@@ -20,7 +19,6 @@ describe("users data layer", () => {
       "bob@example.com",
     ]);
 
-    // Query back with a literal SELECT against the spun-up test database.
     const rows = getDb()
       .prepare("SELECT email, name FROM users ORDER BY id")
       .all() as { email: string; name: string }[];
