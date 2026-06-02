@@ -126,8 +126,49 @@ export function updateRunPhoto(runId: number, photo: string | null): void {
   getDb().prepare(`UPDATE runs SET photo = ? WHERE id = ?`).run(photo, runId);
 }
 
-export async function finishRun(runId: number, userId: number): Promise<void> {
+/** Whether the given user is one of the run's participants. */
+export function isRunParticipant(runId: number, userId: number): boolean {
+  const row = getDb()
+    .prepare(
+      `SELECT 1 FROM run_participants WHERE run_id = ? AND user_id = ? LIMIT 1`,
+    )
+    .get(runId, userId);
+  return row !== undefined;
+}
+
+/**
+ * Marks the user as finished with the run (hiding it from their home page) and
+ * reports whether they were the first participant to do so. The first finisher
+ * is the one prompted to add the run's group photo.
+ */
+export async function finishRun(
+  runId: number,
+  userId: number,
+): Promise<{ isFirstFinisher: boolean }> {
+  const db = getDb();
+  // Count *other* participants who have already finished, before marking this
+  // user, so exactly one finisher is ever flagged as first.
+  const { n } = db
+    .prepare(
+      `SELECT COUNT(*) AS n FROM run_participants
+       WHERE run_id = ? AND user_id != ? AND visible = 0`,
+    )
+    .get(runId, userId) as { n: number };
+  db.prepare(
+    `UPDATE run_participants SET visible = 0 WHERE run_id = ? AND user_id = ?`,
+  ).run(runId, userId);
+  return { isFirstFinisher: n === 0 };
+}
+
+/**
+ * Reverts a finish, putting the run back on the user's home page. Used when the
+ * first finisher declines to take the group photo: they're un-finished so the
+ * next participant to finish is asked for the photo instead.
+ */
+export async function unfinishRun(runId: number, userId: number): Promise<void> {
   getDb()
-    .prepare(`UPDATE run_participants SET visible = 0 WHERE run_id = ? AND user_id = ?`)
+    .prepare(
+      `UPDATE run_participants SET visible = 1 WHERE run_id = ? AND user_id = ?`,
+    )
     .run(runId, userId);
 }
