@@ -1,6 +1,5 @@
-import Image from "next/image";
-import Link from "next/link";
 import RunMap from "./run-map";
+import RunnerModal from "./runner-modal";
 import type { Run } from "@/lib/runs";
 import { formatDate } from "@/lib/format-date";
 
@@ -26,30 +25,7 @@ export default function RunCard({ run }: { run: Run }) {
             <ul className="mt-1.5 flex flex-col gap-2">
               {run.partners.map((partner) => (
                 <li key={partner.id}>
-                  <Link
-                    href={`/runners/${partner.id}`}
-                    className="flex items-center gap-2 rounded-lg -mx-1 px-1 py-0.5 hover:bg-zinc-50 dark:hover:bg-zinc-800"
-                  >
-                    {partner.avatar ? (
-                      <Image
-                        src={partner.avatar}
-                        alt={`${partner.name}'s profile picture`}
-                        width={36}
-                        height={36}
-                        className="h-9 w-9 shrink-0 rounded-full border border-black/10 object-cover dark:border-white/15"
-                      />
-                    ) : (
-                      <span
-                        aria-hidden="true"
-                        className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-black/10 bg-zinc-100 text-sm font-semibold text-zinc-500 dark:border-white/15 dark:bg-zinc-800 dark:text-zinc-400"
-                      >
-                        {partner.name.charAt(0)}
-                      </span>
-                    )}
-                    <span className="truncate text-lg font-semibold tracking-tight">
-                      {partner.name}
-                    </span>
-                  </Link>
+                  <RunnerModal runner={partner} />
                 </li>
               ))}
             </ul>

@@ -25,11 +25,14 @@ type UserRow = {
   date_of_birth: string | null;
   gender: string | null;
   preferred_pace_seconds: number | null;
+  why_run: string | null;
+  hobbies: string | null;
+  interests: string | null;
   created_at: string;
 };
 
 const USER_COLUMNS =
-  "id, email, name, avatar, date_of_birth, gender, preferred_pace_seconds, created_at";
+  "id, email, name, avatar, date_of_birth, gender, preferred_pace_seconds, why_run, hobbies, interests, created_at";
 
 function rowToUser(row: UserRow): User {
   return {
@@ -40,6 +43,9 @@ function rowToUser(row: UserRow): User {
     dateOfBirth: row.date_of_birth,
     gender: row.gender,
     preferredPaceSeconds: row.preferred_pace_seconds,
+    whyRun: row.why_run,
+    hobbies: row.hobbies,
+    interests: row.interests,
     created_at: row.created_at,
   };
 }
@@ -78,6 +84,13 @@ export type ProfileUpdate = {
   dateOfBirth: string;
   gender: Gender;
   preferredPaceSeconds: number;
+  // Optional get-to-know-me fields. Omit to leave them untouched is not
+  // supported here — they're written on every update; null clears the value.
+  // Callers that don't collect them (e.g. onboarding) may leave them undefined,
+  // which is treated as null.
+  whyRun?: string | null;
+  hobbies?: string | null;
+  interests?: string | null;
 };
 
 /** Looks up a user by email. Returns null if there's no such account. */
@@ -85,14 +98,6 @@ export function findUserByEmail(email: string): User | null {
   const row = getDb()
     .prepare(`SELECT ${USER_COLUMNS} FROM users WHERE email = ?`)
     .get(email) as UserRow | undefined;
-  return row ? rowToUser(row) : null;
-}
-
-/** Looks up a user by id. Returns null if there's no such account. */
-export function findUserById(id: number): User | null {
-  const row = getDb()
-    .prepare(`SELECT ${USER_COLUMNS} FROM users WHERE id = ?`)
-    .get(id) as UserRow | undefined;
   return row ? rowToUser(row) : null;
 }
 
@@ -128,13 +133,19 @@ export function updateUserProfile(userId: number, fields: ProfileUpdate): void {
         SET name = ?,
             date_of_birth = ?,
             gender = ?,
-            preferred_pace_seconds = ?
+            preferred_pace_seconds = ?,
+            why_run = ?,
+            hobbies = ?,
+            interests = ?
       WHERE id = ?`,
   ).run(
     fields.name,
     fields.dateOfBirth,
     fields.gender,
     fields.preferredPaceSeconds,
+    fields.whyRun ?? null,
+    fields.hobbies ?? null,
+    fields.interests ?? null,
     userId,
   );
 }

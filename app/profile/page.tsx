@@ -36,6 +36,9 @@ export default async function ProfilePage() {
         initialDateOfBirth={user.dateOfBirth}
         initialGender={gender}
         initialPreferredPaceSeconds={user.preferredPaceSeconds}
+        initialWhyRun={user.whyRun}
+        initialHobbies={user.hobbies}
+        initialInterests={user.interests}
       />
 
       <hr className="my-8 border-black/10 dark:border-white/15" />

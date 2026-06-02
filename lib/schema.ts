@@ -18,6 +18,11 @@ CREATE TABLE IF NOT EXISTS users (
   date_of_birth          TEXT NOT NULL,                 -- ISO yyyy-mm-dd; age is derived
   gender                 TEXT NOT NULL,                 -- one of GENDERS in lib/gender.ts
   preferred_pace_seconds INTEGER NOT NULL,              -- typical comfortable pace, seconds per km
+  -- Optional, free-text "get to know me" fields. Never required: they exist so
+  -- runners can share more than bare stats and break the ice before a first run.
+  why_run                TEXT,                          -- why they like running with others
+  hobbies                TEXT,                          -- recent non-running hobbies
+  interests              TEXT,                          -- other interests / talking points
   created_at             TEXT NOT NULL DEFAULT (datetime('now'))
 );
 
@@ -73,6 +78,12 @@ export type User = {
   gender: string | null;
   /** Typical comfortable pace, in seconds per kilometre, or null. */
   preferredPaceSeconds: number | null;
+  /** Optional free text: why they enjoy running with others, or null. */
+  whyRun: string | null;
+  /** Optional free text: recent non-running hobbies, or null. */
+  hobbies: string | null;
+  /** Optional free text: other interests / conversation starters, or null. */
+  interests: string | null;
   created_at: string;
 };
 
@@ -88,6 +99,9 @@ const USER_COLUMN_MIGRATIONS: ReadonlyArray<[string, string]> = [
   ["date_of_birth", "TEXT"],
   ["gender", "TEXT"],
   ["preferred_pace_seconds", "INTEGER"],
+  ["why_run", "TEXT"],
+  ["hobbies", "TEXT"],
+  ["interests", "TEXT"],
 ];
 
 const AVAILABILITY_COLUMN_MIGRATIONS: ReadonlyArray<[string, string]> = [
