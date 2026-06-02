@@ -1,5 +1,9 @@
 import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
 
+vi.mock("@/lib/geocoding", () => ({
+  reverseGeocode: vi.fn().mockResolvedValue("Mocked Location"),
+}));
+
 import { createAvailabilityFor } from "@/lib/availability";
 import { getRunsWithin24Hours, recomputeRuns } from "@/lib/runs";
 import { createUser } from "@/lib/users";
@@ -33,14 +37,14 @@ afterEach(() => {
 });
 
 describe("recomputeRuns", () => {
-  test("creates a run and its participants for matching users", () => {
+  test("creates a run and its participants for matching users", async () => {
     const alice = createUser(makeFakeUser());
     const bob = createUser(makeFakeUser());
     const slot = { date: TODAY, startTime: "11:00", endTime: "12:00" };
     createAvailabilityFor(alice.id, makeFakeAvailability(slot));
     createAvailabilityFor(bob.id, makeFakeAvailability(slot));
 
-    recomputeRuns();
+    await recomputeRuns();
 
     const runs = getDb()
       .prepare("SELECT id, date, time FROM runs")
@@ -57,40 +61,40 @@ describe("recomputeRuns", () => {
     );
   });
 
-  test("leaves a lone runner unmatched, and re-matches when a partner appears", () => {
+  test("leaves a lone runner unmatched, and re-matches when a partner appears", async () => {
     const alice = createUser(makeFakeUser());
     const bob = createUser(makeFakeUser());
     const slot = { date: TODAY, startTime: "11:00", endTime: "12:00" };
 
     createAvailabilityFor(alice.id, makeFakeAvailability(slot));
-    recomputeRuns();
+    await recomputeRuns();
     expect(runCount()).toBe(0); // alone → no run
 
     createAvailabilityFor(bob.id, makeFakeAvailability(slot));
-    recomputeRuns();
+    await recomputeRuns();
     expect(runCount()).toBe(1); // now paired
 
     // Removing the partner dissolves the run on the next recompute (idempotent).
     getDb().prepare("DELETE FROM availability WHERE user_id = ?").run(bob.id);
-    recomputeRuns();
+    await recomputeRuns();
     expect(runCount()).toBe(0);
   });
 
-  test("recompute does not accumulate duplicate runs", () => {
+  test("recompute does not accumulate duplicate runs", async () => {
     const alice = createUser(makeFakeUser());
     const bob = createUser(makeFakeUser());
     const slot = { date: TODAY, startTime: "11:00", endTime: "12:00" };
     createAvailabilityFor(alice.id, makeFakeAvailability(slot));
     createAvailabilityFor(bob.id, makeFakeAvailability(slot));
 
-    recomputeRuns();
-    recomputeRuns();
-    recomputeRuns();
+    await recomputeRuns();
+    await recomputeRuns();
+    await recomputeRuns();
 
     expect(runCount()).toBe(1);
   });
 
-  test("a user with two overlapping same-date slots doesn't break recompute", () => {
+  test("a user with two overlapping same-date slots doesn't break recompute", async () => {
     const alice = createUser(makeFakeUser());
     const bob = createUser(makeFakeUser());
     const slot = { date: TODAY, startTime: "11:00", endTime: "12:00" };
@@ -100,7 +104,7 @@ describe("recomputeRuns", () => {
     createAvailabilityFor(alice.id, makeFakeAvailability({ ...slot, startTime: "11:15" }));
     createAvailabilityFor(bob.id, makeFakeAvailability(slot));
 
-    expect(() => recomputeRuns()).not.toThrow();
+    await expect(recomputeRuns()).resolves.not.toThrow();
 
     // One run, with Alice and Bob each appearing exactly once.
     expect(runCount()).toBe(1);
@@ -113,7 +117,7 @@ describe("recomputeRuns", () => {
 });
 
 describe("getRunsWithin24Hours", () => {
-  test("returns only runs starting within the next 24 hours", () => {
+  test("returns only runs starting within the next 24 hours", async () => {
     const alice = createUser(makeFakeUser());
     const bob = createUser(makeFakeUser());
     const within = { startTime: "11:00", endTime: "12:00" };
@@ -122,7 +126,7 @@ describe("getRunsWithin24Hours", () => {
     createAvailabilityFor(alice.id, makeFakeAvailability({ date: IN_TWO_DAYS, ...within }));
     createAvailabilityFor(bob.id, makeFakeAvailability({ date: IN_TWO_DAYS, ...within }));
 
-    recomputeRuns();
+    await recomputeRuns();
 
     const runs = getRunsWithin24Hours(alice.id);
     expect(runs).toHaveLength(1);
@@ -132,7 +136,7 @@ describe("getRunsWithin24Hours", () => {
     expect(runs[0].partners).toHaveLength(1);
   });
 
-  test("returns every run within 24 hours, ordered by start time", () => {
+  test("returns every run within 24 hours, ordered by start time", async () => {
     const alice = createUser(makeFakeUser());
     const bob = createUser(makeFakeUser());
     // Later today (11:30) and early tomorrow (07:00) — the window straddles two
@@ -142,7 +146,7 @@ describe("getRunsWithin24Hours", () => {
     createAvailabilityFor(alice.id, makeFakeAvailability({ date: TOMORROW, startTime: "06:00", endTime: "08:00" }));
     createAvailabilityFor(bob.id, makeFakeAvailability({ date: TOMORROW, startTime: "06:00", endTime: "08:00" }));
 
-    recomputeRuns();
+    await recomputeRuns();
 
     const runs = getRunsWithin24Hours(alice.id);
     expect(runs.map((r) => `${r.date} ${r.time}`)).toEqual([
@@ -151,13 +155,13 @@ describe("getRunsWithin24Hours", () => {
     ]);
   });
 
-  test("returns nothing when the user has no upcoming runs", () => {
+  test("returns nothing when the user has no upcoming runs", async () => {
     const loner = createUser(makeFakeUser());
     createAvailabilityFor(
       loner.id,
       makeFakeAvailability({ date: TODAY, startTime: "11:00", endTime: "12:00" }),
     );
-    recomputeRuns();
+    await recomputeRuns();
 
     expect(getRunsWithin24Hours(loner.id)).toEqual([]);
   });

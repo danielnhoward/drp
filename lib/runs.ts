@@ -3,6 +3,7 @@ import "server-only";
 import { getDb } from "./db";
 import { isoDateInDays, isoToday } from "./format-date";
 import { computeRuns, type MatchableAvailability } from "./matching";
+import { reverseGeocode } from "./geocoding";
 
 export type Runner = {
   /** Display name, from the users table. */
@@ -76,7 +77,7 @@ function partnersForRun(runId: number, currentUserId: number): Runner[] {
  * via lib/availability.ts, to avoid an import cycle), runs the pure matcher, and
  * replaces the runs it owns (today onward) in a single transaction.
  */
-export function recomputeRuns(): void {
+export async function recomputeRuns(): Promise<void> {
   const db = getDb();
   const today = isoToday();
 
@@ -103,6 +104,12 @@ export function recomputeRuns(): void {
 
   const proposed = computeRuns(availabilities);
 
+  // Geocode all centroids before entering the synchronous DB transaction
+  // (can't interleave await with DatabaseSync).
+  const geocodedMeetAt = await Promise.all(
+    proposed.map((run) => reverseGeocode(run.lat, run.lon)),
+  );
+
   // Wipe and rebuild the runs we own (today onward) atomically, so a failure
   // can't leave half-updated matches. run_participants clears via cascade.
   db.exec("BEGIN");
@@ -117,12 +124,13 @@ export function recomputeRuns(): void {
       "INSERT INTO run_participants (run_id, user_id, position) VALUES (?, ?, ?)",
     );
 
-    for (const run of proposed) {
+    for (let i = 0; i < proposed.length; i++) {
+      const run = proposed[i];
       const { lastInsertRowid } = insertRun.run(
         run.date,
         run.time,
         run.distanceKm,
-        run.meetAt,
+        geocodedMeetAt[i],
         run.lat,
         run.lon,
       );

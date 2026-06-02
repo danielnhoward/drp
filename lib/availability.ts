@@ -124,7 +124,7 @@ export async function listMyAvailability(): Promise<Availability[]> {
 export async function createAvailability(input: NewAvailability): Promise<void> {
   createAvailabilityFor(await currentUserId(), input);
   // Re-match everyone now that the pool of availability has changed.
-  recomputeRuns();
+  await recomputeRuns();
 }
 
 /** Deletes a slot, scoped to the current user so you can't remove someone else's. */
@@ -134,5 +134,5 @@ export async function deleteAvailability(id: number): Promise<void> {
     await currentUserId(),
   );
   // Re-match everyone now that the pool of availability has changed.
-  recomputeRuns();
+  await recomputeRuns();
 }
