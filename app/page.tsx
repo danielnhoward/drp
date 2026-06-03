@@ -20,7 +20,7 @@ export default async function Home() {
       {runs.length > 0 ? (
         <div className="flex flex-col gap-4">
           {runs.map((run) => (
-            <RunCard key={run.id} run={run} />
+            <RunCard key={run.id} run={run} currentUserId={user.id} />
           ))}
         </div>
       ) : (

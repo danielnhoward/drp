@@ -24,6 +24,8 @@ export type Runner = {
   hobbies: string | null;
   /** Optional free text: other interests / conversation starters, or null. */
   interests: string | null;
+  /** Optional note shown on the scheduled run card, or null. */
+  message: string | null;
   /** URLs of the user's most recent run photos, newest first. */
   recentRunPhotos: string[];
 };
@@ -62,6 +64,20 @@ type RunRow = {
   photo: string | null;
 };
 
+type StoredParticipantRow = {
+  runId: number;
+  date: string | null;
+  time: string;
+  distanceKm: number;
+  meetAt: string;
+  lat: number;
+  lon: number;
+  userId: number;
+  position: number;
+  visible: number | null;
+  message: string | null;
+};
+
 type AvailabilityMatchRow = {
   user_id: number;
   /** NULL for legacy slots created before the date column was added. */
@@ -89,7 +105,8 @@ function partnersForRun(runId: number, currentUserId: number): Runner[] {
               users.preferred_pace_seconds AS preferredPaceSeconds,
               users.why_run AS whyRun,
               users.hobbies AS hobbies,
-              users.interests AS interests
+        users.interests AS interests,
+        run_participants.message AS message
        FROM run_participants
        JOIN users ON users.id = run_participants.user_id
        WHERE run_participants.run_id = ? AND run_participants.user_id != ?
@@ -108,6 +125,7 @@ function partnersForRun(runId: number, currentUserId: number): Runner[] {
     whyRun: row.whyRun,
     hobbies: row.hobbies,
     interests: row.interests,
+    message: row.message,
     recentRunPhotos: recentRunPhotosForRunner(row.id),
   }));
 }
@@ -142,6 +160,94 @@ function recentRunPhotosForRunner(userId: number): string[] {
 export async function recomputeRuns(): Promise<void> {
   const db = getDb();
   const today = isoToday();
+
+  const existingRows = db
+    .prepare(
+      `SELECT runs.id AS runId,
+              runs.date AS date,
+              runs.time AS time,
+              runs.distance_km AS distanceKm,
+              runs.meet_at AS meetAt,
+              runs.lat AS lat,
+              runs.lon AS lon,
+              run_participants.user_id AS userId,
+              run_participants.position AS position,
+              run_participants.visible AS visible,
+              run_participants.message AS message
+       FROM runs
+       JOIN run_participants ON run_participants.run_id = runs.id
+       WHERE runs.date >= ?`,
+    )
+    .all(today) as StoredParticipantRow[];
+
+  // Merge single-user fingerprints into whole-run fingerprints by first
+  // grouping rows by run id, then re-keying by the full participant set.
+  const existingRuns = new Map<
+    number,
+    {
+      date: string;
+      time: string;
+      distanceKm: number;
+      meetAt: string;
+      lat: number;
+      lon: number;
+      participants: Array<{
+        userId: number;
+        position: number;
+        visible: number | null;
+        message: string | null;
+      }>;
+    }
+  >();
+  for (const row of existingRows) {
+    const existing = existingRuns.get(row.runId);
+    if (existing) {
+      existing.participants.push({
+        userId: row.userId,
+        position: row.position,
+        visible: row.visible,
+        message: row.message,
+      });
+    } else {
+      existingRuns.set(row.runId, {
+        date: row.date ?? today,
+        time: row.time,
+        distanceKm: row.distanceKm,
+        meetAt: row.meetAt,
+        lat: row.lat,
+        lon: row.lon,
+        participants: [
+          {
+            userId: row.userId,
+            position: row.position,
+            visible: row.visible,
+            message: row.message,
+          },
+        ],
+      });
+    }
+  }
+
+  const preservedParticipants = new Map<
+    string,
+    Map<number, { position: number; visible: number | null; message: string | null }>
+  >();
+  for (const run of existingRuns.values()) {
+    const userIds = run.participants.map((p) => p.userId).sort((a, b) => a - b);
+    const key = JSON.stringify({
+      date: run.date,
+      time: run.time,
+      distanceKm: run.distanceKm,
+      meetAt: run.meetAt,
+      lat: run.lat,
+      lon: run.lon,
+      userIds,
+    });
+    preservedParticipants.set(
+      key,
+      new Map(run.participants.map((p) => [p.userId, p])),
+    );
+  }
 
   const rows = db
     .prepare(
@@ -183,7 +289,7 @@ export async function recomputeRuns(): Promise<void> {
        VALUES (?, ?, ?, ?, ?, ?)`,
     );
     const insertParticipant = db.prepare(
-      "INSERT INTO run_participants (run_id, user_id, position) VALUES (?, ?, ?)",
+      "INSERT INTO run_participants (run_id, user_id, position, visible, message) VALUES (?, ?, ?, ?, ?)",
     );
 
     for (let i = 0; i < proposed.length; i++) {
@@ -197,8 +303,25 @@ export async function recomputeRuns(): Promise<void> {
         run.lon,
       );
       const runId = Number(lastInsertRowid);
+      const key = JSON.stringify({
+        date: run.date,
+        time: run.time,
+        distanceKm: run.distanceKm,
+        meetAt: geocodedMeetAt[i],
+        lat: run.lat,
+        lon: run.lon,
+        userIds: [...run.userIds].sort((a, b) => a - b),
+      });
+      const preserved = preservedParticipants.get(key);
       run.userIds.forEach((userId, position) => {
-        insertParticipant.run(runId, userId, position);
+        const old = preserved?.get(userId);
+        insertParticipant.run(
+          runId,
+          userId,
+          old?.position ?? position,
+          old?.visible ?? 1,
+          old?.message ?? null,
+        );
       });
     }
 
@@ -263,6 +386,51 @@ export function isRunParticipant(runId: number, userId: number): boolean {
     )
     .get(runId, userId);
   return row !== undefined;
+}
+
+/** Returns the given participant's note for a run, or null if they haven't set one. */
+export function getRunParticipantMessage(
+  runId: number,
+  userId: number,
+): string | null {
+  const row = getDb()
+    .prepare(
+      `SELECT message FROM run_participants WHERE run_id = ? AND user_id = ? LIMIT 1`,
+    )
+    .get(runId, userId) as { message: string | null } | undefined;
+  return row?.message ?? null;
+}
+
+/** Adds a message for a participant who hasn't written one yet. */
+export function addRunParticipantMessage(
+  runId: number,
+  userId: number,
+  message: string,
+): boolean {
+  const result = getDb()
+    .prepare(
+      `UPDATE run_participants
+          SET message = ?
+        WHERE run_id = ? AND user_id = ? AND message IS NULL`,
+    )
+    .run(message, runId, userId);
+  return result.changes > 0;
+}
+
+/** Updates a participant's message for a run. Returns true if a row was changed. */
+export function updateRunParticipantMessage(
+  runId: number,
+  userId: number,
+  message: string,
+): boolean {
+  const result = getDb()
+    .prepare(
+      `UPDATE run_participants
+         SET message = ?
+         WHERE run_id = ? AND user_id = ?`,
+    )
+    .run(message, runId, userId);
+  return result.changes > 0;
 }
 
 /**
