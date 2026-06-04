@@ -56,7 +56,6 @@ CREATE TABLE IF NOT EXISTS run_ratings (
   rater_user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
   rated_user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
   stars         INTEGER NOT NULL CHECK (stars BETWEEN 1 AND 5),
-  note          TEXT,
   created_at    TEXT NOT NULL DEFAULT (datetime('now')),
   updated_at    TEXT NOT NULL DEFAULT (datetime('now')),
   CHECK (rater_user_id != rated_user_id),

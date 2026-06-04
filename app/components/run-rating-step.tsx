@@ -42,8 +42,7 @@ export default function RunRatingStep({ runId, partners, onComplete }: Props) {
     <>
       <h2 className="text-lg font-semibold">Rate your run partners</h2>
       <p className="mt-2 text-sm text-zinc-600 dark:text-zinc-400">
-        Your stars roll into their trust score for future matches. Notes stay
-        private for now.
+        Your stars roll into their trust score for future matches.
       </p>
 
       <form action={action} className="mt-4 flex flex-col gap-4">
@@ -105,18 +104,6 @@ export default function RunRatingStep({ runId, partners, onComplete }: Props) {
                   );
                 })}
               </div>
-
-              <label className="mt-3 block text-xs font-medium text-zinc-500 dark:text-zinc-400">
-                Private note
-                <textarea
-                  name={`note-${partner.id}`}
-                  rows={2}
-                  maxLength={280}
-                  disabled={pending}
-                  placeholder="Reliable, friendly, steady pace..."
-                  className="mt-1 w-full resize-none rounded-lg border border-black/10 bg-white px-3 py-2 text-sm text-zinc-900 outline-none focus:border-amber-500 dark:border-white/15 dark:bg-zinc-900 dark:text-zinc-50"
-                />
-              </label>
             </section>
           ))
         )}

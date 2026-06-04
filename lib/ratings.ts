@@ -10,15 +10,12 @@ export type RatingSummary = {
 export type RunRatingInput = {
   ratedUserId: number;
   stars: number;
-  note?: string | null;
 };
 
 type RatingSummaryRow = {
   average: number | null;
   count: number;
 };
-
-const MAX_NOTE_LENGTH = 280;
 
 function participantIdsForRun(runId: number): number[] {
   const rows = getDb()
@@ -30,11 +27,6 @@ function participantIdsForRun(runId: number): number[] {
     )
     .all(runId) as { user_id: number }[];
   return rows.map((row) => row.user_id);
-}
-
-function cleanNote(note: string | null | undefined): string | null {
-  const trimmed = note?.trim() ?? "";
-  return trimmed.length > 0 ? trimmed.slice(0, MAX_NOTE_LENGTH) : null;
 }
 
 export function getRatingSummaryForUser(userId: number): RatingSummary {
@@ -92,11 +84,10 @@ export function saveRunRatings(
 
   const db = getDb();
   const upsert = db.prepare(
-    `INSERT INTO run_ratings (run_id, rater_user_id, rated_user_id, stars, note)
-     VALUES (?, ?, ?, ?, ?)
+    `INSERT INTO run_ratings (run_id, rater_user_id, rated_user_id, stars)
+     VALUES (?, ?, ?, ?)
      ON CONFLICT(run_id, rater_user_id, rated_user_id) DO UPDATE SET
        stars = excluded.stars,
-       note = excluded.note,
        updated_at = datetime('now')`,
   );
 
@@ -112,7 +103,6 @@ export function saveRunRatings(
         raterUserId,
         ratedUserId,
         rating.stars,
-        cleanNote(rating.note),
       );
     }
     db.exec("COMMIT");

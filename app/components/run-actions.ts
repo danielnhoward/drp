@@ -85,11 +85,9 @@ export async function submitRunRatingsAction(
     if (!key.startsWith("rating-")) continue;
     const ratedUserId = Number(key.slice("rating-".length));
     const stars = Number(value);
-    const note = formData.get(`note-${ratedUserId}`);
     ratings.push({
       ratedUserId,
       stars,
-      note: typeof note === "string" ? note : null,
     });
   }
 

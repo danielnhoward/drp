@@ -42,7 +42,7 @@ describe("run ratings", () => {
     const runId = createRunWithParticipants([alice.id, bob.id, cara.id]);
 
     saveRunRatings(runId, alice.id, [
-      { ratedUserId: bob.id, stars: 5, note: "Friendly and steady." },
+      { ratedUserId: bob.id, stars: 5 },
       { ratedUserId: cara.id, stars: 4 },
     ]);
     saveRunRatings(runId, cara.id, [
