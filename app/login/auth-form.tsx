@@ -88,18 +88,6 @@ export default function AuthForm({ initialState }: Props) {
               ))}
             </select>
           </Field>
-
-          <Field label="Comfortable 5k time (mm:ss)">
-            <input
-              className={fieldClass}
-              type="text"
-              name="fiveKTime"
-              required
-              placeholder="22:30"
-              pattern="\d{1,2}:[0-5]\d"
-              defaultValue={state.fiveKTime}
-            />
-          </Field>
         </>
       )}
 
@@ -126,14 +114,17 @@ export default function AuthForm({ initialState }: Props) {
 
 function Field({
   label,
+  hint,
   children,
 }: {
   label: string;
+  hint?: string;
   children: React.ReactNode;
 }) {
   return (
     <label className="flex flex-col gap-1.5 text-sm">
       <span className="font-medium">{label}</span>
+      {hint && <span className="font-normal text-zinc-500">{hint}</span>}
       {children}
     </label>
   );

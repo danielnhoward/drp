@@ -17,7 +17,11 @@ CREATE TABLE IF NOT EXISTS users (
   -- in before they can use the rest of the site.
   date_of_birth          TEXT NOT NULL,                 -- ISO yyyy-mm-dd; age is derived
   gender                 TEXT NOT NULL,                 -- one of GENDERS in lib/gender.ts
-  preferred_pace_seconds INTEGER NOT NULL,              -- typical comfortable pace, seconds per km
+  -- Optional: typical comfortable pace, seconds per km. Collected as a 5k time
+  -- in the profile's optional section, so it may be NULL. Older databases
+  -- created this column NOT NULL; relaxPaceNotNull rebuilds the table to drop
+  -- that constraint.
+  preferred_pace_seconds INTEGER,
   -- Optional, free-text "get to know me" fields. Never required: they exist so
   -- runners can share more than bare stats and break the ice before a first run.
   why_run                TEXT,                          -- why they like running with others
@@ -158,10 +162,64 @@ function addMissingColumns(
   }
 }
 
+// `preferred_pace_seconds` became optional after launch. Databases first created
+// while it was still declared NOT NULL keep that constraint, which would reject
+// the NULL pace written for runners who skip the (now optional) field. SQLite
+// can't drop a column constraint in place, so rebuild the table when the old
+// constraint is still present — the standard create-copy-drop-rename dance,
+// guarded so it only runs once. Must follow addMissingColumns so every column
+// the copy references already exists.
+function relaxPaceNotNull(connection: DatabaseSync): void {
+  const paceColumn = (
+    connection.prepare(`PRAGMA table_info(users)`).all() as {
+      name: string;
+      notnull: number;
+    }[]
+  ).find((c) => c.name === "preferred_pace_seconds");
+  if (!paceColumn || paceColumn.notnull === 0) return;
+
+  // Foreign keys can only be toggled outside a transaction. Disabling them keeps
+  // the dependent tables' ON DELETE CASCADE from firing when we drop `users`.
+  connection.exec("PRAGMA foreign_keys = OFF");
+  connection.exec("BEGIN");
+  try {
+    connection.exec(`
+      CREATE TABLE users_rebuild (
+        id                     INTEGER PRIMARY KEY AUTOINCREMENT,
+        email                  TEXT NOT NULL UNIQUE COLLATE NOCASE,
+        name                   TEXT NOT NULL,
+        avatar                 TEXT,
+        date_of_birth          TEXT NOT NULL,
+        gender                 TEXT NOT NULL,
+        preferred_pace_seconds INTEGER,
+        why_run                TEXT,
+        hobbies                TEXT,
+        interests              TEXT,
+        created_at             TEXT NOT NULL DEFAULT (datetime('now'))
+      );
+      INSERT INTO users_rebuild
+        (id, email, name, avatar, date_of_birth, gender,
+         preferred_pace_seconds, why_run, hobbies, interests, created_at)
+      SELECT id, email, name, avatar, date_of_birth, gender,
+             preferred_pace_seconds, why_run, hobbies, interests, created_at
+        FROM users;
+      DROP TABLE users;
+      ALTER TABLE users_rebuild RENAME TO users;
+    `);
+    connection.exec("COMMIT");
+  } catch (error) {
+    connection.exec("ROLLBACK");
+    throw error;
+  } finally {
+    connection.exec("PRAGMA foreign_keys = ON");
+  }
+}
+
 export function initSchema(connection: DatabaseSync): void {
   connection.exec(SCHEMA);
   addMissingColumns(connection, "users", USER_COLUMN_MIGRATIONS);
   addMissingColumns(connection, "availability", AVAILABILITY_COLUMN_MIGRATIONS);
   addMissingColumns(connection, "runs", RUN_COLUMN_MIGRATIONS);
   addMissingColumns(connection, "run_participants", RUN_PARTICIPANT_COLUMN_MIGRATIONS);
+  relaxPaceNotNull(connection);
 }

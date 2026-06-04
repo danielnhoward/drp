@@ -21,8 +21,8 @@ export type Runner = {
   dateOfBirth: string;
   /** One of the values in GENDERS (lib/gender.ts). */
   gender: string;
-  /** Comfortable pace in seconds per kilometre. */
-  preferredPaceSeconds: number;
+  /** Comfortable pace in seconds per kilometre, or null when not set. */
+  preferredPaceSeconds: number | null;
   /** Optional free text: why they enjoy running with others, or null. */
   whyRun: string | null;
   /** Optional free text: recent non-running hobbies, or null. */

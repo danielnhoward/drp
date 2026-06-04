@@ -11,8 +11,8 @@ type Props = {
   // "" only appears as a fallback when the stored value isn't a known Gender
   // - the <select> is `required` so submission still forces a real choice.
   initialGender: Gender | "";
-  /** Comfortable pace in seconds per km. */
-  initialPreferredPaceSeconds: number;
+  /** Comfortable pace in seconds per km, or null when not set (it's optional). */
+  initialPreferredPaceSeconds: number | null;
   /** Optional "about me" free text - null when unset. */
   initialWhyRun: string | null;
   initialHobbies: string | null;
@@ -34,7 +34,14 @@ type VibePrompt = {
 const INITIAL_STATE: ProfileFormState = {};
 
 const MAX_VIBE_LENGTH = 500;
-const BASE_PROFILE_PERCENT = 70;
+// The meter starts here and climbs 10% for each filled optional field (the three
+// vibe prompts plus the conversational 5k time), so all four filled reaches 100%.
+const BASE_PROFILE_PERCENT = 60;
+
+// Quick-pick conversational 5k times, offered as chips like the vibe prompts'
+// suggestions. Tapping one fills the field; runners can still type their own.
+// Spaced every 5 minutes across a broad range of easy paces.
+const PACE_PRESETS = ["25:00", "30:00", "35:00", "40:00", "45:00"];
 
 const fieldClass =
   "h-10 rounded-lg border border-black/10 bg-white px-3 text-sm text-black outline-none focus:border-black/40 dark:border-white/15 dark:bg-zinc-900 dark:text-zinc-50 dark:focus:border-white/50";
@@ -106,14 +113,23 @@ export default function ProfileForm({
   });
 
   // Convert stored pace (seconds/km) back to a 5k time for the input, since
-  // the form collects 5k time to match the availability flow.
-  const initialFiveK = formatMMSS(initialPreferredPaceSeconds * 5);
+  // the form collects 5k time to match the availability flow. Pace is optional,
+  // so leave the field blank when it's unset.
+  const initialFiveK =
+    initialPreferredPaceSeconds !== null
+      ? formatMMSS(initialPreferredPaceSeconds * 5)
+      : "";
+  const [fiveK, setFiveK] = useState(initialFiveK);
+  // Optional fields that drive the completion meter: the three vibe prompts plus
+  // the conversational 5k time.
+  const optionalFieldCount = VIBE_PROMPTS.length + 1;
   const filledVibeCount = VIBE_PROMPTS.filter((prompt) =>
     vibe[prompt.name].trim(),
   ).length;
-  const remainingVibeCount = VIBE_PROMPTS.length - filledVibeCount;
-  const profilePercent = BASE_PROFILE_PERCENT + filledVibeCount * 10;
-  const isVibeComplete = remainingVibeCount === 0;
+  const filledOptionalCount = filledVibeCount + (fiveK.trim() ? 1 : 0);
+  const remainingOptionalCount = optionalFieldCount - filledOptionalCount;
+  const profilePercent = BASE_PROFILE_PERCENT + filledOptionalCount * 10;
+  const isVibeComplete = remainingOptionalCount === 0;
 
   function updateVibe(name: VibeFieldName, value: string) {
     setVibe((current) => ({
@@ -189,18 +205,6 @@ export default function ProfileForm({
         </select>
       </Field>
 
-      <Field label="Comfortable 5k time (mm:ss)">
-        <input
-          className={fieldClass}
-          type="text"
-          name="fiveKTime"
-          required
-          placeholder="22:30"
-          pattern="\d{1,2}:[0-5]\d"
-          defaultValue={initialFiveK}
-        />
-      </Field>
-
       <section
         id="running-vibe"
         aria-labelledby="running-vibe-title"
@@ -245,14 +249,16 @@ export default function ProfileForm({
               </div>
               <p className="mt-2 text-sm text-zinc-700 dark:text-zinc-300">
                 {isVibeComplete
-                  ? "Nice. Partners will see a little personality alongside your pace and schedule."
-                  : remainingVibeCount === 1
-                    ? "One more quick prompt finishes the intro partners read before a run."
-                    : `Add ${remainingVibeCount} quick details for run partners read before a run.`}
+                  ? "Nice. Partners will see your easy pace and a little personality before a run."
+                  : remainingOptionalCount === 1
+                    ? "One more quick detail finishes what partners read before a run."
+                    : `Add ${remainingOptionalCount} quick details partners read before a run.`}
               </p>
             </div>
           </div>
         </div>
+
+        <PaceCard value={fiveK} pending={pending} onChange={setFiveK} />
 
         {VIBE_PROMPTS.map((prompt) => (
           <VibePromptCard
@@ -283,6 +289,87 @@ export default function ProfileForm({
         {pending ? "Saving..." : "Save profile"}
       </button>
     </form>
+  );
+}
+
+function PaceCard({
+  value,
+  pending,
+  onChange,
+}: {
+  value: string;
+  pending: boolean;
+  onChange: (value: string) => void;
+}) {
+  const filled = Boolean(value.trim());
+
+  return (
+    <section
+      className={`rounded-lg border p-4 ${
+        filled
+          ? "border-emerald-200 bg-white dark:border-emerald-900/60 dark:bg-zinc-900"
+          : "border-black/10 bg-white dark:border-white/15 dark:bg-zinc-900"
+      }`}
+    >
+      <div className="flex items-start gap-3">
+        <span className="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-blue-50 text-blue-700 dark:bg-blue-950/50 dark:text-blue-200">
+          <StopwatchIcon className="h-5 w-5" />
+        </span>
+        <div className="min-w-0 flex-1">
+          <div className="flex items-start justify-between gap-3">
+            <label
+              htmlFor="fiveKTime"
+              className="text-sm font-semibold text-zinc-900 dark:text-zinc-50"
+            >
+              Your conversational 5k time
+            </label>
+            {filled && (
+              <span className="inline-flex shrink-0 items-center gap-1 rounded-full bg-emerald-50 px-2 py-0.5 text-xs font-medium text-emerald-700 dark:bg-emerald-950/50 dark:text-emerald-300">
+                <CheckIcon className="h-3.5 w-3.5" />
+                Added
+              </span>
+            )}
+          </div>
+          <p className="mt-1 text-sm text-zinc-500 dark:text-zinc-400">
+            The time you&apos;d run 5k while chatting the whole way - relaxed, not
+            a race.
+          </p>
+        </div>
+      </div>
+
+      <div className="mt-3 flex flex-wrap gap-2">
+        {PACE_PRESETS.map((preset) => (
+          <button
+            key={preset}
+            type="button"
+            disabled={pending}
+            onClick={() => onChange(preset)}
+            className="inline-flex min-h-8 max-w-full items-center gap-1.5 rounded-full border border-black/10 bg-zinc-50 px-3 py-1 text-left text-xs font-medium text-zinc-700 transition-colors hover:border-blue-200 hover:bg-blue-50 hover:text-blue-800 disabled:opacity-50 dark:border-white/15 dark:bg-zinc-950 dark:text-zinc-300 dark:hover:border-blue-900/80 dark:hover:bg-blue-950/40 dark:hover:text-blue-200"
+          >
+            <PlusIcon className="h-3.5 w-3.5 shrink-0" />
+            <span className="truncate">{preset}</span>
+          </button>
+        ))}
+      </div>
+
+      <input
+        id="fiveKTime"
+        className={`${fieldClass} mt-3 w-full`}
+        type="text"
+        name="fiveKTime"
+        placeholder="22:30"
+        pattern="\d{1,2}:[0-5]\d"
+        inputMode="numeric"
+        value={value}
+        onChange={(event) => onChange(event.target.value)}
+      />
+
+      <p className="mt-2 text-xs text-zinc-500 dark:text-zinc-400">
+        {filled
+          ? "Partners see this as your easy, chatty pace."
+          : "Tap a time or type your own as mm:ss."}
+      </p>
+    </section>
   );
 }
 
@@ -422,9 +509,11 @@ function PartnerPreview({
 
 function Field({
   label,
+  hint,
   children,
 }: {
   label: string;
+  hint?: string;
   children: React.ReactNode;
 }) {
   return (
@@ -432,6 +521,11 @@ function Field({
       <span className="text-sm font-medium text-zinc-600 dark:text-zinc-400">
         {label}
       </span>
+      {hint && (
+        <span className="text-sm font-normal text-zinc-500 dark:text-zinc-400">
+          {hint}
+        </span>
+      )}
       {children}
     </label>
   );
@@ -488,6 +582,27 @@ function ChatIcon({ className }: { className?: string }) {
       <path d="M21 12a8 8 0 0 1-8 8H7l-4 3v-7a8 8 0 1 1 18-4z" />
       <path d="M8 11h8" />
       <path d="M8 15h5" />
+    </svg>
+  );
+}
+
+function StopwatchIcon({ className }: { className?: string }) {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth={2}
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      className={className}
+      aria-hidden="true"
+    >
+      <circle cx="12" cy="14" r="7" />
+      <path d="M12 14V10" />
+      <path d="M9 2h6" />
+      <path d="M12 2v2" />
+      <path d="M18.4 7.6l1-1" />
     </svg>
   );
 }

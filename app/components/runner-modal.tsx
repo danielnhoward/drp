@@ -34,8 +34,12 @@ export default function RunnerModal({ runner }: { runner: Runner }) {
   const gender = isGender(runner.gender)
     ? GENDER_LABELS[runner.gender]
     : runner.gender;
-  // Stored pace is seconds/km; a 5k takes five times that.
-  const fiveKTime = formatMMSS(runner.preferredPaceSeconds * 5);
+  // Stored pace is seconds/km; a 5k takes five times that. Pace is optional, so
+  // it may be null — the detail is hidden when there's nothing to show.
+  const fiveKTime =
+    runner.preferredPaceSeconds !== null
+      ? formatMMSS(runner.preferredPaceSeconds * 5)
+      : null;
 
   // Optional "get to know me" fields — only render the ones the runner filled
   // in, and skip the whole section when they've shared nothing.
@@ -129,7 +133,11 @@ export default function RunnerModal({ runner }: { runner: Runner }) {
                 </h2>
                 <Detail label="Age">{age}</Detail>
                 <Detail label="Gender">{gender}</Detail>
-                <Detail label="Comfortable 5k">{fiveKTime}</Detail>
+
+                {fiveKTime && (
+                  <Detail label="Conversational 5k">{fiveKTime}</Detail>
+                )}
+
                 <Detail label="Trust">
                   <RatingBadge summary={runner.ratingSummary} compact />
                 </Detail>
