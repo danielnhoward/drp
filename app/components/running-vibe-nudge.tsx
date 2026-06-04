@@ -1,9 +1,10 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useSyncExternalStore } from "react";
 
 const STORAGE_KEY = "drp-running-vibe-nudge-dismissed-at";
+const STORAGE_EVENT = "drp-running-vibe-nudge-change";
 const DISMISS_MS = 7 * 24 * 60 * 60 * 1000;
 
 export default function RunningVibeNudge({
@@ -11,22 +12,17 @@ export default function RunningVibeNudge({
 }: {
   missingCount: number;
 }) {
-  const [visible, setVisible] = useState(false);
-
-  useEffect(() => {
-    const raw = window.localStorage.getItem(STORAGE_KEY);
-    const dismissedAt = raw ? Number(raw) : 0;
-
-    if (!dismissedAt || Date.now() - dismissedAt > DISMISS_MS) {
-      setVisible(true);
-    }
-  }, []);
+  const visible = useSyncExternalStore(
+    subscribeToDismissal,
+    shouldShowNudge,
+    () => false,
+  );
 
   if (!visible || missingCount <= 0) return null;
 
   function dismiss() {
     window.localStorage.setItem(STORAGE_KEY, String(Date.now()));
-    setVisible(false);
+    window.dispatchEvent(new Event(STORAGE_EVENT));
   }
 
   return (
@@ -65,6 +61,25 @@ export default function RunningVibeNudge({
       </div>
     </section>
   );
+}
+
+function subscribeToDismissal(onStoreChange: () => void) {
+  window.addEventListener("storage", onStoreChange);
+  window.addEventListener(STORAGE_EVENT, onStoreChange);
+
+  return () => {
+    window.removeEventListener("storage", onStoreChange);
+    window.removeEventListener(STORAGE_EVENT, onStoreChange);
+  };
+}
+
+function shouldShowNudge() {
+  if (typeof window === "undefined") return false;
+
+  const raw = window.localStorage.getItem(STORAGE_KEY);
+  const dismissedAt = raw ? Number(raw) : 0;
+
+  return !dismissedAt || Date.now() - dismissedAt > DISMISS_MS;
 }
 
 function SparkIcon({ className }: { className?: string }) {
