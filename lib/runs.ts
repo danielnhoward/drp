@@ -178,7 +178,7 @@ export async function scheduleRunForAvailability(
     );
     // Host first (position 0), then the random partners.
     [hostUserId, ...partners].forEach((userId, position) => {
-      insertParticipant.run(runId, userId, position);
+      insertParticipant.run(runId, userId, position, 1, null);
     });
 
     db.exec("COMMIT");
