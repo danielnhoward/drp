@@ -15,9 +15,11 @@ const PHOTO_INITIAL: RunPhotoState = {};
 export default function RunPhotoStep({
   runId,
   onCancel,
+  onDone,
 }: {
   runId: number;
   onCancel: () => void;
+  onDone: () => void;
 }) {
   const [photoState, uploadPhoto, uploading] = useActionState(
     uploadRunPhotoAction,
@@ -42,14 +44,17 @@ export default function RunPhotoStep({
     };
   }, [preview]);
 
-  // Stop the webcam if the step unmounts mid-capture (e.g. the run is
-  // revalidated away after a successful upload). Reads the ref at cleanup time
-  // so it always sees the live stream.
+  // Stop the webcam if the step unmounts mid-capture. Reads the ref at cleanup
+  // time so it always sees the live stream.
   useEffect(() => {
     return () => {
       streamRef.current?.getTracks().forEach((track) => track.stop());
     };
   }, []);
+
+  useEffect(() => {
+    if (photoState.ok) onDone();
+  }, [photoState.ok, onDone]);
 
   function stopWebcam() {
     streamRef.current?.getTracks().forEach((track) => track.stop());

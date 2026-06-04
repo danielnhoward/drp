@@ -1,5 +1,7 @@
 import { isGender } from "@/lib/gender";
+import { getRatingSummaryForUser } from "@/lib/ratings";
 import { requireCompleteUser } from "@/lib/users";
+import RatingBadge from "../components/rating-badge";
 import { logoutAction } from "../login/actions";
 import AvatarForm from "./avatar-form";
 import ProfileForm from "./profile-form";
@@ -15,6 +17,7 @@ export default async function ProfilePage() {
   // Narrow the stored string to the Gender union for the form. Anything that
   // somehow isn't a known value falls back to no selection.
   const gender = isGender(user.gender) ? user.gender : "";
+  const ratingSummary = getRatingSummaryForUser(user.id);
 
   return (
     <main className="mx-auto w-full max-w-md flex-1 px-6 py-8">
@@ -30,6 +33,18 @@ export default async function ProfilePage() {
       </header>
 
       <AvatarForm name={user.name} initialAvatar={user.avatar} />
+
+      <section className="mb-6 rounded-lg border border-black/10 bg-zinc-50 px-4 py-3 dark:border-white/15 dark:bg-zinc-900">
+        <div className="flex items-center justify-between gap-3">
+          <div>
+            <h2 className="text-sm font-semibold">Trust rating</h2>
+            <p className="mt-1 text-xs text-zinc-500 dark:text-zinc-400">
+              Shown to future run partners after they match with you.
+            </p>
+          </div>
+          <RatingBadge summary={ratingSummary} />
+        </div>
+      </section>
 
       <ProfileForm
         initialName={user.name}

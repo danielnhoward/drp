@@ -3,6 +3,7 @@ import "server-only";
 import type { NewAvailability } from "./availability";
 import { getDb } from "./db";
 import { isoDateInDays, isoToday } from "./format-date";
+import { getRatingSummaryForUser, type RatingSummary } from "./ratings";
 import { reverseGeocode } from "./geocoding";
 import { minutesToTime, timeToMinutes } from "./matching";
 
@@ -28,11 +29,13 @@ export type Runner = {
   hobbies: string | null;
   /** Optional free text: other interests / conversation starters, or null. */
   interests: string | null;
+  /** Aggregated trust rating from completed runs. */
+  ratingSummary: RatingSummary;
   /** URLs of the user's most recent run photos, newest first. */
   recentRunPhotos: string[];
 };
 
-type RunnerRow = Omit<Runner, "recentRunPhotos">;
+type RunnerRow = Omit<Runner, "ratingSummary" | "recentRunPhotos">;
 
 export type Run = {
   id: number;
@@ -99,6 +102,7 @@ function partnersForRun(runId: number, currentUserId: number): Runner[] {
     whyRun: row.whyRun,
     hobbies: row.hobbies,
     interests: row.interests,
+    ratingSummary: getRatingSummaryForUser(row.id),
     recentRunPhotos: recentRunPhotosForRunner(row.id),
   }));
 }
