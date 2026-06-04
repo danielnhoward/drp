@@ -60,11 +60,13 @@ export default function RunnerModal({ runner }: { runner: Runner }) {
           name={runner.name}
           className="h-9 w-9 rounded-full text-sm"
         />
-        <span className="flex min-w-0 flex-col items-start">
+        <span className="flex min-w-0 flex-1 items-center gap-2">
           <span className="truncate text-lg font-semibold tracking-tight">
             {runner.name}
           </span>
-          <RatingBadge summary={runner.ratingSummary} compact />
+          <span className="shrink-0">
+            <RatingBadge summary={runner.ratingSummary} compact />
+          </span>
         </span>
         <svg
           viewBox="0 0 24 24"
@@ -73,7 +75,7 @@ export default function RunnerModal({ runner }: { runner: Runner }) {
           strokeWidth={2}
           strokeLinecap="round"
           strokeLinejoin="round"
-          className="h-4 w-4 shrink-0 text-zinc-400 transition-colors group-hover:text-zinc-600 dark:text-zinc-600 dark:group-hover:text-zinc-400"
+          className="ml-auto h-4 w-4 shrink-0 text-zinc-400 transition-colors group-hover:text-zinc-600 dark:text-zinc-600 dark:group-hover:text-zinc-400"
           aria-hidden="true"
         >
           <path d="M9 6l6 6-6 6" />
