@@ -13,19 +13,6 @@ import {
 } from "@/lib/users";
 import type { AuthStage, AuthState } from "./state";
 
-// Matches "M:SS" or "MM:SS" — minutes 1–2 digits, seconds always 2.
-const MMSS = /^(\d{1,2}):([0-5]\d)$/;
-
-function parseMMSS(value: string): number | null {
-  const match = MMSS.exec(value);
-  if (!match) return null;
-  return Number(match[1]) * 60 + Number(match[2]);
-}
-
-function formatMMSS(seconds: number): string {
-  return `${Math.floor(seconds / 60)}:${String(seconds % 60).padStart(2, "0")}`;
-}
-
 export async function authAction(
   _prev: AuthState,
   formData: FormData,
@@ -34,7 +21,6 @@ export async function authAction(
   const name = String(formData.get("name") ?? "").trim();
   const dateOfBirth = String(formData.get("dateOfBirth") ?? "").trim();
   const genderRaw = String(formData.get("gender") ?? "").trim();
-  const fiveKRaw = String(formData.get("fiveKTime") ?? "").trim();
   // The form's hidden "stage" input tells us which stage was rendered when
   // the user clicked submit.
   const stage: AuthStage =
@@ -47,7 +33,6 @@ export async function authAction(
     name,
     dateOfBirth,
     gender: isGender(genderRaw) ? genderRaw : ("" as const),
-    fiveKTime: fiveKRaw,
   };
 
   if (!email) return { ...retained, stage, error: "Enter your email." };
@@ -74,10 +59,6 @@ export async function authAction(
         dateOfBirth: existing.dateOfBirth ?? "",
         gender:
           existing.gender && isGender(existing.gender) ? existing.gender : "",
-        fiveKTime:
-          existing.preferredPaceSeconds !== null
-            ? formatMMSS(existing.preferredPaceSeconds * 5)
-            : "",
       };
     }
     await setSessionUser(existing.id);
@@ -126,30 +107,14 @@ export async function authAction(
   }
   const gender: Gender = genderRaw;
 
-  if (!fiveKRaw) {
-    return {
-      ...retained,
-      stage: "profile",
-      error: "Enter your conversational 5k time.",
-    };
-  }
-  const fiveK = parseMMSS(fiveKRaw);
-  if (fiveK === null || fiveK <= 0) {
-    return {
-      ...retained,
-      stage: "profile",
-      error: "Enter your 5k time as mm:ss (e.g. 22:30).",
-    };
-  }
-  const preferredPaceSeconds = Math.round(fiveK / 5);
-
   if (existing) {
-    // Existing but incomplete — fill in their profile.
+    // Existing but incomplete — fill in their profile. Pace is optional and
+    // collected later on the profile page, so it isn't touched here.
     updateUserProfile(existing.id, {
       name,
       dateOfBirth,
       gender,
-      preferredPaceSeconds,
+      preferredPaceSeconds: existing.preferredPaceSeconds,
     });
     await setSessionUser(existing.id);
   } else {
@@ -158,7 +123,6 @@ export async function authAction(
       name,
       dateOfBirth,
       gender,
-      preferredPaceSeconds,
     });
     await setSessionUser(user.id);
   }

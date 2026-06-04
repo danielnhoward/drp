@@ -21,7 +21,6 @@ export function makeFakeUser(overrides: Partial<NewUser> = {}): NewUser {
     name: `Test Runner ${counter}`,
     dateOfBirth: "1990-01-01",
     gender: "prefer-not-to-say",
-    preferredPaceSeconds: 330, // 5:30 / km
     ...overrides,
   };
 }

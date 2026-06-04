@@ -9,10 +9,6 @@ import { INITIAL_AUTH_STATE, type AuthState } from "./state";
 // Reads the session cookie, so this page must be dynamic.
 export const dynamic = "force-dynamic";
 
-function formatMMSS(seconds: number): string {
-  return `${Math.floor(seconds / 60)}:${String(seconds % 60).padStart(2, "0")}`;
-}
-
 export default async function LoginPage() {
   const current = await getCurrentUser();
 
@@ -29,10 +25,6 @@ export default async function LoginPage() {
         dateOfBirth: current.dateOfBirth ?? "",
         gender:
           current.gender && isGender(current.gender) ? current.gender : "",
-        fiveKTime:
-          current.preferredPaceSeconds !== null
-            ? formatMMSS(current.preferredPaceSeconds * 5)
-            : "",
       }
     : INITIAL_AUTH_STATE;
 

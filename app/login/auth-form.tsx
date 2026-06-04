@@ -88,22 +88,6 @@ export default function AuthForm({ initialState }: Props) {
               ))}
             </select>
           </Field>
-
-          <Field
-            label="Conversational 5k time (mm:ss)"
-            hint="The time you'd run 5k at a conversational pace — relaxed enough to chat the whole way, not a race effort. This helps us match you with partners you can comfortably run and talk with."
-          >
-            <input
-              className={fieldClass}
-              type="text"
-              name="fiveKTime"
-              required
-              placeholder="22:30"
-              pattern="\d{1,2}:[0-5]\d"
-              inputMode="numeric"
-              defaultValue={state.fiveKTime}
-            />
-          </Field>
         </>
       )}
 

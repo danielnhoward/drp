@@ -69,14 +69,16 @@ export async function updateProfileAction(
   if (!isGender(genderRaw)) return { error: "Pick a valid gender option." };
   const gender: Gender = genderRaw;
 
-  if (!fiveKRaw) return { error: "Enter your conversational 5k time." };
-  const fiveK = parseMMSS(fiveKRaw);
-  if (fiveK === null || fiveK <= 0) {
-    return { error: "Enter your 5k time as mm:ss (e.g. 22:30)." };
+  // Pace is optional. When provided it's collected as a 5k time and stored as
+  // seconds-per-km, mirroring the availability form; a blank field clears it.
+  let preferredPaceSeconds: number | null = null;
+  if (fiveKRaw) {
+    const fiveK = parseMMSS(fiveKRaw);
+    if (fiveK === null || fiveK <= 0) {
+      return { error: "Enter your 5k time as mm:ss (e.g. 22:30)." };
+    }
+    preferredPaceSeconds = Math.round(fiveK / 5);
   }
-  // Pace is collected as a 5k time and stored as seconds-per-km, mirroring
-  // the availability form.
-  const preferredPaceSeconds = Math.round(fiveK / 5);
 
   const whyRun = parseOptionalText(whyRunRaw, "why you run with others");
   if ("error" in whyRun) return { error: whyRun.error };

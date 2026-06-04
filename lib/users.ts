@@ -51,24 +51,17 @@ function rowToUser(row: UserRow): User {
 }
 
 /**
- * A user whose profile fields are all set. Pages behind the onboarding gate
- * receive this narrower type so they don't have to handle nullable fields.
+ * A user whose required profile fields are all set. Pages behind the onboarding
+ * gate receive this narrower type so they don't have to handle the nullable
+ * required fields. Pace stays nullable here — it's optional now.
  */
-export type CompleteUser = Omit<
-  User,
-  "dateOfBirth" | "gender" | "preferredPaceSeconds"
-> & {
+export type CompleteUser = Omit<User, "dateOfBirth" | "gender"> & {
   dateOfBirth: string;
   gender: string;
-  preferredPaceSeconds: number;
 };
 
 export function isProfileComplete(user: User): user is CompleteUser {
-  return (
-    user.dateOfBirth !== null &&
-    user.gender !== null &&
-    user.preferredPaceSeconds !== null
-  );
+  return user.dateOfBirth !== null && user.gender !== null;
 }
 
 export type NewUser = {
@@ -76,18 +69,16 @@ export type NewUser = {
   name: string;
   dateOfBirth: string;
   gender: Gender;
-  preferredPaceSeconds: number;
 };
 
 export type ProfileUpdate = {
   name: string;
   dateOfBirth: string;
   gender: Gender;
-  preferredPaceSeconds: number;
-  // Optional get-to-know-me fields. Omit to leave them untouched is not
-  // supported here — they're written on every update; null clears the value.
-  // Callers that don't collect them (e.g. onboarding) may leave them undefined,
-  // which is treated as null.
+  // Optional fields. Updates are not partial — every column is written on each
+  // update, so a field left undefined is treated as null (cleared). Callers that
+  // don't collect them (e.g. onboarding) may leave them undefined.
+  preferredPaceSeconds?: number | null;
   whyRun?: string | null;
   hobbies?: string | null;
   interests?: string | null;
@@ -105,16 +96,10 @@ export function findUserByEmail(email: string): User | null {
 export function createUser(input: NewUser): User {
   const { lastInsertRowid } = getDb()
     .prepare(
-      `INSERT INTO users (email, name, date_of_birth, gender, preferred_pace_seconds)
-       VALUES (?, ?, ?, ?, ?)`,
+      `INSERT INTO users (email, name, date_of_birth, gender)
+       VALUES (?, ?, ?, ?)`,
     )
-    .run(
-      input.email,
-      input.name,
-      input.dateOfBirth,
-      input.gender,
-      input.preferredPaceSeconds,
-    );
+    .run(input.email, input.name, input.dateOfBirth, input.gender);
   const row = getDb()
     .prepare(`SELECT ${USER_COLUMNS} FROM users WHERE id = ?`)
     .get(Number(lastInsertRowid)) as UserRow;
@@ -142,7 +127,7 @@ export function updateUserProfile(userId: number, fields: ProfileUpdate): void {
     fields.name,
     fields.dateOfBirth,
     fields.gender,
-    fields.preferredPaceSeconds,
+    fields.preferredPaceSeconds ?? null,
     fields.whyRun ?? null,
     fields.hobbies ?? null,
     fields.interests ?? null,

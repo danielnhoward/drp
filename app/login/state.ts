@@ -13,7 +13,6 @@ export type AuthState = {
   name: string;
   dateOfBirth: string;
   gender: Gender | "";
-  fiveKTime: string;
   error?: string;
 };
 
@@ -23,5 +22,4 @@ export const INITIAL_AUTH_STATE: AuthState = {
   name: "",
   dateOfBirth: "",
   gender: "",
-  fiveKTime: "",
 };
