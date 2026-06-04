@@ -33,6 +33,13 @@ export default function MapLocationPickerImpl({
   const [locating, setLocating] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  // Where the press that produced the current click began. The geolocate
+  // button is overlaid on the map, so a thumb that starts a pan on top of it
+  // and releases still synthesises a click. We record the pointer-down point
+  // and ignore the click if the pointer travelled far enough to be a drag,
+  // which keeps the button tappable without hijacking pans that start on it.
+  const pressStartRef = useRef<{ x: number; y: number } | null>(null);
+
   // Initial mount only — Leaflet manages its own DOM thereafter. Imperative
   // updates (e.g. setView from the geolocate button) go through mapRef.
   useEffect(() => {
@@ -77,7 +84,20 @@ export default function MapLocationPickerImpl({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const useMyLocation = () => {
+  // Only fire geolocation if the press that led here didn't move far — a real
+  // tap, not a pan that happened to start on the button.
+  const onButtonClick = (e: React.MouseEvent) => {
+    const start = pressStartRef.current;
+    pressStartRef.current = null;
+    if (start) {
+      const dx = e.clientX - start.x;
+      const dy = e.clientY - start.y;
+      if (Math.hypot(dx, dy) > 10) return;
+    }
+    requestMyLocation();
+  };
+
+  const requestMyLocation = () => {
     if (typeof navigator === "undefined" || !navigator.geolocation) {
       setError("Geolocation isn't available in this browser.");
       return;
@@ -139,19 +159,18 @@ export default function MapLocationPickerImpl({
           </svg>
         </div>
 
-      </div>
-
-      <div className="flex items-center justify-between gap-2 text-xs text-zinc-500 dark:text-zinc-400">
-        {/* Geolocate button lives below the map, not overlaid on it. When it
-            was an absolute-positioned overlay at bottom-right, the touch
-            target sat on top of the map and a thumb starting a pan there
-            would land on the button instead — synthesising a stray click
-            and firing geolocation as the pan ended. */}
+        {/* Geolocate button overlaid on the map for prominence. It's a solid,
+            shadowed pill so it reads clearly against the tiles, and an
+            onPointerDown/onClick drag-guard (see pressStartRef) keeps a pan
+            that starts on it from firing geolocation as the pan ends. */}
         <button
           type="button"
-          onClick={useMyLocation}
+          onPointerDown={(e) => {
+            pressStartRef.current = { x: e.clientX, y: e.clientY };
+          }}
+          onClick={onButtonClick}
           disabled={locating}
-          className="flex items-center gap-1.5 rounded-md px-2 py-1 text-zinc-700 hover:bg-black/5 disabled:opacity-50 dark:text-zinc-200 dark:hover:bg-white/10"
+          className="absolute bottom-3 left-1/2 z-[1000] flex -translate-x-1/2 items-center gap-1.5 rounded-full bg-blue-600 px-4 py-2 text-xs font-medium text-white shadow-lg transition-colors hover:bg-blue-700 disabled:opacity-60 dark:bg-blue-600 dark:hover:bg-blue-700"
         >
           {locating ? (
             <svg
@@ -182,6 +201,9 @@ export default function MapLocationPickerImpl({
           )}
           <span>Use my location</span>
         </button>
+      </div>
+
+      <div className="flex justify-end text-xs text-zinc-500 dark:text-zinc-400">
         <span className="tabular-nums">
           {lat.toFixed(5)}, {lon.toFixed(5)}
         </span>
