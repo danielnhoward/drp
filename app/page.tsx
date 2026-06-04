@@ -1,6 +1,6 @@
 import RunCard from "./components/run-card";
 import RunningVibeNudge from "./components/running-vibe-nudge";
-import { getRunsWithin24Hours } from "@/lib/runs";
+import { ensureRunsBackfilled, getRunsWithin24Hours } from "@/lib/runs";
 import { requireCompleteUser } from "@/lib/users";
 
 // Reads from the database on every request rather than at build time.
@@ -8,6 +8,8 @@ export const dynamic = "force-dynamic";
 
 export default async function Home() {
   const user = await requireCompleteUser();
+  // Generate runs for any slots that don't have one yet (legacy / seed rows).
+  await ensureRunsBackfilled();
   const runs = getRunsWithin24Hours(user.id);
   const missingVibeCount = [user.whyRun, user.hobbies, user.interests].filter(
     (value) => !value?.trim(),

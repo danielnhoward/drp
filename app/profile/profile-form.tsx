@@ -197,7 +197,6 @@ export default function ProfileForm({
           required
           placeholder="22:30"
           pattern="\d{1,2}:[0-5]\d"
-          inputMode="numeric"
           defaultValue={initialFiveK}
         />
       </Field>
