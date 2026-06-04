@@ -52,7 +52,7 @@ export default function RunnerModal({ runner }: { runner: Runner }) {
         type="button"
         onClick={() => setOpen(true)}
         aria-label={`View ${runner.name}'s profile`}
-        className="group -mx-1 flex w-full cursor-pointer items-center gap-2 rounded-lg px-1 py-0.5 hover:bg-zinc-50 dark:hover:bg-zinc-800"
+        className="group flex w-full cursor-pointer items-center gap-2 rounded-xl border border-black/20 px-2.5 py-1.5 hover:bg-zinc-50 dark:border-white/15 dark:hover:bg-zinc-800"
       >
         <Avatar
           avatar={runner.avatar}
@@ -69,7 +69,7 @@ export default function RunnerModal({ runner }: { runner: Runner }) {
           strokeWidth={2}
           strokeLinecap="round"
           strokeLinejoin="round"
-          className="h-4 w-4 shrink-0 text-zinc-300 transition-colors group-hover:text-zinc-500 dark:text-zinc-600 dark:group-hover:text-zinc-400"
+          className="h-4 w-4 shrink-0 text-zinc-400 transition-colors group-hover:text-zinc-600 dark:text-zinc-600 dark:group-hover:text-zinc-400"
           aria-hidden="true"
         >
           <path d="M9 6l6 6-6 6" />
