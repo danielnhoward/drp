@@ -6,9 +6,10 @@ const nextConfig: NextConfig = {
   output: "standalone",
   experimental: {
     serverActions: {
-      // Profile picture uploads are capped at 5 MB in lib/avatars.ts; the
-      // default 1 MB Server Action body limit would reject them at the edge
-      // with an opaque error before our validation runs.
+      // Image uploads (avatars in lib/avatars.ts, run group photos in
+      // lib/run-photos.ts) are capped at 5 MB; the default 1 MB Server Action
+      // body limit would reject them at the edge with an opaque error before
+      // our validation runs.
       bodySizeLimit: "5mb",
     },
   },
@@ -29,6 +30,11 @@ const nextConfig: NextConfig = {
     localPatterns: [
       {
         pathname: "/avatars/**",
+      },
+      // Group photos, served by app/run-photos/[runId]/route.ts, share the same
+      // `?v=<timestamp>` cache-buster convention as avatars.
+      {
+        pathname: "/run-photos/**",
       },
     ],
   },

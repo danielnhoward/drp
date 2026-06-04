@@ -52,16 +52,28 @@ export default function RunnerModal({ runner }: { runner: Runner }) {
         type="button"
         onClick={() => setOpen(true)}
         aria-label={`View ${runner.name}'s profile`}
-        className="-mx-1 flex w-full cursor-pointer items-center gap-2 rounded-lg px-1 py-0.5 hover:bg-zinc-50 dark:hover:bg-zinc-800"
+        className="group flex w-full cursor-pointer items-center gap-2 rounded-xl border border-black/20 px-2.5 py-1.5 hover:bg-zinc-50 dark:border-white/15 dark:hover:bg-zinc-800"
       >
         <Avatar
           avatar={runner.avatar}
           name={runner.name}
           className="h-9 w-9 rounded-full text-sm"
         />
-        <span className="truncate text-lg font-semibold tracking-tight">
+        <span className="min-w-0 flex-1 truncate text-lg font-semibold tracking-tight">
           {runner.name}
         </span>
+        <svg
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth={2}
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          className="h-4 w-4 shrink-0 text-zinc-400 transition-colors group-hover:text-zinc-600 dark:text-zinc-600 dark:group-hover:text-zinc-400"
+          aria-hidden="true"
+        >
+          <path d="M9 6l6 6-6 6" />
+        </svg>
       </button>
 
       {open && (
@@ -79,7 +91,7 @@ export default function RunnerModal({ runner }: { runner: Runner }) {
             className="absolute inset-0 cursor-default bg-black/50"
           />
 
-          <div className="relative z-50 w-full max-w-sm rounded-2xl bg-white p-6 shadow-xl dark:bg-zinc-900">
+          <div className="relative z-10 max-h-[calc(100vh-2rem)] w-full max-w-sm overflow-y-auto rounded-2xl bg-white p-6 shadow-xl dark:bg-zinc-900">
             <button
               type="button"
               onClick={() => setOpen(false)}
@@ -127,6 +139,30 @@ export default function RunnerModal({ runner }: { runner: Runner }) {
                     </p>
                   </div>
                 ))}
+              </div>
+            )}
+
+            {runner.recentRunPhotos.length > 0 && (
+              <div className="mt-5 border-t border-black/10 pt-4 dark:border-white/15">
+                <h3 className="text-sm font-medium text-zinc-500 dark:text-zinc-400">
+                  Recent run photos
+                </h3>
+                <div className="mt-3 flex gap-2">
+                  {runner.recentRunPhotos.map((photo, index) => (
+                    <div
+                      key={`${photo}-${index}`}
+                      className="relative aspect-square flex-1 overflow-hidden rounded-xl bg-zinc-100 dark:bg-zinc-800"
+                    >
+                      <Image
+                        src={photo}
+                        alt={`${runner.name} on a recent run`}
+                        fill
+                        sizes="(max-width: 640px) 33vw, 96px"
+                        className="object-cover"
+                      />
+                    </div>
+                  ))}
+                </div>
               </div>
             )}
           </div>

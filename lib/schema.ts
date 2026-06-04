@@ -38,6 +38,7 @@ CREATE TABLE IF NOT EXISTS runs (
   -- this run (and its participants, which cascade from runs). NULL for legacy
   -- runs created before the per-availability scheduler.
   availability_id INTEGER REFERENCES availability(id) ON DELETE CASCADE,
+  photo       TEXT,                     -- URL of the run's group photo, set when the run is finished
   created_at  TEXT NOT NULL DEFAULT (datetime('now'))
 );
 
@@ -116,6 +117,7 @@ const AVAILABILITY_COLUMN_MIGRATIONS: ReadonlyArray<[string, string]> = [
 const RUN_COLUMN_MIGRATIONS: ReadonlyArray<[string, string]> = [
   ["date", "TEXT"],
   ["availability_id", "INTEGER REFERENCES availability(id) ON DELETE CASCADE"],
+  ["photo", "TEXT"],
 ];
 
 const RUN_PARTICIPANT_COLUMN_MIGRATIONS: ReadonlyArray<[string, string]> = [["visible", "INTEGER"]];
