@@ -34,6 +34,10 @@ CREATE TABLE IF NOT EXISTS runs (
   meet_at     TEXT NOT NULL,            -- meeting point address
   lat         REAL NOT NULL,
   lon         REAL NOT NULL,
+  -- The availability slot that produced this run. Deleting that slot removes
+  -- this run (and its participants, which cascade from runs). NULL for legacy
+  -- runs created before the per-availability scheduler.
+  availability_id INTEGER REFERENCES availability(id) ON DELETE CASCADE,
   photo       TEXT,                     -- URL of the run's group photo, set when the run is finished
   created_at  TEXT NOT NULL DEFAULT (datetime('now'))
 );
@@ -113,6 +117,7 @@ const AVAILABILITY_COLUMN_MIGRATIONS: ReadonlyArray<[string, string]> = [
 
 const RUN_COLUMN_MIGRATIONS: ReadonlyArray<[string, string]> = [
   ["date", "TEXT"],
+  ["availability_id", "INTEGER REFERENCES availability(id) ON DELETE CASCADE"],
   ["photo", "TEXT"],
 ];
 

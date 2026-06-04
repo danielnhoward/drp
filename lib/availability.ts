@@ -2,7 +2,7 @@ import "server-only";
 
 import { getDb } from "./db";
 import { isoDateInDays, isoToday } from "./format-date";
-import { recomputeRuns } from "./runs";
+import { ensureRunsBackfilled, scheduleRunForAvailability } from "./runs";
 import { requireUser } from "./users";
 
 export type Availability = {
@@ -74,8 +74,13 @@ function ensureSeeded(userId: number): void {
   createAvailabilityFor(userId, SEED);
 }
 
-export function createAvailabilityFor(userId: number, input: NewAvailability): void {
-  getDb().prepare(
+/**
+ * Inserts an availability slot and returns its new id. Run-free on purpose: the
+ * dev seed and tests rely on this not scheduling a run (createAvailability does
+ * that for the live add flow).
+ */
+export function createAvailabilityFor(userId: number, input: NewAvailability): number {
+  const { lastInsertRowid } = getDb().prepare(
     `INSERT INTO availability
        (user_id, date, start_time, end_time, distance_km, pace_min_seconds, pace_max_seconds, lat, lon)
      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
@@ -90,12 +95,15 @@ export function createAvailabilityFor(userId: number, input: NewAvailability): v
     input.lat,
     input.lon,
   );
+  return Number(lastInsertRowid);
 }
 
 /** Returns the current user's availability slots, earliest start time first. */
 export async function listMyAvailability(): Promise<Availability[]> {
   const userId = await currentUserId();
   ensureSeeded(userId);
+  // Generate runs for any slots that don't have one yet (legacy / seed rows).
+  await ensureRunsBackfilled();
 
   const rows = getDb()
     .prepare(
@@ -121,17 +129,57 @@ export async function listMyAvailability(): Promise<Availability[]> {
 }
 
 export async function createAvailability(input: NewAvailability): Promise<void> {
-  createAvailabilityFor(await currentUserId(), input);
-  // Re-match everyone now that the pool of availability has changed.
-  await recomputeRuns();
+  const userId = await currentUserId();
+  const availabilityId = createAvailabilityFor(userId, input);
+  // Schedule exactly one run for the new slot; existing runs are untouched.
+  await scheduleRunForAvailability(availabilityId, userId, input);
 }
 
-/** Deletes a slot, scoped to the current user so you can't remove someone else's. */
+/**
+ * Deletes a slot, scoped to the current user so you can't remove someone else's.
+ * The run produced from this slot is removed automatically via the
+ * runs.availability_id foreign key's ON DELETE CASCADE; no other runs change.
+ */
 export async function deleteAvailability(id: number): Promise<void> {
   getDb().prepare("DELETE FROM availability WHERE id = ? AND user_id = ?").run(
     id,
     await currentUserId(),
   );
-  // Re-match everyone now that the pool of availability has changed.
-  await recomputeRuns();
+}
+
+/**
+ * Updates a slot (scoped to the current user) and rebuilds only the run it
+ * produced. The old run is dropped (its participants cascade away) and a fresh
+ * one is scheduled from the new values; every other run is left as-is.
+ */
+export async function updateAvailability(
+  id: number,
+  input: NewAvailability,
+): Promise<void> {
+  const userId = await currentUserId();
+  const result = getDb()
+    .prepare(
+      `UPDATE availability
+          SET date = ?, start_time = ?, end_time = ?, distance_km = ?,
+              pace_min_seconds = ?, pace_max_seconds = ?, lat = ?, lon = ?
+        WHERE id = ? AND user_id = ?`,
+    )
+    .run(
+      input.date,
+      input.startTime,
+      input.endTime,
+      input.distanceKm,
+      input.paceMinSeconds,
+      input.paceMaxSeconds,
+      input.lat,
+      input.lon,
+      id,
+      userId,
+    );
+  // Nothing updated → the slot isn't this user's; don't touch any runs.
+  if (result.changes === 0) return;
+
+  // Drop the slot's existing run (participants cascade) and rebuild it.
+  getDb().prepare("DELETE FROM runs WHERE availability_id = ?").run(id);
+  await scheduleRunForAvailability(id, userId, input);
 }
