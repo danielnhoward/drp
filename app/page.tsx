@@ -1,4 +1,5 @@
 import RunCard from "./components/run-card";
+import RunningVibeNudge from "./components/running-vibe-nudge";
 import { ensureRunsBackfilled, getRunsWithin24Hours } from "@/lib/runs";
 import { requireCompleteUser } from "@/lib/users";
 
@@ -10,6 +11,9 @@ export default async function Home() {
   // Generate runs for any slots that don't have one yet (legacy / seed rows).
   await ensureRunsBackfilled();
   const runs = getRunsWithin24Hours(user.id);
+  const missingVibeCount = [user.whyRun, user.hobbies, user.interests].filter(
+    (value) => !value?.trim(),
+  ).length;
 
   return (
     <main className="mx-auto w-full max-w-2xl flex-1 px-4 py-6">
@@ -19,6 +23,7 @@ export default async function Home() {
           Your confirmed runs starting within the next 24 hours.
         </p>
       </header>
+      <RunningVibeNudge missingCount={missingVibeCount} />
       {runs.length > 0 ? (
         <div className="flex flex-col gap-4">
           {runs.map((run) => (
