@@ -8,6 +8,7 @@ import {
   isRunParticipant,
   getRunParticipantMessage,
   updateRunParticipantMessage,
+  clearRunParticipantMessage,
   unfinishRun,
   updateRunPhoto,
 } from "@/lib/runs";
@@ -16,7 +17,7 @@ import { saveRunPhotoFile } from "@/lib/run-photos";
 import { requireUser } from "@/lib/users";
 
 export type RunPhotoState = { error?: string; ok?: boolean };
-export type RunMessageState = { error?: string; ok?: boolean; message?: string };
+export type RunMessageState = { error?: string; ok?: boolean; message?: string | null };
 
 const MAX_RUN_MESSAGE_LENGTH = 500;
 
@@ -118,4 +119,24 @@ export async function addRunMessageAction(
 
   revalidatePath("/");
   return { ok: true, message };
+}
+
+export async function clearRunMessageAction(
+  _prev: RunMessageState,
+  formData: FormData,
+): Promise<RunMessageState> {
+  const id = Number(formData.get("runId"));
+  if (!Number.isFinite(id)) return { error: "Something went wrong." };
+
+  const user = await requireUser();
+  if (!isRunParticipant(id, user.id)) {
+    return { error: "You're not part of this run." };
+  }
+
+  const cleared = clearRunParticipantMessage(id, user.id);
+  if (!cleared) return { error: "Unable to clear your message." };
+
+  publishRunMessageUpdated(id, user.id, null);
+  revalidatePath("/");
+  return { ok: true, message: null };
 }

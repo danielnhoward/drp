@@ -342,6 +342,21 @@ export function updateRunParticipantMessage(
   return result.changes > 0;
 }
 
+/** Clears a participant's message (sets it to NULL). Returns true if a row was changed. */
+export function clearRunParticipantMessage(
+  runId: number,
+  userId: number,
+): boolean {
+  const result = getDb()
+    .prepare(
+      `UPDATE run_participants
+         SET message = NULL
+         WHERE run_id = ? AND user_id = ? AND message IS NOT NULL`,
+    )
+    .run(runId, userId);
+  return result.changes > 0;
+}
+
 /**
  * Marks the user as finished with the run (hiding it from their home page) and
  * reports whether they were the first participant to do so. The first finisher

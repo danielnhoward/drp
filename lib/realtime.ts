@@ -4,7 +4,7 @@ export type RunRealtimeEvent = {
   type: "run.message.updated";
   runId: number;
   userId: number;
-  message: string;
+  message: string | null;
 };
 
 type Listener = (event: RunRealtimeEvent) => void;
@@ -65,7 +65,7 @@ export function subscribeRunEvents(
 export function publishRunMessageUpdated(
   runId: number,
   userId: number,
-  message: string,
+  message: string | null,
 ): void {
   publish(channelForRun(runId), {
     type: "run.message.updated",

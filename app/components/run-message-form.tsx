@@ -3,7 +3,7 @@
 import { useActionState } from "react";
 import { useEffect, useState } from "react";
 
-import { addRunMessageAction, type RunMessageState } from "./run-actions";
+import { addRunMessageAction, clearRunMessageAction, type RunMessageState } from "./run-actions";
 
 const INITIAL_STATE: RunMessageState = {};
 const textareaClass =
@@ -20,6 +20,10 @@ export default function RunMessageForm({
     addRunMessageAction,
     INITIAL_STATE,
   );
+  const [clearState, clearAction, clearPending] = useActionState(
+    clearRunMessageAction,
+    INITIAL_STATE,
+  );
 
   const savedMessage = state.ok ? state.message ?? initialMessage : initialMessage;
   const [editing, setEditing] = useState<boolean>(savedMessage === null);
@@ -31,6 +35,13 @@ export default function RunMessageForm({
       setTimeout(() => setEditing(false));
     }
   }, [state.ok]);
+
+  // Close editor when clear completes
+  useEffect(() => {
+    if (clearState.ok) {
+      setTimeout(() => setEditing(false));
+    }
+  }, [clearState.ok]);
 
   if (!editing && savedMessage !== null) {
     return (
@@ -45,13 +56,25 @@ export default function RunMessageForm({
             </p>
           </div>
           <div>
-            <button
-              type="button"
-              onClick={() => setEditing(true)}
-              className="rounded-full border px-3 py-1.5 text-sm font-medium cursor-pointer"
-            >
-              Edit
-            </button>
+            <div className="flex gap-2">
+              <button
+                type="button"
+                onClick={() => setEditing(true)}
+                className="rounded-full border px-3 py-1.5 text-sm font-medium cursor-pointer"
+              >
+                Edit
+              </button>
+              <form action={clearAction} className="inline">
+                <input type="hidden" name="runId" value={runId} />
+                <button
+                  type="submit"
+                  disabled={clearPending}
+                  className="rounded-full border px-3 py-1.5 text-sm font-medium cursor-pointer"
+                >
+                  {clearPending ? "Clearing…" : "Clear"}
+                </button>
+              </form>
+            </div>
           </div>
         </div>
       </div>
@@ -59,52 +82,67 @@ export default function RunMessageForm({
   }
 
   return (
-    <form
-      action={action}
-      className="rounded-2xl border border-dashed border-black/15 bg-zinc-50/60 p-3 dark:border-white/15 dark:bg-zinc-950/30"
-    >
-      <input type="hidden" name="runId" value={runId} />
-      <label className="flex flex-col gap-1.5">
-        <span className="text-xs font-medium uppercase tracking-wide text-zinc-500 dark:text-zinc-400">
-          {savedMessage ? "Edit your message" : "Add a message"}
-        </span>
-        <textarea
-          name="message"
-          maxLength={500}
-          rows={3}
-          defaultValue={savedMessage ?? undefined}
-          placeholder="e.g. I’ll be the one in the blue jacket and I’m happy to chat about trail running."
-          className={textareaClass}
-          disabled={pending}
-        />
-      </label>
+    <div>
+      <form
+        action={action}
+        className="rounded-2xl border border-dashed border-black/15 bg-zinc-50/60 p-3 dark:border-white/15 dark:bg-zinc-950/30"
+      >
+        <input type="hidden" name="runId" value={runId} />
+        <label className="flex flex-col gap-1.5">
+          <span className="text-xs font-medium uppercase tracking-wide text-zinc-500 dark:text-zinc-400">
+            {savedMessage ? "Edit your message" : "Add a message"}
+          </span>
+          <textarea
+            name="message"
+            maxLength={500}
+            rows={3}
+            defaultValue={savedMessage ?? undefined}
+            placeholder="e.g. I’ll be the one in the blue jacket and I’m happy to chat about trail running."
+            className={textareaClass}
+            disabled={pending}
+          />
+        </label>
 
-      {state.error && (
-        <p className="mt-2 text-sm text-red-600 dark:text-red-400">
-          {state.error}
-        </p>
-      )}
+        {state.error && (
+          <p className="mt-2 text-sm text-red-600 dark:text-red-400">
+            {state.error}
+          </p>
+        )}
 
-      <div className="mt-3 flex justify-end gap-2">
-        {savedMessage && (
+        <div className="mt-3 flex justify-end gap-2">
+          {savedMessage && (
+            <button
+              type="button"
+              onClick={() => {
+                setEditing(false);
+              }}
+              className="rounded-full border px-3 py-1.5 text-sm font-medium cursor-pointer"
+            >
+              Cancel
+            </button>
+          )}
           <button
-            type="button"
-            onClick={() => {
-              setEditing(false);
-            }}
+            type="submit"
+            disabled={pending}
+            className="rounded-full bg-blue-600 px-3 py-1.5 text-sm font-medium text-white transition-colors hover:bg-blue-500 disabled:opacity-60 cursor-pointer"
+          >
+            {pending ? "Saving…" : "Save message"}
+          </button>
+        </div>
+      </form>
+
+      {savedMessage && (
+        <form action={clearAction} className="mt-2 flex justify-end">
+          <input type="hidden" name="runId" value={runId} />
+          <button
+            type="submit"
+            disabled={clearPending}
             className="rounded-full border px-3 py-1.5 text-sm font-medium cursor-pointer"
           >
-            Cancel
+            {clearPending ? "Clearing…" : "Clear message"}
           </button>
-        )}
-        <button
-          type="submit"
-          disabled={pending}
-          className="rounded-full bg-blue-600 px-3 py-1.5 text-sm font-medium text-white transition-colors hover:bg-blue-500 disabled:opacity-60 cursor-pointer"
-        >
-          {pending ? "Saving…" : "Save message"}
-        </button>
-      </div>
-    </form>
+        </form>
+      )}
+    </div>
   );
 }
