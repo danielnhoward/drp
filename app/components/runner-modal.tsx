@@ -52,16 +52,28 @@ export default function RunnerModal({ runner }: { runner: Runner }) {
         type="button"
         onClick={() => setOpen(true)}
         aria-label={`View ${runner.name}'s profile`}
-        className="-mx-1 flex w-full cursor-pointer items-center gap-2 rounded-lg px-1 py-0.5 hover:bg-zinc-50 dark:hover:bg-zinc-800"
+        className="group -mx-1 flex w-full cursor-pointer items-center gap-2 rounded-lg px-1 py-0.5 hover:bg-zinc-50 dark:hover:bg-zinc-800"
       >
         <Avatar
           avatar={runner.avatar}
           name={runner.name}
           className="h-9 w-9 rounded-full text-sm"
         />
-        <span className="truncate text-lg font-semibold tracking-tight">
+        <span className="min-w-0 flex-1 truncate text-lg font-semibold tracking-tight">
           {runner.name}
         </span>
+        <svg
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth={2}
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          className="h-4 w-4 shrink-0 text-zinc-300 transition-colors group-hover:text-zinc-500 dark:text-zinc-600 dark:group-hover:text-zinc-400"
+          aria-hidden="true"
+        >
+          <path d="M9 6l6 6-6 6" />
+        </svg>
       </button>
 
       {open && (
