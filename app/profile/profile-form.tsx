@@ -205,18 +205,6 @@ export default function ProfileForm({
         </select>
       </Field>
 
-      <Field label="Comfortable 5k time (mm:ss)">
-        <input
-          className={fieldClass}
-          type="text"
-          name="fiveKTime"
-          required
-          placeholder="22:30"
-          pattern="\d{1,2}:[0-5]\d"
-          defaultValue={initialFiveK}
-        />
-      </Field>
-
       <section
         id="running-vibe"
         aria-labelledby="running-vibe-title"
