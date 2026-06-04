@@ -91,7 +91,10 @@ export default function ProfileForm({
         </select>
       </Field>
 
-      <Field label="Comfortable 5k time (mm:ss)">
+      <Field
+        label="Conversational 5k time (mm:ss)"
+        hint="The time you'd run 5k at a conversational pace — relaxed enough to chat the whole way, not a race effort. This helps us match you with partners you can comfortably run and talk with."
+      >
         <input
           className={fieldClass}
           type="text"
@@ -170,9 +173,11 @@ export default function ProfileForm({
 
 function Field({
   label,
+  hint,
   children,
 }: {
   label: string;
+  hint?: string;
   children: React.ReactNode;
 }) {
   return (
@@ -180,6 +185,11 @@ function Field({
       <span className="text-sm font-medium text-zinc-600 dark:text-zinc-400">
         {label}
       </span>
+      {hint && (
+        <span className="text-sm font-normal text-zinc-500 dark:text-zinc-400">
+          {hint}
+        </span>
+      )}
       {children}
     </label>
   );

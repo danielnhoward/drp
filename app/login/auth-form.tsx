@@ -89,7 +89,10 @@ export default function AuthForm({ initialState }: Props) {
             </select>
           </Field>
 
-          <Field label="Comfortable 5k time (mm:ss)">
+          <Field
+            label="Conversational 5k time (mm:ss)"
+            hint="The time you'd run 5k at a conversational pace — relaxed enough to chat the whole way, not a race effort. This helps us match you with partners you can comfortably run and talk with."
+          >
             <input
               className={fieldClass}
               type="text"
@@ -127,14 +130,17 @@ export default function AuthForm({ initialState }: Props) {
 
 function Field({
   label,
+  hint,
   children,
 }: {
   label: string;
+  hint?: string;
   children: React.ReactNode;
 }) {
   return (
     <label className="flex flex-col gap-1.5 text-sm">
       <span className="font-medium">{label}</span>
+      {hint && <span className="font-normal text-zinc-500">{hint}</span>}
       {children}
     </label>
   );

@@ -69,7 +69,7 @@ export async function updateProfileAction(
   if (!isGender(genderRaw)) return { error: "Pick a valid gender option." };
   const gender: Gender = genderRaw;
 
-  if (!fiveKRaw) return { error: "Enter your comfortable 5k time." };
+  if (!fiveKRaw) return { error: "Enter your conversational 5k time." };
   const fiveK = parseMMSS(fiveKRaw);
   if (fiveK === null || fiveK <= 0) {
     return { error: "Enter your 5k time as mm:ss (e.g. 22:30)." };

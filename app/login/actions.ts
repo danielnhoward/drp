@@ -130,7 +130,7 @@ export async function authAction(
     return {
       ...retained,
       stage: "profile",
-      error: "Enter your comfortable 5k time.",
+      error: "Enter your conversational 5k time.",
     };
   }
   const fiveK = parseMMSS(fiveKRaw);

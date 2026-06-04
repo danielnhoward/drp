@@ -111,7 +111,7 @@ export default function RunnerModal({ runner }: { runner: Runner }) {
                 </h2>
                 <Detail label="Age">{age}</Detail>
                 <Detail label="Gender">{gender}</Detail>
-                <Detail label="Comfortable 5k">{fiveKTime}</Detail>
+                <Detail label="Conversational 5k">{fiveKTime}</Detail>
               </dl>
             </div>
 
