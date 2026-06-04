@@ -96,6 +96,7 @@ export async function updateProfileAction(
   });
 
   revalidatePath("/profile");
+  revalidatePath("/");
   return { ok: true };
 }
 
