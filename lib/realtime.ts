@@ -18,13 +18,16 @@ declare global {
   var __runRealtimeState__: RealtimeState | undefined;
 }
 
-const state: RealtimeState = globalThis.__runRealtimeState__ ?? {
+// Pin the realtime state to globalThis so every bundled copy of this module
+// shares it. Next.js can bundle `lib/realtime.ts` separately into the Server
+// Action chunk (the publisher) and the Route Handler chunk (the SSE
+// subscriber); without a shared singleton each copy gets its own `channels`
+// map and the listener never hears the publisher. This must run in production
+// too — unlike the Prisma dev-only pattern, the duplication we're guarding
+// against happens in the production build, not just across HMR reloads.
+const state: RealtimeState = (globalThis.__runRealtimeState__ ??= {
   channels: new Map(),
-};
-
-if (process.env.NODE_ENV !== "production") {
-  globalThis.__runRealtimeState__ = state;
-}
+});
 
 function channelForRun(runId: number): string {
   return `run:${runId}`;
