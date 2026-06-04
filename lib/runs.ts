@@ -29,6 +29,8 @@ export type Runner = {
   hobbies: string | null;
   /** Optional free text: other interests / conversation starters, or null. */
   interests: string | null;
+  /** Optional note shown on the scheduled run card, or null. */
+  message: string | null;
   /** Aggregated trust rating from completed runs. */
   ratingSummary: RatingSummary;
   /** URLs of the user's most recent run photos, newest first. */
@@ -83,7 +85,8 @@ function partnersForRun(runId: number, currentUserId: number): Runner[] {
               users.preferred_pace_seconds AS preferredPaceSeconds,
               users.why_run AS whyRun,
               users.hobbies AS hobbies,
-              users.interests AS interests
+        users.interests AS interests,
+        run_participants.message AS message
        FROM run_participants
        JOIN users ON users.id = run_participants.user_id
        WHERE run_participants.run_id = ? AND run_participants.user_id != ?
@@ -102,6 +105,7 @@ function partnersForRun(runId: number, currentUserId: number): Runner[] {
     whyRun: row.whyRun,
     hobbies: row.hobbies,
     interests: row.interests,
+    message: row.message,
     ratingSummary: getRatingSummaryForUser(row.id),
     recentRunPhotos: recentRunPhotosForRunner(row.id),
   }));
@@ -174,11 +178,11 @@ export async function scheduleRunForAvailability(
     const runId = Number(lastInsertRowid);
 
     const insertParticipant = db.prepare(
-      "INSERT INTO run_participants (run_id, user_id, position) VALUES (?, ?, ?)",
+      "INSERT INTO run_participants (run_id, user_id, position, visible, message) VALUES (?, ?, ?, ?, ?)",
     );
     // Host first (position 0), then the random partners.
     [hostUserId, ...partners].forEach((userId, position) => {
-      insertParticipant.run(runId, userId, position);
+      insertParticipant.run(runId, userId, position, 1, null);
     });
 
     db.exec("COMMIT");
@@ -295,6 +299,66 @@ export function isRunParticipant(runId: number, userId: number): boolean {
     )
     .get(runId, userId);
   return row !== undefined;
+}
+
+/** Returns the given participant's note for a run, or null if they haven't set one. */
+export function getRunParticipantMessage(
+  runId: number,
+  userId: number,
+): string | null {
+  const row = getDb()
+    .prepare(
+      `SELECT message FROM run_participants WHERE run_id = ? AND user_id = ? LIMIT 1`,
+    )
+    .get(runId, userId) as { message: string | null } | undefined;
+  return row?.message ?? null;
+}
+
+/** Adds a message for a participant who hasn't written one yet. */
+export function addRunParticipantMessage(
+  runId: number,
+  userId: number,
+  message: string,
+): boolean {
+  const result = getDb()
+    .prepare(
+      `UPDATE run_participants
+          SET message = ?
+        WHERE run_id = ? AND user_id = ? AND message IS NULL`,
+    )
+    .run(message, runId, userId);
+  return result.changes > 0;
+}
+
+/** Updates a participant's message for a run. Returns true if a row was changed. */
+export function updateRunParticipantMessage(
+  runId: number,
+  userId: number,
+  message: string,
+): boolean {
+  const result = getDb()
+    .prepare(
+      `UPDATE run_participants
+         SET message = ?
+         WHERE run_id = ? AND user_id = ?`,
+    )
+    .run(message, runId, userId);
+  return result.changes > 0;
+}
+
+/** Clears a participant's message (sets it to NULL). Returns true if a row was changed. */
+export function clearRunParticipantMessage(
+  runId: number,
+  userId: number,
+): boolean {
+  const result = getDb()
+    .prepare(
+      `UPDATE run_participants
+         SET message = NULL
+         WHERE run_id = ? AND user_id = ? AND message IS NOT NULL`,
+    )
+    .run(runId, userId);
+  return result.changes > 0;
 }
 
 /**

@@ -53,6 +53,7 @@ CREATE TABLE IF NOT EXISTS run_participants (
   user_id  INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
   position INTEGER NOT NULL DEFAULT 0, -- preserves display order
   visible  INTEGER NOT NULL DEFAULT 1,
+  message  TEXT,
   PRIMARY KEY (run_id, user_id)
 );
 
@@ -141,7 +142,10 @@ const RUN_COLUMN_MIGRATIONS: ReadonlyArray<[string, string]> = [
   ["photo", "TEXT"],
 ];
 
-const RUN_PARTICIPANT_COLUMN_MIGRATIONS: ReadonlyArray<[string, string]> = [["visible", "INTEGER"]];
+const RUN_PARTICIPANT_COLUMN_MIGRATIONS: ReadonlyArray<[string, string]> = [
+  ["visible", "INTEGER"],
+  ["message", "TEXT"],
+];
 
 // Adds any columns from `migrations` the table doesn't already have. The table
 // name is a hardcoded constant (never user input), so interpolating it is safe.

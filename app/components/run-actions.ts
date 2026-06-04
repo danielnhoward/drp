@@ -3,16 +3,24 @@
 import { revalidatePath } from "next/cache";
 
 import {
+  addRunParticipantMessage,
   finishRun,
   isRunParticipant,
+  getRunParticipantMessage,
+  updateRunParticipantMessage,
+  clearRunParticipantMessage,
   unfinishRun,
   updateRunPhoto,
 } from "@/lib/runs";
+import { publishRunMessageUpdated } from "../../lib/realtime";
 import { saveRunRatings, type RunRatingInput } from "@/lib/ratings";
 import { saveRunPhotoFile } from "@/lib/run-photos";
 import { requireUser } from "@/lib/users";
 
 export type RunPhotoState = { error?: string; ok?: boolean };
+export type RunMessageState = { error?: string; ok?: boolean; message?: string | null };
+
+const MAX_RUN_MESSAGE_LENGTH = 500;
 export type RunRatingsState = { error?: string; ok?: boolean };
 
 /**
@@ -106,4 +114,64 @@ export async function submitRunRatingsAction(
   revalidatePath("/");
   revalidatePath("/profile");
   return { ok: true };
+}
+
+/**
+ * Stores or updates a short note for the current user on a run.
+ * If a message already exists, we update it so users can edit their message.
+ */
+export async function addRunMessageAction(
+  _prev: RunMessageState,
+  formData: FormData,
+): Promise<RunMessageState> {
+  const id = Number(formData.get("runId"));
+  if (!Number.isFinite(id)) return { error: "Something went wrong." };
+
+  const user = await requireUser();
+  if (!isRunParticipant(id, user.id)) {
+    return { error: "You're not part of this run." };
+  }
+
+  const existing = getRunParticipantMessage(id, user.id);
+
+  const message = String(formData.get("message") ?? "").trim();
+  if (!message) {
+    return { error: "Enter a message." };
+  }
+  if (message.length > MAX_RUN_MESSAGE_LENGTH) {
+    return { error: `Keep your message under ${MAX_RUN_MESSAGE_LENGTH} characters.` };
+  }
+
+  let stored = false;
+  if (existing === null) {
+    stored = addRunParticipantMessage(id, user.id, message);
+  } else {
+    stored = updateRunParticipantMessage(id, user.id, message);
+  }
+  if (!stored) return { error: "Unable to save your message." };
+
+  publishRunMessageUpdated(id, user.id, message);
+
+  revalidatePath("/");
+  return { ok: true, message };
+}
+
+export async function clearRunMessageAction(
+  _prev: RunMessageState,
+  formData: FormData,
+): Promise<RunMessageState> {
+  const id = Number(formData.get("runId"));
+  if (!Number.isFinite(id)) return { error: "Something went wrong." };
+
+  const user = await requireUser();
+  if (!isRunParticipant(id, user.id)) {
+    return { error: "You're not part of this run." };
+  }
+
+  const cleared = clearRunParticipantMessage(id, user.id);
+  if (!cleared) return { error: "Unable to clear your message." };
+
+  publishRunMessageUpdated(id, user.id, null);
+  revalidatePath("/");
+  return { ok: true, message: null };
 }

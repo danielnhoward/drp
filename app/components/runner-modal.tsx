@@ -98,7 +98,7 @@ export default function RunnerModal({ runner }: { runner: Runner }) {
             type="button"
             aria-label="Close profile"
             onClick={() => setOpen(false)}
-            className="absolute inset-0 cursor-default bg-black/50"
+            className="absolute inset-0 cursor-pointer bg-black/50"
           />
 
           <div className="relative z-10 max-h-[calc(100vh-2rem)] w-full max-w-sm overflow-y-auto rounded-2xl bg-white p-6 shadow-xl dark:bg-zinc-900">
@@ -106,7 +106,7 @@ export default function RunnerModal({ runner }: { runner: Runner }) {
               type="button"
               onClick={() => setOpen(false)}
               aria-label="Close profile"
-              className="absolute right-3 top-3 rounded-full p-1.5 text-zinc-500 transition-colors hover:bg-black/5 hover:text-zinc-900 dark:text-zinc-400 dark:hover:bg-white/10 dark:hover:text-zinc-50"
+              className="absolute right-3 top-3 rounded-full p-1.5 text-zinc-500 transition-colors hover:bg-black/5 hover:text-zinc-900 dark:text-zinc-400 dark:hover:bg-white/10 dark:hover:text-zinc-50 cursor-pointer"
             >
               <svg
                 viewBox="0 0 24 24"
