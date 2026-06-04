@@ -45,9 +45,9 @@ const textareaClass =
 const VIBE_PROMPTS: VibePrompt[] = [
   {
     name: "whyRun",
-    title: "What makes a partner run worth saying yes to?",
+    title: "What makes your runs better?",
     microcopy:
-      "Give a future running partner one reason the first mile will feel easy.",
+      "Tell your future running partner what makes your runs feel easy and enjoyable.",
     placeholder:
       "e.g. I like easy miles with good chat, especially when someone gets me out the door.",
     previewLabel: "Runs feel better when",
@@ -60,7 +60,7 @@ const VIBE_PROMPTS: VibePrompt[] = [
   },
   {
     name: "hobbies",
-    title: "What are you into lately, away from running?",
+    title: "What are you into lately, apart from running?",
     microcopy:
       "A couple of current interests makes the pre-run hello less awkward.",
     placeholder:
