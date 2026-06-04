@@ -214,7 +214,10 @@ function AvailabilityForm({ onClose }: { onClose: () => void }) {
           <span className="text-sm font-medium text-zinc-600 dark:text-zinc-400">
             Location
           </span>
-          <MapLocationPicker initialLat={51.5073} initialLon={-0.1657} />
+          {/* Centred on the whole of the UK (zoomed out to fit the country)
+              rather than London, so users anywhere in the UK start with their
+              region in view. */}
+          <MapLocationPicker initialLat={54.5} initialLon={-3} initialZoom={5} />
         </div>
 
         {state.error ? (
