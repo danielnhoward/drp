@@ -39,9 +39,9 @@ export default function RunnerModal({ runner }: { runner: Runner }) {
   // Optional "get to know me" fields — only render the ones the runner filled
   // in, and skip the whole section when they've shared nothing.
   const about = [
-    { label: "Why I run with others", value: runner.whyRun },
-    { label: "Recent hobbies", value: runner.hobbies },
-    { label: "Other interests", value: runner.interests },
+    { label: "Runs feel better when", value: runner.whyRun },
+    { label: "Off-run lately", value: runner.hobbies },
+    { label: "Easy-run chat", value: runner.interests },
   ].filter((item): item is { label: string; value: string } =>
     Boolean(item.value),
   );
