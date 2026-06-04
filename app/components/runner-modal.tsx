@@ -3,6 +3,7 @@
 import Image from "next/image";
 import { useEffect, useState } from "react";
 
+import RatingBadge from "./rating-badge";
 import type { Runner } from "@/lib/runs";
 import { ageFromDateOfBirth } from "@/lib/format-date";
 import { GENDER_LABELS, isGender } from "@/lib/gender";
@@ -59,8 +60,11 @@ export default function RunnerModal({ runner }: { runner: Runner }) {
           name={runner.name}
           className="h-9 w-9 rounded-full text-sm"
         />
-        <span className="truncate text-lg font-semibold tracking-tight">
-          {runner.name}
+        <span className="flex min-w-0 flex-col items-start">
+          <span className="truncate text-lg font-semibold tracking-tight">
+            {runner.name}
+          </span>
+          <RatingBadge summary={runner.ratingSummary} compact />
         </span>
       </button>
 
@@ -112,6 +116,9 @@ export default function RunnerModal({ runner }: { runner: Runner }) {
                 <Detail label="Age">{age}</Detail>
                 <Detail label="Gender">{gender}</Detail>
                 <Detail label="Comfortable 5k">{fiveKTime}</Detail>
+                <Detail label="Trust">
+                  <RatingBadge summary={runner.ratingSummary} compact />
+                </Detail>
               </dl>
             </div>
 
