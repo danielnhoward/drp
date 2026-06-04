@@ -4,10 +4,23 @@ import { useState, useTransition } from "react";
 
 import { cancelRunPhotoAction, finishRunAction } from "./run-actions";
 import RunPhotoStep from "./run-photo-step";
+import RunRatingStep from "./run-rating-step";
 
-export default function FinishRun({ runId }: { runId: number }) {
+type RatingPartner = {
+  id: number;
+  name: string;
+  avatar: string | null;
+};
+
+export default function FinishRun({
+  runId,
+  partners,
+}: {
+  runId: number;
+  partners: RatingPartner[];
+}) {
   const [open, setOpen] = useState(false);
-  const [step, setStep] = useState<"confirm" | "photo">("confirm");
+  const [step, setStep] = useState<"confirm" | "photo" | "rating">("confirm");
   const [pending, startTransition] = useTransition();
 
   function openModal() {
@@ -22,9 +35,7 @@ export default function FinishRun({ runId }: { runId: number }) {
       if (promptForPhoto) {
         setStep("photo");
       } else {
-        // Not the first finisher: the action already revalidated "/", so this
-        // card is about to unmount.
-        setOpen(false);
+        setStep("rating");
       }
     });
   }
@@ -56,7 +67,7 @@ export default function FinishRun({ runId }: { runId: number }) {
             // stray tap discard the photo prompt the first finisher just earned.
             onClick={step === "confirm" ? () => setOpen(false) : undefined}
           />
-          <div className="z-60 mx-4 max-w-lg rounded-2xl bg-white p-6 shadow-lg dark:bg-zinc-900">
+          <div className="z-60 mx-4 w-full max-w-lg rounded-2xl bg-white p-6 shadow-lg dark:bg-zinc-900">
             {step === "confirm" ? (
               <>
                 <h2 className="text-lg font-semibold">Finish run</h2>
@@ -83,8 +94,18 @@ export default function FinishRun({ runId }: { runId: number }) {
                   </button>
                 </div>
               </>
+            ) : step === "photo" ? (
+              <RunPhotoStep
+                runId={runId}
+                onCancel={cancelPhoto}
+                onDone={() => setStep("rating")}
+              />
             ) : (
-              <RunPhotoStep runId={runId} onCancel={cancelPhoto} />
+              <RunRatingStep
+                runId={runId}
+                partners={partners}
+                onComplete={() => setOpen(false)}
+              />
             )}
           </div>
         </div>

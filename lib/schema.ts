@@ -56,6 +56,23 @@ CREATE TABLE IF NOT EXISTS run_participants (
   PRIMARY KEY (run_id, user_id)
 );
 
+-- After a run, each participant rates the other runners. The UNIQUE constraint
+-- makes re-submitting a rating an update rather than a duplicate.
+CREATE TABLE IF NOT EXISTS run_ratings (
+  id            INTEGER PRIMARY KEY AUTOINCREMENT,
+  run_id        INTEGER NOT NULL REFERENCES runs(id) ON DELETE CASCADE,
+  rater_user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  rated_user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  stars         INTEGER NOT NULL CHECK (stars BETWEEN 1 AND 5),
+  created_at    TEXT NOT NULL DEFAULT (datetime('now')),
+  updated_at    TEXT NOT NULL DEFAULT (datetime('now')),
+  CHECK (rater_user_id != rated_user_id),
+  UNIQUE (run_id, rater_user_id, rated_user_id)
+);
+
+CREATE INDEX IF NOT EXISTS idx_run_ratings_rated_user ON run_ratings (rated_user_id);
+CREATE INDEX IF NOT EXISTS idx_run_ratings_run_rater ON run_ratings (run_id, rater_user_id);
+
 -- A user's availability slots, set on the "My Schedule" page: when they're
 -- free to run, how far, how fast, and roughly where they'll be (lat/lon, so we
 -- can match them with nearby partners). The actual meeting point is chosen
