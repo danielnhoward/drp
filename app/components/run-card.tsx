@@ -39,7 +39,14 @@ export default function RunCard({
 
           <RunMap lat={run.lat} lon={run.lon} label={run.meetAt} />
           <div className="flex justify-end">
-            <FinishRun runId={run.id} />
+            <FinishRun
+              runId={run.id}
+              partners={run.partners.map(({ id, name, avatar }) => ({
+                id,
+                name,
+                avatar,
+              }))}
+            />
           </div>
         </div>
       </div>
