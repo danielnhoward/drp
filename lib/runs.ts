@@ -1,10 +1,14 @@
 import "server-only";
 
+import type { NewAvailability } from "./availability";
 import { getDb } from "./db";
 import { isoDateInDays, isoToday } from "./format-date";
 import { getRatingSummaryForUser, type RatingSummary } from "./ratings";
-import { computeRuns, type MatchableAvailability } from "./matching";
 import { reverseGeocode } from "./geocoding";
+import { minutesToTime, timeToMinutes } from "./matching";
+
+/** Most partners we'll pull into a single dummy-scheduled run, besides the host. */
+const MAX_PARTNERS = 2;
 
 export type Runner = {
   /** The user's id. */
@@ -65,19 +69,6 @@ type RunRow = {
   photo: string | null;
 };
 
-type AvailabilityMatchRow = {
-  user_id: number;
-  /** NULL for legacy slots created before the date column was added. */
-  date: string | null;
-  start_time: string;
-  end_time: string;
-  distance_km: number;
-  pace_min_seconds: number;
-  pace_max_seconds: number;
-  lat: number;
-  lon: number;
-};
-
 // Returns everyone in the run *except* the current user — the home page header
 // is "Next run:" and the partners list reads "Running with:", so showing the
 // viewer's own name there would be redundant.
@@ -136,81 +127,118 @@ function recentRunPhotosForRunner(userId: number): string[] {
 }
 
 /**
- * Recomputes all runs from current availability and persists them. Called after
- * any availability change (add / edit / delete) so matches stay in sync.
+ * Schedules a single run for one availability slot, the "dummy" matcher: the run
+ * takes all its parameters from the host's slot (date, the midpoint of the time
+ * window, distance, and location / meeting point) and is filled with up to
+ * {@link MAX_PARTNERS} *random* other users, ignoring their own availability.
  *
- * Reads every slot from today onward straight from the availability table (not
- * via lib/availability.ts, to avoid an import cycle), runs the pure matcher, and
- * replaces the runs it owns (today onward) in a single transaction.
+ * If there are no other users at all, nothing is created — a run needs at least
+ * one partner. The run is linked to the slot via runs.availability_id, so
+ * deleting the slot removes exactly this run (and its participants, by cascade).
  */
-export async function recomputeRuns(): Promise<void> {
+export async function scheduleRunForAvailability(
+  availabilityId: number,
+  hostUserId: number,
+  slot: Pick<
+    NewAvailability,
+    "date" | "startTime" | "endTime" | "distanceKm" | "lat" | "lon"
+  >,
+): Promise<void> {
   const db = getDb();
-  const today = isoToday();
 
-  const rows = db
-    .prepare(
-      `SELECT user_id, date, start_time, end_time, distance_km, pace_min_seconds, pace_max_seconds, lat, lon
-       FROM availability
-       WHERE date >= ? OR date IS NULL`,
-    )
-    .all(today) as AvailabilityMatchRow[];
+  const partners = (
+    db
+      .prepare("SELECT id FROM users WHERE id != ? ORDER BY RANDOM() LIMIT ?")
+      .all(hostUserId, MAX_PARTNERS) as { id: number }[]
+  ).map((row) => row.id);
 
-  const availabilities: MatchableAvailability[] = rows.map((row) => ({
-    userId: row.user_id,
-    // Treat legacy null-date slots as today, matching listMyAvailability's fallback.
-    date: row.date ?? today,
-    startTime: row.start_time,
-    endTime: row.end_time,
-    distanceKm: row.distance_km,
-    paceMinSeconds: row.pace_min_seconds,
-    paceMaxSeconds: row.pace_max_seconds,
-    lat: row.lat,
-    lon: row.lon,
-  }));
+  // A run needs at least one other person; with no other users, just leave the
+  // availability on its own (it'll get a run later via the backfill once peers exist).
+  if (partners.length === 0) return;
 
-  const proposed = computeRuns(availabilities);
-
-  // Geocode all centroids before entering the synchronous DB transaction
-  // (can't interleave await with DatabaseSync).
-  const geocodedMeetAt = await Promise.all(
-    proposed.map((run) => reverseGeocode(run.lat, run.lon)),
+  // Run starts at the midpoint of the host's window.
+  const time = minutesToTime(
+    (timeToMinutes(slot.startTime) + timeToMinutes(slot.endTime)) / 2,
   );
+  // Geocode before the synchronous DB transaction (can't await inside it).
+  const meetAt = await reverseGeocode(slot.lat, slot.lon);
 
-  // Wipe and rebuild the runs we own (today onward) atomically, so a failure
-  // can't leave half-updated matches. run_participants clears via cascade.
   db.exec("BEGIN");
   try {
-    db.prepare("DELETE FROM runs WHERE date >= ?").run(today);
+    const { lastInsertRowid } = db
+      .prepare(
+        `INSERT INTO runs (date, time, distance_km, meet_at, lat, lon, availability_id)
+         VALUES (?, ?, ?, ?, ?, ?, ?)`,
+      )
+      .run(slot.date, time, slot.distanceKm, meetAt, slot.lat, slot.lon, availabilityId);
+    const runId = Number(lastInsertRowid);
 
-    const insertRun = db.prepare(
-      `INSERT INTO runs (date, time, distance_km, meet_at, lat, lon)
-       VALUES (?, ?, ?, ?, ?, ?)`,
-    );
     const insertParticipant = db.prepare(
       "INSERT INTO run_participants (run_id, user_id, position) VALUES (?, ?, ?)",
     );
-
-    for (let i = 0; i < proposed.length; i++) {
-      const run = proposed[i];
-      const { lastInsertRowid } = insertRun.run(
-        run.date,
-        run.time,
-        run.distanceKm,
-        geocodedMeetAt[i],
-        run.lat,
-        run.lon,
-      );
-      const runId = Number(lastInsertRowid);
-      run.userIds.forEach((userId, position) => {
-        insertParticipant.run(runId, userId, position);
-      });
-    }
+    // Host first (position 0), then the random partners.
+    [hostUserId, ...partners].forEach((userId, position) => {
+      insertParticipant.run(runId, userId, position);
+    });
 
     db.exec("COMMIT");
   } catch (error) {
     db.exec("ROLLBACK");
     throw error;
   }
+}
+
+// Availability rows that still need a run, as read back for the backfill below.
+type UnscheduledAvailabilityRow = {
+  id: number;
+  user_id: number;
+  date: string | null;
+  start_time: string;
+  end_time: string;
+  distance_km: number;
+  lat: number;
+  lon: number;
+};
+
+/**
+ * Generates a run for every availability slot that doesn't yet have one (legacy
+ * rows, the dev seed, or slots created while their host had no peers). Idempotent
+ * — it skips slots that already have a run, so it never disturbs existing runs.
+ * Runs lazily once per process (see the guard in lib/availability.ts).
+ */
+export async function backfillRunsForUnscheduledAvailability(): Promise<void> {
+  const today = isoToday();
+  const rows = getDb()
+    .prepare(
+      `SELECT a.id, a.user_id, a.date, a.start_time, a.end_time, a.distance_km, a.lat, a.lon
+       FROM availability a
+       LEFT JOIN runs r ON r.availability_id = a.id
+       WHERE r.id IS NULL`,
+    )
+    .all() as UnscheduledAvailabilityRow[];
+
+  for (const row of rows) {
+    await scheduleRunForAvailability(row.id, row.user_id, {
+      // Treat legacy null-date slots as today, matching listMyAvailability's fallback.
+      date: row.date ?? today,
+      startTime: row.start_time,
+      endTime: row.end_time,
+      distanceKm: row.distance_km,
+      lat: row.lat,
+      lon: row.lon,
+    });
+  }
+}
+
+// Run the backfill at most once per process. Guarded by a flag (not just the
+// idempotent skip in the query) so we don't re-scan on every page load.
+let backfillChecked = false;
+
+/** One-time-per-process wrapper around {@link backfillRunsForUnscheduledAvailability}. */
+export async function ensureRunsBackfilled(): Promise<void> {
+  if (backfillChecked) return;
+  backfillChecked = true;
+  await backfillRunsForUnscheduledAvailability();
 }
 
 /**
