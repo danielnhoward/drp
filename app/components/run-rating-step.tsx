@@ -62,9 +62,6 @@ export default function RunRatingStep({ runId, partners, onComplete }: Props) {
                 <PartnerAvatar partner={partner} />
                 <div className="min-w-0">
                   <h3 className="truncate font-medium">{partner.name}</h3>
-                  <p className="text-xs text-zinc-500 dark:text-zinc-400">
-                    How did this run feel?
-                  </p>
                 </div>
               </div>
 
