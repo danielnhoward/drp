@@ -331,9 +331,8 @@ function PaceCard({
             )}
           </div>
           <p className="mt-1 text-sm text-zinc-500 dark:text-zinc-400">
-            The time you&apos;d run 5k while chatting the whole way — relaxed, not
-            a race. Helps us match you with partners you can comfortably keep pace
-            and talk with.
+            The time you&apos;d run 5k while chatting the whole way - relaxed, not
+            a race.
           </p>
         </div>
       </div>
