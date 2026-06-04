@@ -88,18 +88,6 @@ export default function AuthForm({ initialState }: Props) {
               ))}
             </select>
           </Field>
-
-          <Field label="Comfortable 5k time (mm:ss)">
-            <input
-              className={fieldClass}
-              type="text"
-              name="fiveKTime"
-              required
-              placeholder="22:30"
-              pattern="\d{1,2}:[0-5]\d"
-              defaultValue={state.fiveKTime}
-            />
-          </Field>
         </>
       )}
 
