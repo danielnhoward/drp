@@ -3,7 +3,16 @@
 import { useActionState, useState } from "react";
 
 import { GENDERS, GENDER_LABELS, type Gender } from "@/lib/gender";
+import { formatMMSS } from "@/lib/profile-fields";
 import { updateProfileAction, type ProfileFormState } from "./actions";
+import {
+  appendSuggestion,
+  MAX_VIBE_LENGTH,
+  PACE_PRESETS,
+  VIBE_PROMPTS,
+  type VibeFieldName,
+  type VibePrompt,
+} from "./profile-content";
 
 type Props = {
   initialName: string;
@@ -19,79 +28,17 @@ type Props = {
   initialInterests: string | null;
 };
 
-type VibeFieldName = "whyRun" | "hobbies" | "interests";
-
-type VibePrompt = {
-  name: VibeFieldName;
-  title: string;
-  microcopy: string;
-  placeholder: string;
-  previewLabel: string;
-  suggestions: string[];
-  Icon: (props: { className?: string }) => React.ReactNode;
-};
-
 const INITIAL_STATE: ProfileFormState = {};
 
-const MAX_VIBE_LENGTH = 500;
 // The meter starts here and climbs 10% for each filled optional field (the three
 // vibe prompts plus the conversational 5k time), so all four filled reaches 100%.
 const BASE_PROFILE_PERCENT = 60;
-
-// Quick-pick conversational 5k times, offered as chips like the vibe prompts'
-// suggestions. Tapping one fills the field; runners can still type their own.
-// Spaced every 5 minutes across a broad range of easy paces.
-const PACE_PRESETS = ["25:00", "30:00", "35:00", "40:00", "45:00"];
 
 const fieldClass =
   "h-10 rounded-lg border border-black/10 bg-white px-3 text-sm text-black outline-none focus:border-black/40 dark:border-white/15 dark:bg-zinc-900 dark:text-zinc-50 dark:focus:border-white/50";
 
 const textareaClass =
   "mt-3 min-h-24 w-full resize-none rounded-lg border border-black/10 bg-white px-3 py-2 text-sm text-black outline-none focus:border-black/40 dark:border-white/15 dark:bg-zinc-900 dark:text-zinc-50 dark:focus:border-white/50";
-
-const VIBE_PROMPTS: VibePrompt[] = [
-  {
-    name: "whyRun",
-    title: "What makes your runs better?",
-    microcopy:
-      "Tell your future running partner what makes your runs feel easy and enjoyable.",
-    placeholder:
-      "e.g. I like easy miles with good chat, especially when someone gets me out the door.",
-    previewLabel: "Runs feel better when",
-    suggestions: [
-      "Easy miles with good chat",
-      "Accountability when motivation dips",
-      "Finding new local routes",
-    ],
-    Icon: SparkIcon,
-  },
-  {
-    name: "hobbies",
-    title: "What are you into lately, apart from running?",
-    microcopy:
-      "A couple of current interests makes the pre-run hello less awkward.",
-    placeholder:
-      "e.g. Trying new coffee spots, cooking after long runs, and learning guitar badly but happily.",
-    previewLabel: "Off-run lately",
-    suggestions: ["Coffee spots", "Cooking", "Live music", "Weekend walks"],
-    Icon: TrailIcon,
-  },
-  {
-    name: "interests",
-    title: "What could you happily chat about on an easy run?",
-    microcopy:
-      "Think low-pressure topics for the moments between pace checks.",
-    placeholder:
-      "e.g. Films, travel stories, football, local food places, or whatever podcast I just got hooked on.",
-    previewLabel: "Easy-run chat",
-    suggestions: ["Films and TV", "Travel stories", "Food places", "Podcasts"],
-    Icon: ChatIcon,
-  },
-];
-
-function formatMMSS(seconds: number): string {
-  return `${Math.floor(seconds / 60)}:${String(seconds % 60).padStart(2, "0")}`;
-}
 
 export default function ProfileForm({
   initialName,
@@ -139,28 +86,10 @@ export default function ProfileForm({
   }
 
   function addSuggestion(name: VibeFieldName, suggestion: string) {
-    setVibe((current) => {
-      const currentValue = current[name].trim();
-      if (
-        currentValue.toLowerCase().includes(suggestion.toLowerCase())
-      ) {
-        return current;
-      }
-
-      const joiner = currentValue
-        ? /[.!?]$/.test(currentValue)
-          ? " "
-          : ", "
-        : "";
-
-      return {
-        ...current,
-        [name]: `${currentValue}${joiner}${suggestion}`.slice(
-          0,
-          MAX_VIBE_LENGTH,
-        ),
-      };
-    });
+    setVibe((current) => ({
+      ...current,
+      [name]: appendSuggestion(current[name], suggestion, MAX_VIBE_LENGTH),
+    }));
   }
 
   return (
@@ -528,61 +457,6 @@ function Field({
       )}
       {children}
     </label>
-  );
-}
-
-function SparkIcon({ className }: { className?: string }) {
-  return (
-    <svg
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth={2}
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      className={className}
-      aria-hidden="true"
-    >
-      <path d="M12 2l1.5 6.5L20 10l-6.5 1.5L12 18l-1.5-6.5L4 10l6.5-1.5L12 2z" />
-      <path d="M19 16l.7 2.3L22 19l-2.3.7L19 22l-.7-2.3L16 19l2.3-.7L19 16z" />
-    </svg>
-  );
-}
-
-function TrailIcon({ className }: { className?: string }) {
-  return (
-    <svg
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth={2}
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      className={className}
-      aria-hidden="true"
-    >
-      <path d="M4 18c3 0 3-4 6-4s3 4 6 4 3-4 6-4" />
-      <path d="M4 10c3 0 3-4 6-4s3 4 6 4 3-4 6-4" />
-    </svg>
-  );
-}
-
-function ChatIcon({ className }: { className?: string }) {
-  return (
-    <svg
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth={2}
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      className={className}
-      aria-hidden="true"
-    >
-      <path d="M21 12a8 8 0 0 1-8 8H7l-4 3v-7a8 8 0 1 1 18-4z" />
-      <path d="M8 11h8" />
-      <path d="M8 15h5" />
-    </svg>
   );
 }
 

@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 
 import { deleteAvatarFile, saveAvatarFile } from "@/lib/avatars";
 import { isGender, type Gender } from "@/lib/gender";
+import { paceSecondsFromFiveK, parseOptionalText } from "@/lib/profile-fields";
 import {
   requireUser,
   updateUserAvatar,
@@ -13,33 +14,6 @@ import {
 export type ProfileFormState = { error?: string; ok?: boolean };
 
 export type AvatarFormState = { error?: string; ok?: boolean };
-
-// Matches "M:SS" or "MM:SS" — minutes 1–2 digits, seconds always 2.
-const MMSS = /^(\d{1,2}):([0-5]\d)$/;
-
-function parseMMSS(value: string): number | null {
-  const match = MMSS.exec(value);
-  if (!match) return null;
-  return Number(match[1]) * 60 + Number(match[2]);
-}
-
-// Optional free-text fields are capped so a single profile can't store an
-// unbounded blob. Generous enough for a few sentences each.
-const MAX_ABOUT_LENGTH = 500;
-
-// Trims an optional text field to null when blank. Returns the field's error
-// message if it exceeds the length cap, otherwise the cleaned value.
-function parseOptionalText(
-  value: string,
-  label: string,
-): { value: string | null } | { error: string } {
-  const trimmed = value.trim();
-  if (!trimmed) return { value: null };
-  if (trimmed.length > MAX_ABOUT_LENGTH) {
-    return { error: `Keep ${label} under ${MAX_ABOUT_LENGTH} characters.` };
-  }
-  return { value: trimmed };
-}
 
 export async function updateProfileAction(
   _prev: ProfileFormState,
@@ -71,14 +45,9 @@ export async function updateProfileAction(
 
   // Pace is optional. When provided it's collected as a 5k time and stored as
   // seconds-per-km, mirroring the availability form; a blank field clears it.
-  let preferredPaceSeconds: number | null = null;
-  if (fiveKRaw) {
-    const fiveK = parseMMSS(fiveKRaw);
-    if (fiveK === null || fiveK <= 0) {
-      return { error: "Enter your 5k time as mm:ss (e.g. 22:30)." };
-    }
-    preferredPaceSeconds = Math.round(fiveK / 5);
-  }
+  const pace = paceSecondsFromFiveK(fiveKRaw);
+  if ("error" in pace) return { error: pace.error };
+  const preferredPaceSeconds = pace.value;
 
   const whyRun = parseOptionalText(whyRunRaw, "why you run with others");
   if ("error" in whyRun) return { error: whyRun.error };
