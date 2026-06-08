@@ -61,6 +61,9 @@ export default function OnboardingWizard({ resuming, initialValues }: Props) {
     : STEP_ORDER;
 
   const [stepIndex, setStepIndex] = useState(0);
+  // Which way the last navigation went, so the incoming step slides in from the
+  // matching side ("scrolling" forward to the next question / back to the last).
+  const [direction, setDirection] = useState<"next" | "prev">("next");
   const [values, setValues] = useState<OnboardingValues>(initialValues);
   const [stepError, setStepError] = useState<string | null>(null);
   const [emailError, setEmailError] = useState<string | null>(null);
@@ -83,7 +86,10 @@ export default function OnboardingWizard({ resuming, initialValues }: Props) {
     setHandledState(serverState);
     if (serverState.step) {
       const target = steps.indexOf(serverState.step);
-      if (target >= 0) setStepIndex(target);
+      if (target >= 0) {
+        setDirection("prev");
+        setStepIndex(target);
+      }
     }
   }
 
@@ -109,11 +115,13 @@ export default function OnboardingWizard({ resuming, initialValues }: Props) {
 
   function back() {
     setStepError(null);
+    setDirection("prev");
     setStepIndex((index) => Math.max(0, index - 1));
   }
 
   function advance() {
     setStepError(null);
+    setDirection("next");
     setStepIndex((index) => Math.min(steps.length - 1, index + 1));
   }
 
@@ -246,12 +254,25 @@ export default function OnboardingWizard({ resuming, initialValues }: Props) {
 
       <Progress current={stepIndex + 1} total={steps.length} />
 
-      <div className="mt-8 flex flex-1 flex-col">
-        {renderStep()}
+      {/* Clip wrapper: the inner step slides in from 64px off-axis, so this
+          keeps the overshoot from briefly extending the page. */}
+      <div className="mt-8 flex flex-1 flex-col overflow-hidden">
+        {/* Re-keyed per step so each screen swipes in fresh — up from below
+            moving forward, down from above going back. */}
+        <div
+          key={step}
+          className={`flex flex-1 flex-col ${
+            direction === "next" ? "anim-step-up" : "anim-step-down"
+          }`}
+        >
+          {renderStep()}
 
-        {error && (
-          <p className="mt-4 text-sm text-red-600 dark:text-red-400">{error}</p>
-        )}
+          {error && (
+            <p className="mt-4 text-sm text-red-600 dark:text-red-400">
+              {error}
+            </p>
+          )}
+        </div>
       </div>
 
       <div className="mt-8 flex items-center justify-between gap-3">
