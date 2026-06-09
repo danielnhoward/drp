@@ -20,6 +20,7 @@ import {
 } from "@/app/profile/profile-content";
 import { completeOnboardingAction, lookupEmailAction } from "./actions";
 import {
+  BEGINNER_VIBE_COPY,
   INITIAL_COMPLETE_STATE,
   OPTIONAL_STEPS,
   STEP_ORDER,
@@ -55,17 +56,22 @@ function vibePromptFor(step: StepId): VibePrompt | undefined {
 }
 
 export default function OnboardingWizard({ resuming, initialValues }: Props) {
-  // A resuming user already supplied their email; drop that step for them.
-  const steps = resuming
-    ? STEP_ORDER.filter((step) => step !== "email")
-    : STEP_ORDER;
-
   const [stepIndex, setStepIndex] = useState(0);
   // Which way the last navigation went, so the incoming step slides in from the
   // matching side ("scrolling" forward to the next question / back to the last).
   const [direction, setDirection] = useState<"next" | "prev">("next");
   const [values, setValues] = useState<OnboardingValues>(initialValues);
   const [stepError, setStepError] = useState<string | null>(null);
+
+  // The step list is derived from the answers so far: a resuming user already
+  // supplied their email (drop that step), and a beginner who hasn't run before
+  // skips the pace question. "ranBefore" sits before "pace", so changing the
+  // answer never invalidates the current stepIndex.
+  const steps = STEP_ORDER.filter((step) => {
+    if (step === "email" && resuming) return false;
+    if (step === "pace" && values.ranBefore === "no") return false;
+    return true;
+  });
   const [emailError, setEmailError] = useState<string | null>(null);
 
   const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
@@ -112,6 +118,18 @@ export default function OnboardingWizard({ resuming, initialValues }: Props) {
     value: OnboardingValues[K],
   ) {
     setValues((current) => ({ ...current, [key]: value }));
+  }
+
+  // Answering "No" skips the pace step, so clear any pace already entered (e.g.
+  // the user picked Yes, typed a time, then came back and switched to No) — they
+  // can no longer see or edit it, and beginners shouldn't submit one.
+  function setRanBefore(answer: "yes" | "no") {
+    setStepError(null);
+    setValues((current) => ({
+      ...current,
+      ranBefore: answer,
+      fiveKTime: answer === "no" ? "" : current.fiveKTime,
+    }));
   }
 
   function back() {
@@ -166,6 +184,9 @@ export default function OnboardingWizard({ resuming, initialValues }: Props) {
     }
     if (step === "gender" && !values.gender) {
       return setStepError("Pick a gender.");
+    }
+    if (step === "ranBefore" && !values.ranBefore) {
+      return setStepError("Let us know if you've run before.");
     }
     advance();
   }
@@ -423,6 +444,40 @@ export default function OnboardingWizard({ resuming, initialValues }: Props) {
           </StepHeader>
         );
 
+      case "ranBefore": {
+        const options: { value: "yes" | "no"; label: string }[] = [
+          { value: "yes", label: "Yes, I've run before" },
+          { value: "no", label: "No, I'm just starting out" },
+        ];
+        return (
+          <StepHeader
+            title="Have you run before?"
+            subtitle="No experience needed — this just helps us ask the right questions next."
+          >
+            <div className="flex flex-col gap-2">
+              {options.map((option) => {
+                const selected = values.ranBefore === option.value;
+                return (
+                  <button
+                    key={option.value}
+                    type="button"
+                    onClick={() => setRanBefore(option.value)}
+                    aria-pressed={selected}
+                    className={`flex h-12 items-center rounded-lg border px-4 text-left text-sm font-medium transition-colors ${
+                      selected
+                        ? "border-blue-500 bg-blue-50 text-blue-800 dark:border-blue-500/70 dark:bg-blue-950/40 dark:text-blue-200"
+                        : "border-black/10 bg-white text-zinc-800 hover:border-black/30 dark:border-white/15 dark:bg-zinc-900 dark:text-zinc-100 dark:hover:border-white/40"
+                    }`}
+                  >
+                    {option.label}
+                  </button>
+                );
+              })}
+            </div>
+          </StepHeader>
+        );
+      }
+
       case "photo":
         return (
           <StepHeader
@@ -477,7 +532,7 @@ export default function OnboardingWizard({ resuming, initialValues }: Props) {
       case "pace":
         return (
           <StepHeader
-            title={firstName ? `What's your easy 5k pace, ${firstName}?` : "What's your easy 5k pace?"}
+            title={firstName ? `What's your conversational 5k pace, ${firstName}?` : "What's your conversation 5k pace?"}
             subtitle="Think conversational pace, not race-day pace. We use it to match you with runners at a similar rhythm."
           >
             <div className="mb-3 flex flex-wrap gap-2">
@@ -515,8 +570,14 @@ export default function OnboardingWizard({ resuming, initialValues }: Props) {
         const prompt = vibePromptFor(step);
         if (!prompt) return null;
         const value = values[prompt.name];
+        // Beginners (No branch) see reframed copy for whyRun/hobbies while
+        // reusing the same chips and field; interests is shared as-is.
+        const copy =
+          values.ranBefore === "no" && step !== "interests"
+            ? BEGINNER_VIBE_COPY[step]
+            : prompt;
         return (
-          <StepHeader title={prompt.title} subtitle={prompt.microcopy}>
+          <StepHeader title={copy.title} subtitle={copy.microcopy}>
             <div className="mb-3 flex flex-wrap gap-2">
               {prompt.suggestions.map((suggestion) => (
                 <button
@@ -539,7 +600,7 @@ export default function OnboardingWizard({ resuming, initialValues }: Props) {
               className={textareaClass}
               rows={4}
               maxLength={MAX_VIBE_LENGTH}
-              placeholder={prompt.placeholder}
+              placeholder={copy.placeholder}
               value={value}
               onChange={(event) =>
                 setValue(prompt.name, event.target.value.slice(0, MAX_VIBE_LENGTH))
