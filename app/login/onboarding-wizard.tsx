@@ -426,8 +426,8 @@ export default function OnboardingWizard({ resuming, initialValues }: Props) {
       case "photo":
         return (
           <StepHeader
-            title="Add a profile photo"
-            subtitle="Totally optional, but it can help your running partner spot you at the meeting point."
+            title="Help your running partner recognize you"
+            subtitle="It does not need to be a running photo. A picture helps the person you are matched with feel like they are meeting a real person, and you can change or remove it later."
           >
             <div className="flex items-center gap-4">
               <div className="relative h-24 w-24 shrink-0">
