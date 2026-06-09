@@ -14,8 +14,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Find a running partner",
-  description: "Find a running partner",
+  title: "RunDezvous",
+  description: "RunDezvous — find your running partner.",
 };
 
 export default function RootLayout({
