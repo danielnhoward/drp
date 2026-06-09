@@ -98,6 +98,7 @@ export default function OnboardingWizard({ resuming, initialValues }: Props) {
   const isLast = stepIndex === steps.length - 1;
   const isOptional = OPTIONAL_STEPS.has(step);
   const isEmail = step === "email";
+  const firstName = values.name.trim().split(/\s+/)[0] ?? "";
 
   // Revoke the preview object URL when it's replaced or the component unmounts.
   useEffect(() => {
@@ -341,7 +342,7 @@ export default function OnboardingWizard({ resuming, initialValues }: Props) {
         return (
           <StepHeader
             title="What's your email?"
-            subtitle="New or returning — we'll set you up in one step."
+            subtitle="We'll use this to find your account or help you create one."
           >
             <input
               className={fieldClass}
@@ -357,8 +358,12 @@ export default function OnboardingWizard({ resuming, initialValues }: Props) {
       case "name":
         return (
           <StepHeader
-            title="What should we call you?"
-            subtitle="The name other runners will see."
+            title={firstName ? `Hi, ${firstName}.` : "What should we call you?"}
+            subtitle={
+              firstName
+                ? "Lovely to have you here. Other runners will see this name when you're matched."
+                : "This is the name other runners will see."
+            }
           >
             <input
               className={fieldClass}
@@ -374,8 +379,8 @@ export default function OnboardingWizard({ resuming, initialValues }: Props) {
       case "dateOfBirth":
         return (
           <StepHeader
-            title="When's your birthday?"
-            subtitle="We use your age to find compatible partners."
+            title={firstName ? `When's your birthday, ${firstName}?` : "When's your birthday?"}
+            subtitle="We use your age to help suggest comfortable running partners."
           >
             <input
               // color-scheme lets the browser draw the native calendar-picker
@@ -391,7 +396,10 @@ export default function OnboardingWizard({ resuming, initialValues }: Props) {
 
       case "gender":
         return (
-          <StepHeader title="How do you identify?">
+          <StepHeader
+            title="How do you identify?"
+            subtitle="Pick the option that feels right for your profile."
+          >
             <div className="flex flex-col gap-2">
               {GENDERS.map((option) => {
                 const selected = values.gender === option;
@@ -419,7 +427,7 @@ export default function OnboardingWizard({ resuming, initialValues }: Props) {
         return (
           <StepHeader
             title="Add a profile photo"
-            subtitle="Optional, but it helps a matched partner spot you at the meeting point."
+            subtitle="Totally optional, but it can help your running partner spot you at the meeting point."
           >
             <div className="flex items-center gap-4">
               <div className="relative h-24 w-24 shrink-0">
@@ -469,8 +477,8 @@ export default function OnboardingWizard({ resuming, initialValues }: Props) {
       case "pace":
         return (
           <StepHeader
-            title="Your conversational 5k time"
-            subtitle="The time you'd run 5k while chatting the whole way — relaxed, not a race. We use it to match you on pace."
+            title={firstName ? `What's your easy 5k pace, ${firstName}?` : "What's your easy 5k pace?"}
+            subtitle="Think conversational pace, not race-day pace. We use it to match you with runners at a similar rhythm."
           >
             <div className="mb-3 flex flex-wrap gap-2">
               {PACE_PRESETS.map((preset) => (
@@ -555,8 +563,8 @@ export default function OnboardingWizard({ resuming, initialValues }: Props) {
         ].filter((item): item is string => item !== null);
         return (
           <StepHeader
-            title={name ? `You're all set, ${name}!` : "You're all set!"}
-            subtitle="Create your account to start finding running partners. Anything you skipped you can add later from your profile."
+            title={firstName ? `You're all set, ${firstName}.` : "You're all set."}
+            subtitle="Create your account and we'll start finding runs that fit your schedule. Anything you skipped can be added later from your profile."
           >
             <dl className="flex flex-col gap-2 rounded-lg border border-black/10 bg-zinc-50 p-4 text-sm dark:border-white/15 dark:bg-zinc-900">
               <ReviewRow label="Email" value={values.email} />
