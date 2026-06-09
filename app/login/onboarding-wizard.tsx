@@ -553,7 +553,6 @@ export default function OnboardingWizard({ resuming, initialValues }: Props) {
       }
 
       case "review": {
-        const name = values.name.trim();
         const added = [
           avatarPreview ? "profile photo" : null,
           values.fiveKTime.trim() ? `5k time (${values.fiveKTime.trim()})` : null,
