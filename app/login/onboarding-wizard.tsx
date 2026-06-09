@@ -31,6 +31,11 @@ type Props = {
   // True when a signed-in user is finishing an incomplete profile: their email
   // is already known, so the wizard drops the "email" step.
   resuming: boolean;
+  // True when a new runner arrived from the landing page with their email
+  // already entered: it's prefilled in initialValues, so the "email" step is
+  // dropped here too (without the resuming label changes — they're still
+  // creating an account, not finishing one).
+  skipEmailStep?: boolean;
   initialValues: OnboardingValues;
 };
 
@@ -54,11 +59,17 @@ function vibePromptFor(step: StepId): VibePrompt | undefined {
   return VIBE_PROMPTS.find((prompt) => prompt.name === step);
 }
 
-export default function OnboardingWizard({ resuming, initialValues }: Props) {
-  // A resuming user already supplied their email; drop that step for them.
-  const steps = resuming
-    ? STEP_ORDER.filter((step) => step !== "email")
-    : STEP_ORDER;
+export default function OnboardingWizard({
+  resuming,
+  skipEmailStep = false,
+  initialValues,
+}: Props) {
+  // The email is already settled — supplied by a resuming user's row or handed
+  // over from the landing page — so drop that step in either case.
+  const steps =
+    resuming || skipEmailStep
+      ? STEP_ORDER.filter((step) => step !== "email")
+      : STEP_ORDER;
 
   const [stepIndex, setStepIndex] = useState(0);
   // Which way the last navigation went, so the incoming step slides in from the
