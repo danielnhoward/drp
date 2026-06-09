@@ -46,7 +46,9 @@ const textareaClass =
 const chipClass =
   "inline-flex min-h-8 max-w-full items-center gap-1.5 rounded-full border border-black/10 bg-zinc-50 px-3 py-1 text-left text-xs font-medium text-zinc-700 transition-colors hover:border-blue-200 hover:bg-blue-50 hover:text-blue-800 disabled:opacity-50 dark:border-white/15 dark:bg-zinc-950 dark:text-zinc-300 dark:hover:border-blue-900/80 dark:hover:bg-blue-950/40 dark:hover:text-blue-200";
 const primaryBtn =
-  "rounded-full bg-blue-600 px-5 py-2.5 text-sm font-medium text-white transition-colors hover:bg-blue-700 disabled:opacity-50";
+  "inline-flex min-w-24 items-center justify-center rounded-full bg-blue-600 px-5 py-2.5 text-sm font-medium text-white transition-colors hover:bg-blue-700 disabled:opacity-50";
+const secondaryBtn =
+  "inline-flex min-w-24 items-center justify-center rounded-full border border-black/15 bg-white px-5 py-2.5 text-sm font-medium text-zinc-800 transition-colors hover:bg-zinc-50 dark:border-white/20 dark:bg-zinc-950 dark:text-zinc-100 dark:hover:bg-zinc-900";
 const ghostBtn =
   "rounded-full px-4 py-2.5 text-sm font-medium text-zinc-600 transition-colors hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-50";
 
@@ -99,6 +101,10 @@ export default function OnboardingWizard({ resuming, initialValues }: Props) {
   const isOptional = OPTIONAL_STEPS.has(step);
   const isEmail = step === "email";
   const firstName = values.name.trim().split(/\s+/)[0] ?? "";
+  const hasOptionalContent = isOptional && optionalStepHasValue(step);
+  const advanceButtonLabel = isOptional && !hasOptionalContent ? "Skip" : "Continue";
+  const advanceButtonClass =
+    isOptional && !hasOptionalContent ? secondaryBtn : primaryBtn;
 
   // Revoke the preview object URL when it's replaced or the component unmounts.
   useEffect(() => {
@@ -124,6 +130,23 @@ export default function OnboardingWizard({ resuming, initialValues }: Props) {
     setStepError(null);
     setDirection("next");
     setStepIndex((index) => Math.min(steps.length - 1, index + 1));
+  }
+
+  function optionalStepHasValue(currentStep: StepId) {
+    switch (currentStep) {
+      case "photo":
+        return Boolean(avatarPreview);
+      case "pace":
+        return Boolean(values.fiveKTime.trim());
+      case "whyRun":
+        return Boolean(values.whyRun.trim());
+      case "hobbies":
+        return Boolean(values.hobbies.trim());
+      case "interests":
+        return Boolean(values.interests.trim());
+      default:
+        return false;
+    }
   }
 
   function continueFromEmail() {
@@ -285,11 +308,6 @@ export default function OnboardingWizard({ resuming, initialValues }: Props) {
           )}
         </div>
         <div className="flex items-center gap-2">
-          {isOptional && !isLast && (
-            <button type="button" onClick={advance} className={ghostBtn}>
-              Skip for now
-            </button>
-          )}
           {isEmail ? (
             // Shares the "advance" key with the Continue button below so the
             // node is reused between advancing steps (focus stays on it).
@@ -326,9 +344,9 @@ export default function OnboardingWizard({ resuming, initialValues }: Props) {
               key="advance"
               type="button"
               onClick={isOptional ? nextOptional : nextRequired}
-              className={primaryBtn}
+              className={advanceButtonClass}
             >
-              Continue
+              {advanceButtonLabel}
             </button>
           )}
         </div>
@@ -427,7 +445,8 @@ export default function OnboardingWizard({ resuming, initialValues }: Props) {
         return (
           <StepHeader
             title="Add a profile photo"
-            subtitle="Totally optional, but it can help your running partner spot you at the meeting point."
+            subtitle="It can help your running partner spot you at the meeting point."
+            optional
           >
             <div className="flex items-center gap-4">
               <div className="relative h-24 w-24 shrink-0">
@@ -479,6 +498,7 @@ export default function OnboardingWizard({ resuming, initialValues }: Props) {
           <StepHeader
             title={firstName ? `What's your easy 5k pace, ${firstName}?` : "What's your easy 5k pace?"}
             subtitle="Think conversational pace, not race-day pace. We use it to match you with runners at a similar rhythm."
+            optional
           >
             <div className="mb-3 flex flex-wrap gap-2">
               {PACE_PRESETS.map((preset) => (
@@ -516,7 +536,7 @@ export default function OnboardingWizard({ resuming, initialValues }: Props) {
         if (!prompt) return null;
         const value = values[prompt.name];
         return (
-          <StepHeader title={prompt.title} subtitle={prompt.microcopy}>
+          <StepHeader title={prompt.title} subtitle={prompt.microcopy} optional>
             <div className="mb-3 flex flex-wrap gap-2">
               {prompt.suggestions.map((suggestion) => (
                 <button
@@ -553,7 +573,6 @@ export default function OnboardingWizard({ resuming, initialValues }: Props) {
       }
 
       case "review": {
-        const name = values.name.trim();
         const added = [
           avatarPreview ? "profile photo" : null,
           values.fiveKTime.trim() ? `5k time (${values.fiveKTime.trim()})` : null,
@@ -619,16 +638,25 @@ function Progress({ current, total }: { current: number; total: number }) {
 function StepHeader({
   title,
   subtitle,
+  optional = false,
   children,
 }: {
   title: string;
   subtitle?: string;
+  optional?: boolean;
   children: React.ReactNode;
 }) {
   return (
     <div className="flex flex-col gap-4">
       <div>
-        <h1 className="text-2xl font-semibold tracking-tight">{title}</h1>
+        <div className="flex flex-wrap items-center gap-2">
+          <h1 className="text-2xl font-semibold">{title}</h1>
+          {optional && (
+            <span className="inline-flex shrink-0 items-center rounded-full border border-blue-200 bg-blue-50 px-2 py-0.5 text-xs font-semibold text-blue-700 dark:border-blue-900/60 dark:bg-blue-950/40 dark:text-blue-200">
+              Optional
+            </span>
+          )}
+        </div>
         {subtitle && (
           <p className="mt-2 text-sm text-zinc-600 dark:text-zinc-400">
             {subtitle}
