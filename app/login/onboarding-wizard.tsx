@@ -32,6 +32,11 @@ type Props = {
   // True when a signed-in user is finishing an incomplete profile: their email
   // is already known, so the wizard drops the "email" step.
   resuming: boolean;
+  // True when a new runner arrived from the landing page with their email
+  // already entered: it's prefilled in initialValues, so the "email" step is
+  // dropped here too (without the resuming label changes — they're still
+  // creating an account, not finishing one).
+  skipEmailStep?: boolean;
   initialValues: OnboardingValues;
 };
 
@@ -55,7 +60,11 @@ function vibePromptFor(step: StepId): VibePrompt | undefined {
   return VIBE_PROMPTS.find((prompt) => prompt.name === step);
 }
 
-export default function OnboardingWizard({ resuming, initialValues }: Props) {
+export default function OnboardingWizard({
+  resuming,
+  skipEmailStep = false,
+  initialValues,
+}: Props) {
   const [stepIndex, setStepIndex] = useState(0);
   // Which way the last navigation went, so the incoming step slides in from the
   // matching side ("scrolling" forward to the next question / back to the last).
@@ -63,12 +72,13 @@ export default function OnboardingWizard({ resuming, initialValues }: Props) {
   const [values, setValues] = useState<OnboardingValues>(initialValues);
   const [stepError, setStepError] = useState<string | null>(null);
 
-  // The step list is derived from the answers so far: a resuming user already
-  // supplied their email (drop that step), and a beginner who hasn't run before
-  // skips the pace question. "ranBefore" sits before "pace", so changing the
-  // answer never invalidates the current stepIndex.
+  // The step list is derived from the answers so far. The email is dropped when
+  // it's already settled — a resuming user's row, or one handed over from the
+  // landing page (skipEmailStep) — and a beginner who hasn't run before skips
+  // the pace question. "ranBefore" sits before "pace", so changing the answer
+  // never invalidates the current stepIndex.
   const steps = STEP_ORDER.filter((step) => {
-    if (step === "email" && resuming) return false;
+    if (step === "email" && (resuming || skipEmailStep)) return false;
     if (step === "pace" && values.ranBefore === "no") return false;
     return true;
   });
@@ -382,8 +392,8 @@ export default function OnboardingWizard({ resuming, initialValues }: Props) {
             title={firstName ? `Hi, ${firstName}.` : "What should we call you?"}
             subtitle={
               firstName
-                ? "Lovely to have you here. Other runners will see this name when you're matched."
-                : "This is the name other runners will see."
+                ? "Lovely to have you here. This is the display name other runners will see, a nickname or first name is perfectly fine."
+                : "Pick a display name other runners will see, a nickname or just your first name is perfectly fine."
             }
           >
             <input
@@ -481,8 +491,8 @@ export default function OnboardingWizard({ resuming, initialValues }: Props) {
       case "photo":
         return (
           <StepHeader
-            title="Add a profile photo"
-            subtitle="Totally optional, but it can help your running partner spot you at the meeting point."
+            title="Help your running partner recognise you"
+            subtitle="It does not need to be a running photo. A picture helps the person you are matched with feel like they are meeting a real person, and you can change or remove it later."
           >
             <div className="flex items-center gap-4">
               <div className="relative h-24 w-24 shrink-0">
@@ -614,7 +624,6 @@ export default function OnboardingWizard({ resuming, initialValues }: Props) {
       }
 
       case "review": {
-        const name = values.name.trim();
         const added = [
           avatarPreview ? "profile photo" : null,
           values.fiveKTime.trim() ? `5k time (${values.fiveKTime.trim()})` : null,

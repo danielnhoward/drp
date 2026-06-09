@@ -14,14 +14,19 @@ const BASIC_AUTH_BYPASS_COOKIE = process.env.BASIC_AUTH_BYPASS_COOKIE ?? "bypass
 const BASIC_AUTH_BYPASS_MAX_AGE = Number(process.env.BASIC_AUTH_BYPASS_MAX_AGE ?? 1 * 60 * 60);
 
 // Routes that don't require a session. Everything else gets redirected to
-// /login when the session cookie is missing. The admin page is intentionally
+// /welcome when the session cookie is missing. The admin page is intentionally
 // open so it can be used to recover access by impersonating any account.
-const PUBLIC_ROUTES = new Set(["/login", "/admin"]);
+const PUBLIC_ROUTES = new Set(["/welcome", "/login", "/admin"]);
 
 function isPublic(pathname: string): boolean {
   if (PUBLIC_ROUTES.has(pathname)) return true;
   // Treat nested admin routes (e.g. /admin/anything) as public too.
   if (pathname.startsWith("/admin/")) return true;
+  // The app icon (served at /icon.svg from app/icon.svg) is public so the
+  // browser can show the favicon on the logged-out landing/login pages: the
+  // favicon fetch carries no session cookie, so a session-gated /icon.svg would
+  // redirect to an HTML page and fail to load as an image.
+  if (pathname === "/icon.svg") return true;
   // Avatar and run-photo files are public so next/image's internal optimizer
   // fetch (which doesn't forward the session cookie) can load them; both are
   // already exposed in shared views like the run card and profile popup.
@@ -103,8 +108,8 @@ export function proxy(request: NextRequest) {
   // the id resolves to an actual row before trusting it.
   if (request.cookies.get("session")?.value) return NextResponse.next();
 
-  const loginUrl = new URL("/login", request.url);
-  return NextResponse.redirect(loginUrl);
+  const welcomeUrl = new URL("/welcome", request.url);
+  return NextResponse.redirect(welcomeUrl);
 }
 
 export const config = {

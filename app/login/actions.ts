@@ -165,5 +165,5 @@ export async function completeOnboardingAction(
 
 export async function logoutAction(): Promise<void> {
   await clearSession();
-  redirect("/login");
+  redirect("/welcome");
 }
