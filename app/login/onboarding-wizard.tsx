@@ -290,7 +290,10 @@ export default function OnboardingWizard({ resuming, initialValues }: Props) {
             </button>
           )}
           {isEmail ? (
+            // Shares the "advance" key with the Continue button below so the
+            // node is reused between advancing steps (focus stays on it).
             <button
+              key="advance"
               type="button"
               onClick={continueFromEmail}
               disabled={emailPending}
@@ -299,7 +302,16 @@ export default function OnboardingWizard({ resuming, initialValues }: Props) {
               {emailPending ? "Checking…" : "Continue"}
             </button>
           ) : isLast ? (
-            <button type="submit" disabled={pending} className={primaryBtn}>
+            // Distinct key from the advancing buttons: React mounts this as a
+            // fresh, UNFOCUSED element rather than reusing the Continue node, so
+            // an Enter carried over from advancing (e.g. held/repeated) can't
+            // land on the submit and finish the wizard without a real click.
+            <button
+              key="submit"
+              type="submit"
+              disabled={pending}
+              className={primaryBtn}
+            >
               {pending
                 ? resuming
                   ? "Saving…"
@@ -310,6 +322,7 @@ export default function OnboardingWizard({ resuming, initialValues }: Props) {
             </button>
           ) : (
             <button
+              key="advance"
               type="button"
               onClick={isOptional ? nextOptional : nextRequired}
               className={primaryBtn}
@@ -365,7 +378,9 @@ export default function OnboardingWizard({ resuming, initialValues }: Props) {
             subtitle="We use your age to find compatible partners."
           >
             <input
-              className={fieldClass}
+              // color-scheme lets the browser draw the native calendar-picker
+              // glyph per the active theme: black in light mode, white in dark.
+              className={`${fieldClass} [color-scheme:light_dark]`}
               type="date"
               max={today}
               value={values.dateOfBirth}
