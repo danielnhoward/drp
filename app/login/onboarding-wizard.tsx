@@ -361,8 +361,8 @@ export default function OnboardingWizard({ resuming, initialValues }: Props) {
             title={firstName ? `Hi, ${firstName}.` : "What should we call you?"}
             subtitle={
               firstName
-                ? "Lovely to have you here. Other runners will see this name when you're matched."
-                : "This is the name other runners will see."
+                ? "Lovely to have you here. This is the display name other runners will see, a nickname or first name is perfectly fine."
+                : "Pick a display name other runners will see, a nickname or just your first name is perfectly fine."
             }
           >
             <input
