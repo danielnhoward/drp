@@ -26,26 +26,26 @@ export default function RunningVibeNudge({
   }
 
   return (
-    <section className="mb-4 rounded-lg border border-amber-200 bg-amber-50 p-4 dark:border-amber-900/60 dark:bg-amber-950/25">
+    <section className="anim-rise mb-4 rounded-2xl border border-accent/30 bg-surface-2 p-4">
       <div className="flex items-start gap-3">
-        <span className="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-amber-100 text-amber-800 dark:bg-amber-900/60 dark:text-amber-200">
+        <span className="glow-pulse mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-accent/15 text-accent">
           <SparkIcon className="h-5 w-5" />
         </span>
         <div className="min-w-0 flex-1">
-          <p className="text-sm font-semibold text-zinc-950 dark:text-zinc-50">
+          <p className="text-sm font-semibold text-foreground">
             {missingCount === 3
               ? "Your partner intro is empty."
               : `${missingCount} partner intro prompt${
                   missingCount === 1 ? "" : "s"
                 } left.`}
           </p>
-          <p className="mt-1 text-sm text-zinc-700 dark:text-zinc-300">
+          <p className="mt-1 text-sm text-muted">
             Add a few running-vibe notes so a matched runner has something easy
             to ask you about.
           </p>
           <Link
             href="/profile#running-vibe"
-            className="mt-3 inline-flex h-9 items-center rounded-full bg-blue-600 px-4 text-sm font-medium text-white transition-colors hover:bg-blue-700"
+            className="btn-accent tap mt-3 text-sm"
           >
             Add running vibe
           </Link>
@@ -54,7 +54,7 @@ export default function RunningVibeNudge({
           type="button"
           onClick={dismiss}
           aria-label="Dismiss running vibe reminder"
-          className="-mr-1 -mt-1 rounded-full p-1.5 text-amber-800 transition-colors hover:bg-amber-100 dark:text-amber-200 dark:hover:bg-amber-900/50"
+          className="-mr-1 -mt-1 rounded-full p-1.5 text-muted transition-colors hover:bg-surface-2 hover:text-foreground"
         >
           <CloseIcon className="h-4 w-4" />
         </button>

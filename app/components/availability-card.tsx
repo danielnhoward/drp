@@ -8,22 +8,26 @@ import RunMap from "./run-map";
 
 export default function AvailabilityCard({ slot }: { slot: Availability }) {
   return (
-    <li className="rounded-2xl border border-black/10 bg-white p-4 shadow-sm dark:border-white/15 dark:bg-zinc-900">
+    <li className="card hover-lift anim-rise p-4">
       <div className="flex items-start gap-3">
         {/* Left: the slot details. */}
         <dl className="flex min-w-0 flex-1 flex-col gap-2 text-base">
           <Detail Icon={CalendarIcon} label="Date">
-            {formatDate(slot.date)}
+            <span className="font-mono tnum">{formatDate(slot.date)}</span>
           </Detail>
           <Detail Icon={ClockIcon} label="Availability">
-            {slot.startTime} – {slot.endTime}
+            <span className="font-mono tnum">
+              {slot.startTime} – {slot.endTime}
+            </span>
           </Detail>
           <div className="flex flex-wrap items-center gap-x-6 gap-y-2">
             <Detail Icon={RouteIcon} label="Distance">
-              {slot.distanceKm} km
+              <span className="font-mono tnum">{slot.distanceKm} km</span>
             </Detail>
             <Detail Icon={RunnerIcon} label="Pace">
-              {formatMMSS(slot.paceMinSeconds)} – {formatMMSS(slot.paceMaxSeconds)} /km
+              <span className="font-mono tnum">
+                {formatMMSS(slot.paceMinSeconds)} – {formatMMSS(slot.paceMaxSeconds)} /km
+              </span>
             </Detail>
           </div>
         </dl>
@@ -39,7 +43,7 @@ export default function AvailabilityCard({ slot }: { slot: Availability }) {
           <Link
             href={`/calendar/${slot.id}/edit`}
             aria-label="Edit availability"
-            className="rounded-full border border-black/10 p-2 text-zinc-500 transition-colors hover:border-black/30 hover:bg-black/5 hover:text-zinc-900 dark:border-white/15 dark:text-zinc-400 dark:hover:border-white/30 dark:hover:bg-white/10 dark:hover:text-white"
+            className="tap rounded-full border border-border p-2 text-muted transition-colors hover:bg-surface-2 hover:text-foreground"
           >
             <PencilIcon className="h-4 w-4" aria-hidden="true" />
           </Link>
@@ -49,7 +53,7 @@ export default function AvailabilityCard({ slot }: { slot: Availability }) {
             <button
               type="submit"
               aria-label="Delete availability"
-              className="rounded-full border border-black/10 p-2 text-zinc-500 transition-colors hover:border-red-500/40 hover:bg-red-500/10 hover:text-red-600 dark:border-white/15 dark:text-zinc-400 dark:hover:text-red-400"
+              className="tap rounded-full border border-border p-2 text-muted transition-colors hover:border-danger/40 hover:bg-danger/10 hover:text-danger"
             >
               <TrashIcon className="h-4 w-4" aria-hidden="true" />
             </button>
@@ -72,7 +76,7 @@ function Detail({
   return (
     <div className="flex items-center gap-2">
       <Icon
-        className="h-5 w-5 shrink-0 text-zinc-500 dark:text-zinc-400"
+        className="h-5 w-5 shrink-0 text-muted"
         aria-hidden="true"
       />
       <span className="sr-only">{label}:</span>

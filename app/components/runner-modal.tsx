@@ -57,7 +57,7 @@ export default function RunnerModal({ runner }: { runner: Runner }) {
         type="button"
         onClick={() => setOpen(true)}
         aria-label={`View ${runner.name}'s profile`}
-        className="group flex w-full cursor-pointer items-center gap-2 rounded-xl border border-black/20 px-2.5 py-1.5 hover:bg-zinc-50 dark:border-white/15 dark:hover:bg-zinc-800"
+        className="group flex w-full cursor-pointer items-center gap-2 rounded-xl border border-border px-2.5 py-1.5 transition-colors hover:border-accent/40 hover:bg-surface-2"
       >
         <Avatar
           avatar={runner.avatar}
@@ -79,7 +79,7 @@ export default function RunnerModal({ runner }: { runner: Runner }) {
           strokeWidth={2}
           strokeLinecap="round"
           strokeLinejoin="round"
-          className="ml-auto h-4 w-4 shrink-0 text-zinc-400 transition-colors group-hover:text-zinc-600 dark:text-zinc-600 dark:group-hover:text-zinc-400"
+          className="ml-auto h-4 w-4 shrink-0 text-muted transition-colors group-hover:text-accent"
           aria-hidden="true"
         >
           <path d="M9 6l6 6-6 6" />
@@ -98,15 +98,15 @@ export default function RunnerModal({ runner }: { runner: Runner }) {
             type="button"
             aria-label="Close profile"
             onClick={() => setOpen(false)}
-            className="absolute inset-0 cursor-pointer bg-black/50"
+            className="absolute inset-0 cursor-pointer bg-background/70 backdrop-blur-sm"
           />
 
-          <div className="relative z-10 max-h-[calc(100vh-2rem)] w-full max-w-sm overflow-y-auto rounded-2xl bg-white p-6 shadow-xl dark:bg-zinc-900">
+          <div className="card anim-pop relative z-10 max-h-[calc(100vh-2rem)] w-full max-w-sm overflow-y-auto p-6">
             <button
               type="button"
               onClick={() => setOpen(false)}
               aria-label="Close profile"
-              className="absolute right-3 top-3 rounded-full p-1.5 text-zinc-500 transition-colors hover:bg-black/5 hover:text-zinc-900 dark:text-zinc-400 dark:hover:bg-white/10 dark:hover:text-zinc-50 cursor-pointer"
+              className="absolute right-3 top-3 rounded-full p-1.5 text-muted transition-colors hover:bg-surface-2 hover:text-foreground cursor-pointer"
             >
               <svg
                 viewBox="0 0 24 24"
@@ -135,7 +135,9 @@ export default function RunnerModal({ runner }: { runner: Runner }) {
                 <Detail label="Gender">{gender}</Detail>
 
                 {fiveKTime && (
-                  <Detail label="Conversational 5k">{fiveKTime}</Detail>
+                  <Detail label="Conversational 5k">
+                    <span className="font-mono tnum">{fiveKTime}</span>
+                  </Detail>
                 )}
 
                 <Detail label="Trust">
@@ -145,10 +147,10 @@ export default function RunnerModal({ runner }: { runner: Runner }) {
             </div>
 
             {about.length > 0 && (
-              <div className="mt-5 flex flex-col gap-4 border-t border-black/10 pt-4 dark:border-white/15">
+              <div className="mt-5 flex flex-col gap-4 border-t border-border pt-4">
                 {about.map((item) => (
                   <div key={item.label}>
-                    <h3 className="text-sm font-medium text-zinc-500 dark:text-zinc-400">
+                    <h3 className="text-sm font-medium text-muted">
                       {item.label}
                     </h3>
                     <p className="mt-0.5 whitespace-pre-line text-base">
@@ -160,15 +162,15 @@ export default function RunnerModal({ runner }: { runner: Runner }) {
             )}
 
             {runner.recentRunPhotos.length > 0 && (
-              <div className="mt-5 border-t border-black/10 pt-4 dark:border-white/15">
-                <h3 className="text-sm font-medium text-zinc-500 dark:text-zinc-400">
+              <div className="mt-5 border-t border-border pt-4">
+                <h3 className="text-sm font-medium text-muted">
                   Recent run photos
                 </h3>
                 <div className="mt-3 flex gap-2">
                   {runner.recentRunPhotos.map((photo, index) => (
                     <div
                       key={`${photo}-${index}`}
-                      className="relative aspect-square flex-1 overflow-hidden rounded-xl bg-zinc-100 dark:bg-zinc-800"
+                      className="relative aspect-square flex-1 overflow-hidden rounded-xl bg-surface-2"
                     >
                       <Image
                         src={photo}
@@ -205,14 +207,14 @@ function Avatar({
         alt={`${name}'s profile picture`}
         width={96}
         height={96}
-        className={`shrink-0 border border-black/10 object-cover dark:border-white/15 ${className}`}
+        className={`shrink-0 border border-border object-cover ${className}`}
       />
     );
   }
   return (
     <span
       aria-hidden="true"
-      className={`flex shrink-0 items-center justify-center border border-black/10 bg-zinc-100 font-semibold text-zinc-500 dark:border-white/15 dark:bg-zinc-800 dark:text-zinc-400 ${className}`}
+      className={`flex shrink-0 items-center justify-center border border-border bg-surface-2 font-semibold text-muted ${className}`}
     >
       {name.charAt(0)}
     </span>
@@ -228,7 +230,7 @@ function Detail({
 }) {
   return (
     <div className="flex items-baseline gap-1.5 text-base">
-      <dt className="text-zinc-500 dark:text-zinc-400">{label}:</dt>
+      <dt className="text-muted">{label}:</dt>
       <dd className="font-medium">{children}</dd>
     </div>
   );

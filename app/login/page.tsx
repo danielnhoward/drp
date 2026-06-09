@@ -38,13 +38,13 @@ export default async function LoginPage() {
     : INITIAL_VALUES;
 
   return (
-    <main className="flex w-full flex-1 flex-col">
+    <main className="page-enter flex w-full flex-1 flex-col">
       <OnboardingWizard resuming={resuming} initialValues={initialValues} />
 
-      <p className="pb-8 text-center text-xs text-zinc-500 dark:text-zinc-500">
+      <p className="pb-8 text-center text-xs text-muted">
         <Link
           href="/admin"
-          className="underline hover:text-zinc-700 dark:hover:text-zinc-300"
+          className="underline hover:text-foreground"
         >
           Admin
         </Link>

@@ -35,7 +35,7 @@ export default function BottomNav() {
       aria-label="Primary"
       // Fixed to the bottom across all viewports. The safe-area padding keeps
       // the bar clear of the iOS home indicator on mobile.
-      className="fixed inset-x-0 bottom-0 z-50 border-t border-black/10 bg-white/90 backdrop-blur-sm pb-[env(safe-area-inset-bottom)] dark:border-white/15 dark:bg-black/80"
+      className="fixed inset-x-0 bottom-0 z-50 glass border-t pb-[env(safe-area-inset-bottom)]"
     >
       {/* Centred, width-capped row so the bar reads as a tab bar on mobile and
           a compact toolbar on wider desktop screens. */}
@@ -51,10 +51,10 @@ export default function BottomNav() {
               <Link
                 href={href}
                 aria-current={isActive ? "page" : undefined}
-                className={`flex flex-1 flex-col items-center justify-center gap-1 rounded-lg text-xs font-medium transition-colors ${
+                className={`tap flex flex-1 flex-col items-center justify-center gap-1 rounded-lg text-xs font-medium transition-colors ${
                   isActive
-                    ? "text-blue-600 dark:text-blue-400"
-                    : "text-zinc-500 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-50"
+                    ? "text-accent"
+                    : "text-muted hover:text-foreground"
                 }`}
               >
                 <Icon className="h-6 w-6" aria-hidden="true" />

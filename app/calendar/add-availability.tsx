@@ -23,7 +23,7 @@ function formatMMSS(seconds: number): string {
 }
 
 const fieldClass =
-  "h-10 rounded-lg border border-black/10 bg-white px-3 text-sm text-black outline-none focus:border-black/40 dark:border-white/15 dark:bg-zinc-900 dark:text-zinc-50 dark:focus:border-white/50";
+  "h-10 rounded-lg border border-border bg-surface-2 px-3 text-sm text-foreground placeholder:text-muted outline-none transition-colors focus:border-accent";
 
 export default function AddAvailability() {
   const [isOpen, setOpen] = useState(false);
@@ -50,7 +50,7 @@ export default function AddAvailability() {
           type="button"
           onClick={() => setOpen(true)}
           aria-label="Add availability"
-          className="flex h-14 w-14 items-center justify-center rounded-full bg-blue-600 text-white shadow-lg transition-colors hover:bg-blue-700"
+          className="tap flex h-14 w-14 items-center justify-center rounded-full bg-accent text-accent-contrast shadow-lg transition-colors hover:brightness-110"
         >
         <svg
           viewBox="0 0 24 24"
@@ -78,7 +78,7 @@ export default function AddAvailability() {
             type="button"
             aria-label="Close"
             onClick={() => setOpen(false)}
-            className="absolute inset-0 cursor-default bg-black/50"
+            className="absolute inset-0 cursor-default bg-background/70 backdrop-blur-sm"
           />
           {/* Fresh mount each open, so the form's action state starts clean. */}
           <AvailabilityForm onClose={() => setOpen(false)} />
@@ -111,14 +111,14 @@ function AvailabilityForm({ onClose }: { onClose: () => void }) {
   }, [state.ok, onClose]);
 
   return (
-    <div className="relative z-10 flex max-h-[90vh] w-full max-w-lg flex-col overflow-hidden rounded-2xl bg-white shadow-xl dark:bg-zinc-900">
-      <div className="flex items-center justify-between gap-2 border-b border-black/10 p-4 dark:border-white/15">
-        <h2 className="text-lg font-semibold tracking-tight">Add availability</h2>
+    <div className="card anim-pop relative z-10 flex max-h-[90vh] w-full max-w-lg flex-col overflow-hidden">
+      <div className="flex items-center justify-between gap-2 border-b border-border p-4">
+        <h2 className="text-lg font-semibold tracking-tight text-foreground">Add availability</h2>
         <button
           type="button"
           onClick={onClose}
           aria-label="Close"
-          className="rounded-full p-1.5 text-zinc-500 transition-colors hover:bg-black/5 hover:text-zinc-900 dark:text-zinc-400 dark:hover:bg-white/10 dark:hover:text-zinc-50"
+          className="tap rounded-full p-1.5 text-muted transition-colors hover:bg-surface-2 hover:text-foreground"
         >
           <svg
             viewBox="0 0 24 24"
@@ -183,9 +183,9 @@ function AvailabilityForm({ onClose }: { onClose: () => void }) {
         </Field>
 
         <div className="flex flex-col gap-1.5">
-          <span className="flex items-baseline justify-between text-sm font-medium text-zinc-600 dark:text-zinc-400">
+          <span className="flex items-baseline justify-between text-sm font-medium text-muted">
             <span>Pace range (per km)</span>
-            <span className="tabular-nums text-zinc-900 dark:text-zinc-100">
+            <span className="font-mono tnum tabular-nums text-foreground">
               {formatMMSS(paceMinSeconds)} – {formatMMSS(paceMaxSeconds)} /km
             </span>
           </span>
@@ -200,9 +200,9 @@ function AvailabilityForm({ onClose }: { onClose: () => void }) {
             ariaLabelMin="Fastest pace"
             ariaLabelMax="Slowest pace"
           />
-          <span className="flex justify-between text-xs text-zinc-400 dark:text-zinc-500">
-            <span>{formatMMSS(PACE_MIN_SECONDS)} /km</span>
-            <span>{formatMMSS(PACE_MAX_SECONDS)} /km</span>
+          <span className="flex justify-between text-xs text-muted">
+            <span className="font-mono tnum">{formatMMSS(PACE_MIN_SECONDS)} /km</span>
+            <span className="font-mono tnum">{formatMMSS(PACE_MAX_SECONDS)} /km</span>
           </span>
         </div>
 
@@ -211,7 +211,7 @@ function AvailabilityForm({ onClose }: { onClose: () => void }) {
             with the picker's first labelable descendant — the geolocate
             button — and re-fire it on every pan. */}
         <div className="flex flex-col gap-1.5">
-          <span className="text-sm font-medium text-zinc-600 dark:text-zinc-400">
+          <span className="text-sm font-medium text-muted">
             Location
           </span>
           {/* Centred on the whole of the UK (zoomed out to fit the country)
@@ -221,13 +221,13 @@ function AvailabilityForm({ onClose }: { onClose: () => void }) {
         </div>
 
         {state.error ? (
-          <p className="text-sm text-red-600 dark:text-red-400">{state.error}</p>
+          <p className="text-sm text-danger">{state.error}</p>
         ) : null}
 
         <button
           type="submit"
           disabled={pending}
-          className="mt-1 flex h-11 items-center justify-center rounded-full bg-blue-600 text-sm font-medium text-white transition-colors hover:bg-blue-700 disabled:opacity-50"
+          className="tap mt-1 flex h-11 items-center justify-center rounded-full bg-accent text-sm font-medium text-accent-contrast transition-colors hover:brightness-110 disabled:opacity-50"
         >
           {pending ? "Saving…" : "Save availability"}
         </button>
@@ -245,7 +245,7 @@ function Field({
 }) {
   return (
     <label className="flex flex-col gap-1.5">
-      <span className="text-sm font-medium text-zinc-600 dark:text-zinc-400">
+      <span className="text-sm font-medium text-muted">
         {label}
       </span>
       {children}

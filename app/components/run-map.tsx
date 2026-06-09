@@ -49,7 +49,7 @@ export default function RunMap({
           border. We satisfy the licence by surfacing our own "© OSM" link
           below, pointing at the copyright page. This is explicitly allowed
           by the open street map license. */}
-      <div className="relative h-32 w-full overflow-hidden rounded-xl border border-black/10 dark:border-white/15">
+      <div className="relative h-32 w-full overflow-hidden rounded-xl border border-border">
         <iframe
           title={`Map showing ${label}`}
           src={mapSrc(lat, lon, 0.006, 0.009)}
@@ -60,13 +60,13 @@ export default function RunMap({
           type="button"
           onClick={() => setOpen(true)}
           aria-label={`Expand map for ${label}`}
-          className="absolute inset-0 cursor-pointer transition-colors hover:bg-black/5"
+          className="absolute inset-0 cursor-pointer transition-colors hover:bg-accent/10"
         />
         <a
           href="https://www.openstreetmap.org/copyright"
           target="_blank"
           rel="noopener noreferrer"
-          className="absolute bottom-1 right-1 z-10 rounded bg-white/80 px-1 text-[10px] leading-tight text-zinc-700 hover:underline dark:bg-zinc-900/80 dark:text-zinc-300"
+          className="absolute bottom-1 right-1 z-10 rounded bg-surface/80 px-1 text-[10px] leading-tight text-muted hover:underline"
         >
           © OSM
         </a>
@@ -84,17 +84,17 @@ export default function RunMap({
             type="button"
             aria-label="Close map"
             onClick={() => setOpen(false)}
-            className="absolute inset-0 cursor-default bg-black/50"
+            className="absolute inset-0 cursor-default bg-background/70 backdrop-blur-sm"
           />
 
-          <div className="relative z-10 flex w-full max-w-2xl flex-col overflow-hidden rounded-2xl bg-white shadow-xl dark:bg-zinc-900">
-            <div className="flex items-center justify-between gap-2 border-b border-black/10 p-3 dark:border-white/15">
+          <div className="card anim-pop relative z-10 flex w-full max-w-2xl flex-col overflow-hidden">
+            <div className="flex items-center justify-between gap-2 border-b border-border p-3">
               <p className="min-w-0 truncate font-medium">{label}</p>
               <button
                 type="button"
                 onClick={() => setOpen(false)}
                 aria-label="Close map"
-                className="rounded-full p-1.5 text-zinc-500 transition-colors hover:bg-black/5 hover:text-zinc-900 dark:text-zinc-400 dark:hover:bg-white/10 dark:hover:text-zinc-50"
+                className="rounded-full p-1.5 text-muted transition-colors hover:bg-surface-2 hover:text-foreground"
               >
                 <svg
                   viewBox="0 0 24 24"
@@ -116,12 +116,12 @@ export default function RunMap({
               className="h-[60vh] w-full"
             />
 
-            <div className="border-t border-black/10 p-3 text-sm dark:border-white/15">
+            <div className="border-t border-border p-3 text-sm">
               <a
                 href={`https://www.openstreetmap.org/?mlat=${lat}&mlon=${lon}#map=15/${lat}/${lon}`}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="font-medium text-blue-600 hover:underline dark:text-blue-400"
+                className="font-medium text-accent hover:underline"
               >
                 View on OpenStreetMap
               </a>
