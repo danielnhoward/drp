@@ -426,7 +426,7 @@ export default function OnboardingWizard({ resuming, initialValues }: Props) {
       case "photo":
         return (
           <StepHeader
-            title="Help your running partner recognize you"
+            title="Help your running partner recognise you"
             subtitle="It does not need to be a running photo. A picture helps the person you are matched with feel like they are meeting a real person, and you can change or remove it later."
           >
             <div className="flex items-center gap-4">
