@@ -362,7 +362,7 @@ export default function OnboardingWizard({ resuming, initialValues }: Props) {
         return (
           <StepHeader
             title="When's your birthday?"
-            subtitle="We use your age to find compatible partners — it isn't shown publicly."
+            subtitle="We use your age to find compatible partners."
           >
             <input
               className={fieldClass}
