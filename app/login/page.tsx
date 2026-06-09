@@ -40,6 +40,9 @@ export default async function LoginPage({
         dateOfBirth: current.dateOfBirth ?? "",
         gender:
           current.gender && isGender(current.gender) ? current.gender : "",
+        // UI-only branching flag — not persisted, so a resuming user answers it
+        // fresh.
+        ranBefore: "",
         fiveKTime:
           current.preferredPaceSeconds !== null
             ? formatMMSS(current.preferredPaceSeconds * 5)

@@ -9,6 +9,7 @@ export type StepId =
   | "dateOfBirth"
   | "gender"
   | "photo"
+  | "ranBefore"
   | "pace"
   | "whyRun"
   | "hobbies"
@@ -27,6 +28,7 @@ export const STEP_ORDER: StepId[] = [
   "dateOfBirth",
   "gender",
   "photo",
+  "ranBefore",
   "pace",
   "whyRun",
   "hobbies",
@@ -51,6 +53,9 @@ export type OnboardingValues = {
   name: string;
   dateOfBirth: string;
   gender: Gender | "";
+  // Whether the user has run before. UI-only: it branches the wizard (No skips
+  // the pace step and reframes the next two prompts) but is never persisted.
+  ranBefore: "yes" | "no" | "";
   // Conversational 5k time as mm:ss; converted to seconds/km on submit.
   fiveKTime: string;
   whyRun: string;
@@ -63,10 +68,36 @@ export const INITIAL_VALUES: OnboardingValues = {
   name: "",
   dateOfBirth: "",
   gender: "",
+  ranBefore: "",
   fiveKTime: "",
   whyRun: "",
   hobbies: "",
   interests: "",
+};
+
+// Beginner-branch ("Have you run before?" = No) overrides for the vibe prompts.
+// Only title/microcopy/placeholder change — suggestion chips are reused from
+// VIBE_PROMPTS so the two branches share answer hints. Kept here rather than in
+// profile-content.tsx because the profile editor keeps showing the original
+// running-focused prompts; only onboarding's No-branch uses these.
+export const BEGINNER_VIBE_COPY: Record<
+  "whyRun" | "hobbies",
+  { title: string; microcopy: string; placeholder: string }
+> = {
+  whyRun: {
+    title: "What do you hope to get out of running with us?",
+    microcopy:
+      "Tell your future running partner what would make starting out feel good.",
+    placeholder:
+      "e.g. I'd love some company and gentle accountability to build a habit from scratch.",
+  },
+  hobbies: {
+    title: "What are you into lately?",
+    microcopy:
+      "A couple of current interests makes the pre-run hello less awkward.",
+    placeholder:
+      "e.g. Trying new coffee spots, cooking, and learning guitar badly but happily.",
+  },
 };
 
 // Returned by lookupEmailAction when the user leaves the email step. A returning
