@@ -7,7 +7,7 @@ import { addRunMessageAction, clearRunMessageAction, type RunMessageState } from
 
 const INITIAL_STATE: RunMessageState = {};
 const textareaClass =
-  "min-h-20 rounded-xl border border-black/10 bg-white px-3 py-2 text-sm text-black outline-none focus:border-black/40 dark:border-white/15 dark:bg-zinc-900 dark:text-zinc-50 dark:focus:border-white/50";
+  "min-h-20 rounded-xl border border-border bg-surface-2 px-3 py-2 text-sm text-foreground outline-none transition-colors placeholder:text-muted focus:border-accent";
 
 export default function RunMessageForm({
   runId,
@@ -45,13 +45,13 @@ export default function RunMessageForm({
 
   if (!editing && savedMessage !== null) {
     return (
-      <div className="rounded-2xl border border-black/10 bg-zinc-50 p-3 dark:border-white/15 dark:bg-zinc-950/40">
+      <div className="rounded-2xl border border-border bg-surface-2 p-3">
         <div className="flex items-start justify-between gap-3">
           <div>
-            <p className="text-xs font-medium uppercase tracking-wide text-zinc-500 dark:text-zinc-400">
+            <p className="text-xs font-medium uppercase tracking-wide text-muted">
               Your message
             </p>
-            <p className="mt-1 whitespace-pre-line text-sm text-zinc-700 dark:text-zinc-300">
+            <p className="mt-1 whitespace-pre-line text-sm text-foreground">
               {savedMessage}
             </p>
           </div>
@@ -60,7 +60,7 @@ export default function RunMessageForm({
               <button
                 type="button"
                 onClick={() => setEditing(true)}
-                className="rounded-full border px-3 py-1.5 text-sm font-medium cursor-pointer"
+                className="rounded-full border border-border px-3 py-1.5 text-sm font-medium text-foreground transition-colors hover:bg-surface-2 cursor-pointer"
               >
                 Edit
               </button>
@@ -69,7 +69,7 @@ export default function RunMessageForm({
                 <button
                   type="submit"
                   disabled={clearPending}
-                  className="rounded-full border px-3 py-1.5 text-sm font-medium cursor-pointer"
+                  className="rounded-full border border-border px-3 py-1.5 text-sm font-medium text-foreground transition-colors hover:bg-surface-2 cursor-pointer"
                 >
                   {clearPending ? "Clearing…" : "Clear"}
                 </button>
@@ -85,11 +85,11 @@ export default function RunMessageForm({
     <div>
       <form
         action={action}
-        className="rounded-2xl border border-dashed border-black/15 bg-zinc-50/60 p-3 dark:border-white/15 dark:bg-zinc-950/30"
+        className="rounded-2xl border border-dashed border-border bg-surface-2/50 p-3"
       >
         <input type="hidden" name="runId" value={runId} />
         <label className="flex flex-col gap-1.5">
-          <span className="text-xs font-medium uppercase tracking-wide text-zinc-500 dark:text-zinc-400">
+          <span className="text-xs font-medium uppercase tracking-wide text-muted">
             {savedMessage ? "Edit your message" : "Add a message"}
           </span>
           <textarea
@@ -104,9 +104,7 @@ export default function RunMessageForm({
         </label>
 
         {state.error && (
-          <p className="mt-2 text-sm text-red-600 dark:text-red-400">
-            {state.error}
-          </p>
+          <p className="mt-2 text-sm text-danger">{state.error}</p>
         )}
 
         <div className="mt-3 flex justify-end gap-2">
@@ -116,7 +114,7 @@ export default function RunMessageForm({
               onClick={() => {
                 setEditing(false);
               }}
-              className="rounded-full border px-3 py-1.5 text-sm font-medium cursor-pointer"
+              className="rounded-full border border-border px-3 py-1.5 text-sm font-medium text-foreground transition-colors hover:bg-surface-2 cursor-pointer"
             >
               Cancel
             </button>
@@ -124,7 +122,7 @@ export default function RunMessageForm({
           <button
             type="submit"
             disabled={pending}
-            className="rounded-full bg-blue-600 px-3 py-1.5 text-sm font-medium text-white transition-colors hover:bg-blue-500 disabled:opacity-60 cursor-pointer"
+            className="rounded-full bg-accent px-3 py-1.5 text-sm font-medium text-accent-contrast transition hover:brightness-110 disabled:opacity-60 cursor-pointer"
           >
             {pending ? "Saving…" : "Save message"}
           </button>
@@ -137,7 +135,7 @@ export default function RunMessageForm({
           <button
             type="submit"
             disabled={clearPending}
-            className="rounded-full border px-3 py-1.5 text-sm font-medium cursor-pointer"
+            className="rounded-full border border-border px-3 py-1.5 text-sm font-medium text-foreground transition-colors hover:bg-surface-2 cursor-pointer"
           >
             {clearPending ? "Clearing…" : "Clear message"}
           </button>

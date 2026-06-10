@@ -154,7 +154,7 @@ export default function RunPhotoStep({
   return (
     <>
       <h2 className="text-lg font-semibold">Add a group photo</h2>
-      <p className="mt-2 text-sm text-zinc-600 dark:text-zinc-400">
+      <p className="mt-2 text-sm text-muted">
         You finished first — add a group photo to remember this run by, or hand
         it off to whoever finishes next.
       </p>
@@ -181,7 +181,7 @@ export default function RunPhotoStep({
           muted
           className={
             mode === "webcam" && !preview
-              ? "max-h-64 w-full rounded-lg border border-black/10 object-cover dark:border-white/15"
+              ? "max-h-64 w-full rounded-lg border border-border bg-surface-2 object-cover"
               : "hidden"
           }
         />
@@ -193,7 +193,7 @@ export default function RunPhotoStep({
             width={512}
             height={384}
             unoptimized
-            className="max-h-64 w-full rounded-lg border border-black/10 object-cover dark:border-white/15"
+            className="max-h-64 w-full rounded-lg border border-border bg-surface-2 object-cover"
           />
         )}
 
@@ -203,7 +203,7 @@ export default function RunPhotoStep({
             type="button"
             onClick={retake}
             disabled={uploading}
-            className="inline-flex h-9 items-center justify-center rounded-md border border-black/15 px-3 text-sm font-medium hover:bg-zinc-50 disabled:opacity-50 dark:border-white/20 dark:hover:bg-zinc-900"
+            className="tap inline-flex h-9 items-center justify-center rounded-md border border-border px-3 text-sm font-medium text-foreground hover:bg-surface-2 disabled:opacity-50"
           >
             Retake / choose another
           </button>
@@ -212,14 +212,14 @@ export default function RunPhotoStep({
             <button
               type="button"
               onClick={capturePhoto}
-              className="inline-flex h-9 flex-1 items-center justify-center rounded-md bg-zinc-900 px-3 text-sm font-medium text-white hover:bg-zinc-700 dark:bg-white dark:text-zinc-900 dark:hover:bg-zinc-200"
+              className="tap inline-flex h-9 flex-1 items-center justify-center rounded-md bg-accent px-3 text-sm font-medium text-accent-contrast hover:brightness-110"
             >
               Capture photo
             </button>
             <button
               type="button"
               onClick={cancelWebcam}
-              className="inline-flex h-9 items-center justify-center rounded-md border border-black/15 px-3 text-sm font-medium hover:bg-zinc-50 dark:border-white/20 dark:hover:bg-zinc-900"
+              className="tap inline-flex h-9 items-center justify-center rounded-md border border-border px-3 text-sm font-medium text-foreground hover:bg-surface-2"
             >
               Back
             </button>
@@ -229,14 +229,14 @@ export default function RunPhotoStep({
             <button
               type="button"
               onClick={startWebcam}
-              className="inline-flex h-9 flex-1 items-center justify-center rounded-md border border-black/15 px-3 text-sm font-medium hover:bg-zinc-50 dark:border-white/20 dark:hover:bg-zinc-900"
+              className="tap inline-flex h-9 flex-1 items-center justify-center rounded-md border border-border px-3 text-sm font-medium text-foreground hover:bg-surface-2"
             >
               Use webcam
             </button>
             <button
               type="button"
               onClick={() => fileRef.current?.click()}
-              className="inline-flex h-9 flex-1 items-center justify-center rounded-md border border-black/15 px-3 text-sm font-medium hover:bg-zinc-50 dark:border-white/20 dark:hover:bg-zinc-900"
+              className="tap inline-flex h-9 flex-1 items-center justify-center rounded-md border border-border px-3 text-sm font-medium text-foreground hover:bg-surface-2"
             >
               Choose a file
             </button>
@@ -244,7 +244,7 @@ export default function RunPhotoStep({
         )}
 
         {error && (
-          <p className="text-sm text-red-600 dark:text-red-400">{error}</p>
+          <p className="text-sm text-danger">{error}</p>
         )}
 
         <div className="mt-1 flex justify-end gap-2">
@@ -252,14 +252,14 @@ export default function RunPhotoStep({
             type="button"
             onClick={onCancel}
             disabled={uploading}
-            className="rounded-md px-3 py-1.5 bg-zinc-100 text-sm text-zinc-700 hover:bg-zinc-200 disabled:opacity-50 dark:bg-zinc-800 dark:text-zinc-300"
+            className="tap rounded-md px-3 py-1.5 bg-surface-2 text-sm text-foreground hover:bg-surface disabled:opacity-50"
           >
             Cancel
           </button>
           <button
             type="submit"
             disabled={!hasFile || uploading}
-            className="rounded-md bg-red-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-red-500 disabled:opacity-50"
+            className="tap rounded-md bg-accent px-3 py-1.5 text-sm font-medium text-accent-contrast hover:brightness-110 disabled:opacity-50"
           >
             {uploading ? "Uploading…" : "Upload photo"}
           </button>

@@ -11,7 +11,7 @@ const MapLocationPicker = dynamic(
     ssr: false,
     loading: () => (
       <div className="flex flex-col gap-1.5">
-        <div className="h-64 w-full animate-pulse rounded-xl bg-zinc-100 dark:bg-zinc-800" />
+        <div className="h-64 w-full animate-pulse rounded-xl bg-surface-2" />
       </div>
     ),
   },

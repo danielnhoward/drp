@@ -97,13 +97,13 @@ export default function AvatarForm({ name, initialAvatar }: Props) {
             alt={`${name}'s profile picture`}
             width={80}
             height={80}
-            className="h-20 w-20 rounded-full border border-black/10 object-cover dark:border-white/15"
+            className="h-20 w-20 rounded-full border border-border object-cover"
             unoptimized={preview !== null}
           />
         ) : (
           <span
             aria-hidden="true"
-            className="flex h-20 w-20 items-center justify-center rounded-full border border-black/10 bg-zinc-100 text-2xl font-semibold text-zinc-500 dark:border-white/15 dark:bg-zinc-800 dark:text-zinc-400"
+            className="flex h-20 w-20 items-center justify-center rounded-full border border-border bg-surface-2 text-2xl font-semibold text-muted"
           >
             {name.charAt(0)}
           </span>
@@ -113,7 +113,7 @@ export default function AvatarForm({ name, initialAvatar }: Props) {
       <div className="flex min-w-0 flex-1 flex-col gap-2">
         <form ref={formRef} action={action} className="flex flex-wrap gap-2">
           <label
-            className={`inline-flex h-9 cursor-pointer items-center rounded-md border border-black/15 px-3 text-sm font-medium hover:bg-zinc-50 dark:border-white/20 dark:hover:bg-zinc-900 ${pending ? "pointer-events-none opacity-50" : ""}`}
+            className={`inline-flex h-9 cursor-pointer items-center rounded-md border border-border px-3 text-sm font-medium text-foreground hover:bg-surface-2 ${pending ? "pointer-events-none opacity-50" : ""}`}
           >
             {pending ? "Uploading…" : initialAvatar ? "Change" : "Upload"}
             <input
@@ -131,16 +131,16 @@ export default function AvatarForm({ name, initialAvatar }: Props) {
               type="button"
               onClick={onRemove}
               disabled={pending || removing}
-              className="inline-flex h-9 items-center rounded-md border border-black/15 px-3 text-sm font-medium text-red-600 hover:bg-zinc-50 disabled:opacity-50 dark:border-white/20 dark:text-red-400 dark:hover:bg-zinc-900"
+              className="inline-flex h-9 items-center rounded-md border border-border px-3 text-sm font-medium text-danger hover:bg-surface-2 disabled:opacity-50"
             >
               {removing ? "Removing…" : "Remove"}
             </button>
           )}
         </form>
         {error ? (
-          <p className="text-sm text-red-600 dark:text-red-400">{error}</p>
+          <p className="text-sm text-danger">{error}</p>
         ) : (
-          <p className="text-xs text-zinc-500 dark:text-zinc-400">
+          <p className="text-xs text-muted">
             JPEG, PNG, or WebP. Up to 5 MB.
           </p>
         )}

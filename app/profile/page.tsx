@@ -22,23 +22,23 @@ export default async function ProfilePage() {
   return (
     <main className="mx-auto w-full max-w-md flex-1 px-6 py-8">
       <header className="mb-6">
-        <h1 className="text-2xl font-semibold tracking-tight">Profile</h1>
-        <p className="mt-1 text-sm text-zinc-600 dark:text-zinc-400">
+        <h1 className="text-gradient text-2xl font-semibold tracking-tight">Profile</h1>
+        <p className="mt-1 text-sm text-muted">
           Your account details and running preferences, used to find you
           compatible partners.
         </p>
-        <p className="mt-1 text-sm text-zinc-600 dark:text-zinc-400">
+        <p className="mt-1 text-sm text-muted">
           {user.email}
         </p>
       </header>
 
       <AvatarForm name={user.name} initialAvatar={user.avatar} />
 
-      <section className="mb-6 rounded-lg border border-black/10 bg-zinc-50 px-4 py-3 dark:border-white/15 dark:bg-zinc-900">
+      <section className="card mb-6 px-4 py-3">
         <div className="flex items-center justify-between gap-3">
           <div>
-            <h2 className="text-sm font-semibold">Trust rating</h2>
-            <p className="mt-1 text-xs text-zinc-500 dark:text-zinc-400">
+            <h2 className="text-sm font-semibold text-foreground">Trust rating</h2>
+            <p className="mt-1 text-xs text-muted">
               Shown to future run partners after they match with you.
             </p>
           </div>
@@ -56,12 +56,12 @@ export default async function ProfilePage() {
         initialInterests={user.interests}
       />
 
-      <hr className="my-8 border-black/10 dark:border-white/15" />
+      <hr className="my-8 border-border" />
 
       <form action={logoutAction} className="flex justify-center">
         <button
           type="submit"
-          className="rounded-md border border-black/15 px-4 py-2 text-sm font-medium hover:bg-zinc-50 dark:border-white/20 dark:hover:bg-zinc-900"
+          className="btn-ghost tap text-sm font-medium"
         >
           Sign out
         </button>

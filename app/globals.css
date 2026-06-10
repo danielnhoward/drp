@@ -1,32 +1,471 @@
 @import "tailwindcss";
 
+/* ============================================================================
+   "Velocity" — aqua / deep-space theme
+   ----------------------------------------------------------------------------
+   Dark-first, single theme. A deep navy canvas lit by a cyan -> blue -> violet
+   gradient. ALL colour in the app must flow through these tokens — never write
+   raw hex / rgb() / Tailwind palette colours (zinc-*, bg-white, border-black/…)
+   or `dark:` variants in components. Use the semantic utilities only:
+     bg-background / bg-surface / bg-surface-2
+     text-foreground / text-muted / text-accent / text-accent-2 / text-accent-contrast
+     border-border  bg-brand  text-gradient  glow  card  btn-accent  btn-ghost
+   Raw colour values live here and nowhere else.
+   ========================================================================== */
+
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  color-scheme: dark;
+
+  /* Surfaces — deep graphite-navy, low chroma for a calmer, premium feel */
+  --background: #080a11; /* near-black navy canvas */
+  --surface: #11141d; /* cards */
+  --surface-2: #181c27; /* raised / chips / inputs */
+  --border: rgba(255, 255, 255, 0.07); /* hairline */
+
+  /* Text */
+  --foreground: #e7ebf2; /* clean near-white */
+  --muted: #8a93a6; /* neutral slate secondary text */
+
+  /* Accents — refined steel-cyan, deeper and less neon */
+  --accent: #38aecf; /* primary actions, links, active */
+  --accent-mid: #4878c8; /* gradient midpoint */
+  --accent-2: #7064c0; /* muted violet — gradient end, sparing highlights */
+  --accent-contrast: #05101a; /* text/icons on accent fills */
+
+  /* Status (shared, not theme-swapped) */
+  --success: #3cbd80;
+  --danger: #db5a55;
+
+  /* Signature gradient (reserved for titles) + a restrained glow */
+  --gradient-brand: linear-gradient(
+    120deg,
+    #38aecf 0%,
+    #4878c8 52%,
+    #7064c0 100%
+  );
+  --glow-accent: 0 0 16px rgba(56, 174, 207, 0.2);
+
+  /* Elevation — re-valued in light mode for soft, cool shadows */
+  --shadow-card: 0 1px 2px rgba(0, 0, 0, 0.5), 0 8px 22px rgba(0, 0, 0, 0.2);
+  --shadow-elevated: 0 8px 22px rgba(0, 0, 0, 0.3);
+  --shadow-btn: 0 6px 18px rgba(0, 0, 0, 0.25);
+  --scrim: rgba(4, 6, 12, 0.62); /* modal backdrop dim */
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
+/* Light mode — follows the OS setting (prefers-color-scheme). Same token
+   names, re-valued for a clean cool-white surface; every component, utility,
+   gradient, glow and shadow downstream adapts automatically. */
+@media (prefers-color-scheme: light) {
   :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+    color-scheme: light;
+
+    /* Surfaces */
+    --background: #f6f8fb; /* cool near-white canvas */
+    --surface: #ffffff; /* cards */
+    --surface-2: #eef2f8; /* raised / chips / inputs */
+    --border: rgba(15, 27, 50, 0.1); /* slate hairline */
+
+    /* Text */
+    --foreground: #0f1828; /* deep navy ink */
+    --muted: #586379; /* slate secondary text */
+
+    /* Accents — deepened so they stay legible on white (links + fills) */
+    --accent: #1670b5; /* azure blue */
+    --accent-mid: #2f62b2; /* gradient midpoint */
+    --accent-2: #5b4fb0; /* muted violet */
+    --accent-contrast: #ffffff; /* text/icons on accent fills */
+
+    /* Status */
+    --success: #138a52;
+    --danger: #c0392f;
+
+    /* Signature gradient (titles) + restrained glow */
+    --gradient-brand: linear-gradient(
+      120deg,
+      #1670b5 0%,
+      #2f62b2 52%,
+      #5b4fb0 100%
+    );
+    --glow-accent: 0 0 16px rgba(22, 112, 181, 0.18);
+
+    /* Soft, cool elevation instead of heavy black shadows */
+    --shadow-card: 0 1px 2px rgba(15, 27, 50, 0.06),
+      0 10px 24px rgba(15, 27, 50, 0.08);
+    --shadow-elevated: 0 10px 26px rgba(15, 27, 50, 0.12);
+    --shadow-btn: 0 6px 16px rgba(22, 112, 181, 0.22);
+    --scrim: rgba(15, 27, 50, 0.42); /* dim, but lighter than dark mode */
+  }
+
+  body {
+    /* Barely-there cyan wash at the top instead of the dark-mode halo. */
+    background-image: radial-gradient(
+      1100px 520px at 50% -20%,
+      rgba(22, 112, 181, 0.05),
+      transparent 62%
+    );
   }
 }
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+/* Map tokens onto Tailwind's colour/font scales so the semantic utilities
+   (bg-surface, text-muted, border-border, font-display …) generate. `inline`
+   keeps the var() reference so values stay swappable at runtime. */
+@theme inline {
+  --color-background: var(--background);
+  --color-surface: var(--surface);
+  --color-surface-2: var(--surface-2);
+  --color-border: var(--border);
+  --color-foreground: var(--foreground);
+  --color-muted: var(--muted);
+  --color-accent: var(--accent);
+  --color-accent-mid: var(--accent-mid);
+  --color-accent-2: var(--accent-2);
+  --color-accent-contrast: var(--accent-contrast);
+  --color-success: var(--success);
+  --color-danger: var(--danger);
+
+  --font-sans: var(--font-inter);
+  --font-display: var(--font-space-grotesk);
+  --font-mono: var(--font-jetbrains-mono);
 }
 
-/* Directional vertical slides for the onboarding wizard: the incoming step
-   "swipes" up from below when moving forward, down from above when going back. */
+body {
+  background-color: var(--background);
+  /* Faint cyan wash lighting the top of the canvas — kept subtle. */
+  background-image: radial-gradient(
+    1100px 520px at 50% -20%,
+    rgba(56, 174, 207, 0.05),
+    transparent 62%
+  );
+  background-attachment: fixed;
+  color: var(--foreground);
+  font-family: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+}
+
+/* Display face for headings + big numbers. */
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  font-family: var(--font-space-grotesk), var(--font-inter), sans-serif;
+}
+
+::selection {
+  background: color-mix(in srgb, var(--accent) 26%, transparent);
+  color: var(--foreground);
+}
+
+/* Themed scrollbar so the dark canvas stays consistent. */
+* {
+  scrollbar-color: var(--surface-2) transparent;
+}
+*::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+*::-webkit-scrollbar-thumb {
+  background: var(--surface-2);
+  border-radius: 9999px;
+}
+
+/* ---------------------------------------------------------------------------
+   Brand fills & text
+   ------------------------------------------------------------------------- */
+@utility bg-brand {
+  background-image: var(--gradient-brand);
+}
+
+/* Animated diagonal sweep of the brand gradient — for hero/active surfaces. */
+@utility bg-brand-animated {
+  background-image: var(--gradient-brand);
+  background-size: 200% 200%;
+  animation: gradient-sweep 6s linear infinite alternate;
+}
+
+@utility text-gradient {
+  background-image: var(--gradient-brand);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+@utility glow {
+  box-shadow: var(--glow-accent);
+}
+
+/* Tabular numerals for stats (pair with font-mono). */
+@utility tnum {
+  font-variant-numeric: tabular-nums;
+}
+
+/* ---------------------------------------------------------------------------
+   Surfaces
+   ------------------------------------------------------------------------- */
+@utility card {
+  background-color: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 0.75rem;
+  box-shadow: var(--shadow-card);
+}
+
+/* Frosted-glass variant for floating bars / overlays. */
+@utility glass {
+  background-color: color-mix(in srgb, var(--surface) 80%, transparent);
+  border: 1px solid var(--border);
+  backdrop-filter: blur(12px);
+}
+
+/* Modal/overlay backdrop — dims content in both light and dark. */
+@utility scrim {
+  background-color: var(--scrim);
+}
+
+/* ---------------------------------------------------------------------------
+   Buttons
+   ------------------------------------------------------------------------- */
+@utility btn-accent {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  border-radius: 0.625rem;
+  padding: 0.625rem 1rem;
+  background-color: var(--accent);
+  color: var(--accent-contrast);
+  font-weight: 600;
+  line-height: 1.25;
+  transition:
+    background-color 0.18s ease,
+    box-shadow 0.18s ease,
+    filter 0.18s ease,
+    transform 0.12s ease;
+  cursor: pointer;
+  &:hover {
+    filter: brightness(1.07);
+    box-shadow: var(--shadow-btn);
+  }
+  &:active {
+    transform: translateY(0.5px);
+  }
+  &:disabled {
+    opacity: 0.5;
+    box-shadow: none;
+    filter: none;
+    cursor: not-allowed;
+  }
+}
+
+@utility btn-ghost {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  border-radius: 0.625rem;
+  padding: 0.625rem 1rem;
+  border: 1px solid var(--border);
+  background-color: transparent;
+  color: var(--foreground);
+  font-weight: 500;
+  line-height: 1.25;
+  transition:
+    background-color 0.2s ease,
+    border-color 0.2s ease,
+    transform 0.12s ease;
+  cursor: pointer;
+  &:hover {
+    background-color: var(--surface-2);
+    border-color: rgba(255, 255, 255, 0.16);
+  }
+  &:active {
+    transform: translateY(0.5px);
+  }
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+}
+
+/* Danger variant for destructive confirms. */
+@utility btn-danger {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  border-radius: 0.625rem;
+  padding: 0.625rem 1rem;
+  border: 1px solid color-mix(in srgb, var(--danger) 40%, transparent);
+  background-color: color-mix(in srgb, var(--danger) 14%, transparent);
+  color: var(--danger);
+  font-weight: 600;
+  line-height: 1.25;
+  transition:
+    background-color 0.2s ease,
+    border-color 0.2s ease,
+    transform 0.15s ease;
+  cursor: pointer;
+  &:hover {
+    background-color: color-mix(in srgb, var(--danger) 22%, transparent);
+    border-color: color-mix(in srgb, var(--danger) 60%, transparent);
+  }
+  &:active {
+    transform: translateY(1px);
+  }
+}
+
+/* ---------------------------------------------------------------------------
+   Motion primitives
+   ------------------------------------------------------------------------- */
+@utility hover-lift {
+  transition:
+    transform 0.2s ease,
+    box-shadow 0.2s ease,
+    border-color 0.2s ease;
+  &:hover {
+    transform: translateY(-1px);
+    box-shadow: var(--shadow-elevated);
+  }
+}
+
+@utility tap {
+  transition: transform 0.1s ease;
+  &:active {
+    transform: scale(0.985);
+  }
+}
+
+@utility anim-rise {
+  animation: rise 0.45s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+@utility anim-fade {
+  animation: fade 0.45s ease both;
+}
+@utility anim-pop {
+  animation: pop 0.24s ease-out both;
+}
+@utility page-enter {
+  animation: rise 0.4s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+@utility glow-pulse {
+  animation: glow-pulse 3.4s ease-in-out infinite;
+}
+
+/* Tab-switch page transitions: the incoming page slides in from whichever
+   side matches the tab direction (right tab -> from the right, etc.). */
+@utility anim-slide-in-right {
+  animation: slide-in-right 0.3s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+@utility anim-slide-in-left {
+  animation: slide-in-left 0.3s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+/* Staggered reveal delays (pair with anim-rise / anim-fade). */
+@utility anim-delay-1 {
+  animation-delay: 0.06s;
+}
+@utility anim-delay-2 {
+  animation-delay: 0.12s;
+}
+@utility anim-delay-3 {
+  animation-delay: 0.18s;
+}
+@utility anim-delay-4 {
+  animation-delay: 0.24s;
+}
+@utility anim-delay-5 {
+  animation-delay: 0.3s;
+}
+@utility anim-delay-6 {
+  animation-delay: 0.36s;
+}
+
+/* Loading skeleton shimmer. */
+@utility skeleton {
+  background: linear-gradient(
+    90deg,
+    var(--surface) 0%,
+    var(--surface-2) 50%,
+    var(--surface) 100%
+  );
+  background-size: 200% 100%;
+  border-radius: 0.5rem;
+  animation: shimmer 1.4s ease-in-out infinite;
+}
+
+@keyframes rise {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+@keyframes fade {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+@keyframes pop {
+  from {
+    opacity: 0;
+    transform: scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+@keyframes slide-in-right {
+  from {
+    opacity: 0;
+    transform: translateX(28px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+@keyframes slide-in-left {
+  from {
+    opacity: 0;
+    transform: translateX(-28px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+@keyframes glow-pulse {
+  0%,
+  100% {
+    box-shadow: 0 0 0 rgba(56, 174, 207, 0);
+  }
+  50% {
+    box-shadow: 0 0 14px rgba(56, 174, 207, 0.18);
+  }
+}
+@keyframes shimmer {
+  100% {
+    background-position: -200% 0;
+  }
+}
+@keyframes gradient-sweep {
+  0% {
+    background-position: 0% 50%;
+  }
+  100% {
+    background-position: 200% 50%;
+  }
+}
+
+/* ---------------------------------------------------------------------------
+   Onboarding wizard slide transitions (kept from before).
+   ------------------------------------------------------------------------- */
 @keyframes slide-in-up {
   from {
     opacity: 0;
@@ -54,10 +493,22 @@ body {
   animation: slide-in-down 0.34s cubic-bezier(0.16, 1, 0.3, 1) both;
 }
 
-/* Respect users who prefer reduced motion: show the step instantly, no slide. */
+/* One global guard: anyone who prefers reduced motion gets no animation. */
 @media (prefers-reduced-motion: reduce) {
+  .anim-rise,
+  .anim-fade,
+  .anim-pop,
+  .anim-slide-in-left,
+  .anim-slide-in-right,
+  .page-enter,
+  .glow-pulse,
+  .skeleton,
+  .bg-brand-animated,
+  .hover-lift,
+  .tap,
   .anim-step-up,
   .anim-step-down {
-    animation: none;
+    animation: none !important;
+    transition: none !important;
   }
 }

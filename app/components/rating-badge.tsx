@@ -18,8 +18,8 @@ export default function RatingBadge({
         compact ? "text-xs" : "text-sm"
       } ${
         hasRatings
-          ? "border-amber-300 bg-amber-50 text-amber-700 dark:border-amber-400/40 dark:bg-amber-400/10 dark:text-amber-300"
-          : "border-black/10 bg-zinc-50 text-zinc-500 dark:border-white/15 dark:bg-zinc-800 dark:text-zinc-400"
+          ? "border-accent/40 bg-accent/10 text-accent"
+          : "border-border bg-surface-2 text-muted"
       }`}
       title={
         hasRatings
@@ -30,8 +30,10 @@ export default function RatingBadge({
       <StarIcon filled={hasRatings} />
       {hasRatings ? (
         <>
-          <span>{summary.average?.toFixed(1)}</span>
-          <span className="font-normal opacity-75">({summary.count})</span>
+          <span className="font-mono tnum">{summary.average?.toFixed(1)}</span>
+          <span className="font-mono tnum font-normal opacity-75">
+            ({summary.count})
+          </span>
         </>
       ) : (
         <span>New runner</span>
