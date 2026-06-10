@@ -39,10 +39,10 @@ export default function RangeSlider({
   return (
     <div className="relative h-6 w-full">
       {/* Track background. */}
-      <div className="pointer-events-none absolute inset-x-0 top-1/2 h-1.5 -translate-y-1/2 rounded-full bg-zinc-200 dark:bg-zinc-700" />
+      <div className="pointer-events-none absolute inset-x-0 top-1/2 h-1.5 -translate-y-1/2 rounded-full bg-surface-2" />
       {/* Selected range fill, between the two thumbs. */}
       <div
-        className="pointer-events-none absolute top-1/2 h-1.5 -translate-y-1/2 rounded-full bg-blue-600"
+        className="pointer-events-none absolute top-1/2 h-1.5 -translate-y-1/2 rounded-full bg-accent"
         style={{ left: `${pct(lo)}%`, right: `${100 - pct(hi)}%` }}
       />
       <input
@@ -86,18 +86,18 @@ const inputClass = [
   "[&::-webkit-slider-thumb]:h-5",
   "[&::-webkit-slider-thumb]:w-5",
   "[&::-webkit-slider-thumb]:rounded-full",
-  "[&::-webkit-slider-thumb]:bg-blue-600",
+  "[&::-webkit-slider-thumb]:bg-accent",
   "[&::-webkit-slider-thumb]:border-2",
-  "[&::-webkit-slider-thumb]:border-white",
+  "[&::-webkit-slider-thumb]:border-border",
   "[&::-webkit-slider-thumb]:shadow",
   "[&::-moz-range-thumb]:pointer-events-auto",
   "[&::-moz-range-thumb]:appearance-none",
   "[&::-moz-range-thumb]:h-5",
   "[&::-moz-range-thumb]:w-5",
   "[&::-moz-range-thumb]:rounded-full",
-  "[&::-moz-range-thumb]:bg-blue-600",
+  "[&::-moz-range-thumb]:bg-accent",
   "[&::-moz-range-thumb]:border-2",
-  "[&::-moz-range-thumb]:border-white",
+  "[&::-moz-range-thumb]:border-border",
   "[&::-moz-range-thumb]:border-solid",
   "[&::-moz-range-thumb]:shadow",
 ].join(" ");

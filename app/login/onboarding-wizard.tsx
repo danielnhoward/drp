@@ -46,17 +46,17 @@ const ACCEPTED_TYPES = "image/jpeg,image/png,image/webp";
 const MAX_BYTES = 5 * 1024 * 1024;
 
 const fieldClass =
-  "h-11 w-full rounded-lg border border-black/10 bg-white px-3 text-base text-black outline-none focus:border-black/40 dark:border-white/15 dark:bg-zinc-900 dark:text-zinc-50 dark:focus:border-white/50";
+  "h-11 w-full rounded-lg border border-border bg-surface-2 px-3 text-base text-foreground placeholder:text-muted outline-none transition-colors focus:border-accent";
 const textareaClass =
-  "min-h-28 w-full resize-none rounded-lg border border-black/10 bg-white px-3 py-2 text-base text-black outline-none focus:border-black/40 dark:border-white/15 dark:bg-zinc-900 dark:text-zinc-50 dark:focus:border-white/50";
+  "min-h-28 w-full resize-none rounded-lg border border-border bg-surface-2 px-3 py-2 text-base text-foreground placeholder:text-muted outline-none transition-colors focus:border-accent";
 const chipClass =
-  "inline-flex min-h-8 max-w-full items-center gap-1.5 rounded-full border border-black/10 bg-zinc-50 px-3 py-1 text-left text-xs font-medium text-zinc-700 transition-colors hover:border-blue-200 hover:bg-blue-50 hover:text-blue-800 disabled:opacity-50 dark:border-white/15 dark:bg-zinc-950 dark:text-zinc-300 dark:hover:border-blue-900/80 dark:hover:bg-blue-950/40 dark:hover:text-blue-200";
+  "inline-flex min-h-8 max-w-full items-center gap-1.5 rounded-full border border-border bg-surface-2 px-3 py-1 text-left text-xs font-medium text-muted transition-colors hover:border-accent/40 hover:bg-accent/10 hover:text-accent disabled:opacity-50";
 const primaryBtn =
-  "inline-flex min-w-24 items-center justify-center rounded-full bg-blue-600 px-5 py-2.5 text-sm font-medium text-white transition-colors hover:bg-blue-700 disabled:opacity-50";
+  "btn-accent tap rounded-full px-5 py-2.5 text-sm font-medium disabled:opacity-50";
 const secondaryBtn =
-  "inline-flex min-w-24 items-center justify-center rounded-full border border-black/15 bg-white px-5 py-2.5 text-sm font-medium text-zinc-800 transition-colors hover:bg-zinc-50 dark:border-white/20 dark:bg-zinc-950 dark:text-zinc-100 dark:hover:bg-zinc-900";
+  "btn-ghost tap rounded-full px-5 py-2.5 text-sm font-medium disabled:opacity-50";
 const ghostBtn =
-  "rounded-full px-4 py-2.5 text-sm font-medium text-zinc-600 transition-colors hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-50";
+  "btn-ghost tap rounded-full px-4 py-2.5 text-sm font-medium";
 
 function vibePromptFor(step: StepId): VibePrompt | undefined {
   return VIBE_PROMPTS.find((prompt) => prompt.name === step);
@@ -323,7 +323,7 @@ export default function OnboardingWizard({
           {renderStep()}
 
           {error && (
-            <p className="mt-4 text-sm text-red-600 dark:text-red-400">
+            <p className="mt-4 text-sm text-danger">
               {error}
             </p>
           )}
@@ -432,9 +432,9 @@ export default function OnboardingWizard({
             subtitle="We use your age to help suggest comfortable running partners."
           >
             <input
-              // color-scheme lets the browser draw the native calendar-picker
-              // glyph per the active theme: black in light mode, white in dark.
-              className={`${fieldClass} [color-scheme:light_dark]`}
+              // The dark theme's global color-scheme draws the native
+              // calendar-picker glyph light so it reads on the dark input.
+              className={fieldClass}
               type="date"
               max={today}
               value={values.dateOfBirth}
@@ -458,10 +458,10 @@ export default function OnboardingWizard({
                     type="button"
                     onClick={() => setValue("gender", option)}
                     aria-pressed={selected}
-                    className={`flex h-12 items-center rounded-lg border px-4 text-left text-sm font-medium transition-colors ${
+                    className={`tap flex h-12 items-center rounded-lg border px-4 text-left text-sm font-medium transition-colors ${
                       selected
-                        ? "border-blue-500 bg-blue-50 text-blue-800 dark:border-blue-500/70 dark:bg-blue-950/40 dark:text-blue-200"
-                        : "border-black/10 bg-white text-zinc-800 hover:border-black/30 dark:border-white/15 dark:bg-zinc-900 dark:text-zinc-100 dark:hover:border-white/40"
+                        ? "border-accent/40 bg-accent/10 text-accent"
+                        : "border-border bg-surface text-foreground hover:border-accent/40"
                     }`}
                   >
                     {GENDER_LABELS[option]}
@@ -493,8 +493,8 @@ export default function OnboardingWizard({
                     aria-pressed={selected}
                     className={`flex h-12 items-center rounded-lg border px-4 text-left text-sm font-medium transition-colors ${
                       selected
-                        ? "border-blue-500 bg-blue-50 text-blue-800 dark:border-blue-500/70 dark:bg-blue-950/40 dark:text-blue-200"
-                        : "border-black/10 bg-white text-zinc-800 hover:border-black/30 dark:border-white/15 dark:bg-zinc-900 dark:text-zinc-100 dark:hover:border-white/40"
+                        ? "border-accent/40 bg-accent/10 text-accent"
+                        : "border-border bg-surface text-foreground hover:border-accent/40"
                     }`}
                   >
                     {option.label}
@@ -516,7 +516,7 @@ export default function OnboardingWizard({
               <button
                 type="button"
                 onClick={() => fileRef.current?.click()}
-                className="group relative h-40 w-40 shrink-0 rounded-full focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2"
+                className="group relative h-40 w-40 shrink-0 rounded-full focus:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2"
                 aria-label={avatarPreview ? "Change profile picture" : "Upload profile picture"}
               >
                 {avatarPreview ? (
@@ -526,12 +526,12 @@ export default function OnboardingWizard({
                     width={160}
                     height={160}
                     unoptimized
-                    className="h-40 w-40 rounded-full border border-black/10 object-cover dark:border-white/15"
+                    className="h-40 w-40 rounded-full border border-border object-cover"
                   />
                 ) : (
                   <span
                     aria-hidden="true"
-                    className="flex h-40 w-40 items-center justify-center rounded-full border border-black/10 bg-zinc-100 text-5xl font-semibold text-zinc-500 dark:border-white/15 dark:bg-zinc-800 dark:text-zinc-400"
+                    className="flex h-40 w-40 items-center justify-center rounded-full border border-border bg-surface-2 text-5xl font-semibold text-muted"
                   >
                     {values.name.charAt(0) || "?"}
                   </span>
@@ -539,21 +539,21 @@ export default function OnboardingWizard({
                 {/* Camera badge — bottom-right corner */}
                 <span
                   aria-hidden="true"
-                  className="absolute bottom-1 right-1 flex h-9 w-9 items-center justify-center rounded-full bg-blue-600 shadow-md ring-2 ring-white dark:ring-zinc-950"
+                  className="absolute bottom-1 right-1 flex h-9 w-9 items-center justify-center rounded-full bg-accent shadow-md ring-2 ring-background"
                 >
-                  <CameraIcon className="h-5 w-5 text-white" />
+                  <CameraIcon className="h-5 w-5 text-accent-contrast" />
                 </span>
               </button>
               {avatarPreview && (
                 <button
                   type="button"
                   onClick={removeAvatar}
-                  className="inline-flex h-9 items-center rounded-md border border-black/15 px-3 text-sm font-medium text-red-600 hover:bg-zinc-50 dark:border-white/20 dark:text-red-400 dark:hover:bg-zinc-900"
+                  className="tap inline-flex h-9 items-center rounded-md border border-border px-3 text-sm font-medium text-danger hover:bg-surface-2"
                 >
                   Remove photo
                 </button>
               )}
-              <p className="text-xs text-zinc-500 dark:text-zinc-400">
+              <p className="text-xs text-muted">
                 Tap to {avatarPreview ? "change" : "add a photo"} · JPEG, PNG, or WebP · up to 5 MB
               </p>
             </div>
@@ -563,8 +563,8 @@ export default function OnboardingWizard({
       case "pace":
         return (
           <StepHeader
-            title={firstName ? `What's your conversational 5k pace, ${firstName}?` : "What's your conversation 5k pace?"}
-            subtitle="Think conversational pace, not race-day pace. We use it to match you with runners at a similar rhythm."
+            title={firstName ? `What's your conversational 5k time, ${firstName}?` : "What's your conversational 5k time?"}
+            subtitle="The time you could hold a conversation at, not your race-day best. We use it to match you with runners at a similar rhythm."
             optional
           >
             <div className="mb-3 flex flex-wrap gap-2">
@@ -589,7 +589,7 @@ export default function OnboardingWizard({
               value={values.fiveKTime}
               onChange={(event) => setValue("fiveKTime", event.target.value)}
             />
-            <p className="mt-2 text-xs text-zinc-500 dark:text-zinc-400">
+            <p className="mt-2 text-xs text-muted">
               Tap a time or type your own as mm:ss.
             </p>
           </StepHeader>
@@ -638,8 +638,8 @@ export default function OnboardingWizard({
                 setValue(prompt.name, event.target.value.slice(0, MAX_VIBE_LENGTH))
               }
             />
-            <p className="mt-2 text-right text-xs text-zinc-500 dark:text-zinc-400">
-              {value.length}/{MAX_VIBE_LENGTH}
+            <p className="mt-2 text-right text-xs text-muted">
+              <span className="font-mono tnum">{value.length}/{MAX_VIBE_LENGTH}</span>
             </p>
           </StepHeader>
         );
@@ -658,7 +658,7 @@ export default function OnboardingWizard({
             title={firstName ? `You're all set, ${firstName}.` : "You're all set."}
             subtitle="Create your account and we'll start finding runs that fit your schedule. Anything you skipped can be added later from your profile."
           >
-            <dl className="flex flex-col gap-2 rounded-lg border border-black/10 bg-zinc-50 p-4 text-sm dark:border-white/15 dark:bg-zinc-900">
+            <dl className="card flex flex-col gap-2 p-4 text-sm">
               <ReviewRow label="Email" value={values.email} />
               <ReviewRow label="Date of birth" value={values.dateOfBirth} />
               <ReviewRow
@@ -666,7 +666,7 @@ export default function OnboardingWizard({
                 value={values.gender ? GENDER_LABELS[values.gender] : ""}
               />
             </dl>
-            <p className="text-sm text-zinc-600 dark:text-zinc-400">
+            <p className="text-sm text-muted">
               {added.length > 0
                 ? `Also added: ${added.join(", ")}.`
                 : "You skipped the optional extras — no problem, add them anytime."}
@@ -684,8 +684,8 @@ export default function OnboardingWizard({
 function ReviewRow({ label, value }: { label: string; value: string }) {
   return (
     <div className="flex items-baseline justify-between gap-3">
-      <dt className="text-zinc-500 dark:text-zinc-400">{label}</dt>
-      <dd className="font-medium text-zinc-900 dark:text-zinc-50">
+      <dt className="text-muted">{label}</dt>
+      <dd className="font-medium text-foreground">
         {value || "—"}
       </dd>
     </div>
@@ -695,12 +695,13 @@ function ReviewRow({ label, value }: { label: string; value: string }) {
 function Progress({ current, total }: { current: number; total: number }) {
   return (
     <div>
-      <p className="text-xs font-medium text-zinc-500 dark:text-zinc-400">
-        Step {current} of {total}
+      <p className="text-xs font-medium text-muted">
+        Step <span className="font-mono tnum">{current}</span> of{" "}
+        <span className="font-mono tnum">{total}</span>
       </p>
-      <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-black/10 dark:bg-white/15">
+      <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-surface-2">
         <div
-          className="h-full rounded-full bg-blue-600 transition-all"
+          className="h-full rounded-full bg-accent transition-all"
           style={{ width: `${(current / total) * 100}%` }}
         />
       </div>
@@ -723,15 +724,17 @@ function StepHeader({
     <div className="flex flex-col gap-4">
       <div>
         <div className="flex flex-wrap items-center gap-2">
-          <h1 className="text-2xl font-semibold">{title}</h1>
+          <h1 className="text-gradient text-2xl font-semibold tracking-tight">
+            {title}
+          </h1>
           {optional && (
-            <span className="inline-flex shrink-0 items-center rounded-full border border-blue-200 bg-blue-50 px-2 py-0.5 text-xs font-semibold text-blue-700 dark:border-blue-900/60 dark:bg-blue-950/40 dark:text-blue-200">
+            <span className="inline-flex shrink-0 items-center rounded-full border border-accent/40 bg-accent/10 px-2 py-0.5 text-xs font-semibold text-accent">
               Optional
             </span>
           )}
         </div>
         {subtitle && (
-          <p className="mt-2 text-sm text-zinc-600 dark:text-zinc-400">
+          <p className="mt-2 text-sm text-muted">
             {subtitle}
           </p>
         )}

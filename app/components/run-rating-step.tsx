@@ -40,8 +40,8 @@ export default function RunRatingStep({ runId, partners, onComplete }: Props) {
 
   return (
     <>
-      <h2 className="text-lg font-semibold">Rate your run partners</h2>
-      <p className="mt-2 text-sm text-zinc-600 dark:text-zinc-400">
+      <h2 className="text-lg font-semibold text-foreground">Rate your run partners</h2>
+      <p className="mt-2 text-sm text-muted">
         Your stars roll into their trust score for future matches.
       </p>
 
@@ -49,19 +49,19 @@ export default function RunRatingStep({ runId, partners, onComplete }: Props) {
         <input type="hidden" name="runId" value={String(runId)} />
 
         {partners.length === 0 ? (
-          <p className="rounded-lg border border-black/10 bg-zinc-50 px-3 py-2 text-sm text-zinc-600 dark:border-white/15 dark:bg-zinc-800 dark:text-zinc-300">
+          <p className="rounded-lg border border-border bg-surface-2 px-3 py-2 text-sm text-muted">
             No partners to rate for this run.
           </p>
         ) : (
           partners.map((partner) => (
             <section
               key={partner.id}
-              className="rounded-xl border border-black/10 p-3 dark:border-white/15"
+              className="rounded-xl border border-border p-3"
             >
               <div className="flex items-center gap-3">
                 <PartnerAvatar partner={partner} />
                 <div className="min-w-0">
-                  <h3 className="truncate font-medium">{partner.name}</h3>
+                  <h3 className="truncate font-medium text-foreground">{partner.name}</h3>
                 </div>
               </div>
 
@@ -90,10 +90,10 @@ export default function RunRatingStep({ runId, partners, onComplete }: Props) {
                           [partner.id]: value,
                         }))
                       }
-                      className={`flex h-10 w-10 items-center justify-center rounded-lg border transition-colors disabled:opacity-50 ${
+                      className={`tap flex h-10 w-10 items-center justify-center rounded-lg border transition-colors disabled:opacity-50 ${
                         selected
-                          ? "border-amber-300 bg-amber-100 text-amber-600 dark:border-amber-400/70 dark:bg-amber-400/15 dark:text-amber-300"
-                          : "border-black/10 text-zinc-300 hover:bg-zinc-50 hover:text-amber-500 dark:border-white/15 dark:text-zinc-600 dark:hover:bg-zinc-800 dark:hover:text-amber-300"
+                          ? "border-accent/40 bg-accent/10 text-accent"
+                          : "border-border text-muted hover:bg-surface-2 hover:text-accent"
                       }`}
                     >
                       <StarIcon filled={selected} />
@@ -106,7 +106,7 @@ export default function RunRatingStep({ runId, partners, onComplete }: Props) {
         )}
 
         {state.error && (
-          <p className="text-sm text-red-600 dark:text-red-400" aria-live="polite">
+          <p className="text-sm text-danger" aria-live="polite">
             {state.error}
           </p>
         )}
@@ -115,7 +115,7 @@ export default function RunRatingStep({ runId, partners, onComplete }: Props) {
           <button
             type="submit"
             disabled={!ready || pending}
-            className="rounded-md bg-red-600 px-4 py-2 text-sm font-medium text-white hover:bg-red-500 disabled:opacity-50"
+            className="btn-accent tap text-sm disabled:opacity-50"
           >
             {pending ? "Saving..." : "Submit ratings"}
           </button>
@@ -133,7 +133,7 @@ function PartnerAvatar({ partner }: { partner: RatingPartner }) {
         alt={`${partner.name}'s profile picture`}
         width={44}
         height={44}
-        className="h-11 w-11 shrink-0 rounded-full border border-black/10 object-cover dark:border-white/15"
+        className="h-11 w-11 shrink-0 rounded-full border border-border object-cover"
       />
     );
   }
@@ -141,7 +141,7 @@ function PartnerAvatar({ partner }: { partner: RatingPartner }) {
   return (
     <span
       aria-hidden="true"
-      className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full border border-black/10 bg-zinc-100 font-semibold text-zinc-500 dark:border-white/15 dark:bg-zinc-800 dark:text-zinc-400"
+      className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full border border-border bg-surface-2 font-semibold text-muted"
     >
       {partner.name.charAt(0)}
     </span>
