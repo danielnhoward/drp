@@ -51,6 +51,12 @@ const textareaClass =
   "min-h-28 w-full resize-none rounded-lg border border-black/10 bg-white px-3 py-2 text-base text-black outline-none focus:border-black/40 dark:border-white/15 dark:bg-zinc-900 dark:text-zinc-50 dark:focus:border-white/50";
 const chipClass =
   "inline-flex min-h-8 max-w-full items-center gap-1.5 rounded-full border border-black/10 bg-zinc-50 px-3 py-1 text-left text-xs font-medium text-zinc-700 transition-colors hover:border-blue-200 hover:bg-blue-50 hover:text-blue-800 disabled:opacity-50 dark:border-white/15 dark:bg-zinc-950 dark:text-zinc-300 dark:hover:border-blue-900/80 dark:hover:bg-blue-950/40 dark:hover:text-blue-200";
+// Pace presets are single-choice quick-fills (they replace the field), so they
+// read as a selectable radio group - no "+" icon, and the active one is filled.
+const pacePresetClass =
+  "inline-flex min-h-8 max-w-full items-center justify-center rounded-full border border-black/15 bg-white px-3.5 py-1 text-center text-sm font-medium text-zinc-700 transition-colors hover:border-blue-300 hover:bg-blue-50 hover:text-blue-800 disabled:opacity-50 dark:border-white/15 dark:bg-zinc-950 dark:text-zinc-300 dark:hover:border-blue-900/80 dark:hover:bg-blue-950/40 dark:hover:text-blue-200";
+const pacePresetSelectedClass =
+  "inline-flex min-h-8 max-w-full items-center justify-center rounded-full border border-blue-600 bg-blue-600 px-3.5 py-1 text-center text-sm font-medium text-white transition-colors disabled:opacity-50";
 const primaryBtn =
   "inline-flex min-w-24 items-center justify-center rounded-full bg-blue-600 px-5 py-2.5 text-sm font-medium text-white transition-colors hover:bg-blue-700 disabled:opacity-50";
 const secondaryBtn =
@@ -564,15 +570,20 @@ export default function OnboardingWizard({
             subtitle="The time you could hold a conversation at, not your race-day best. We use it to match you with runners at a similar rhythm."
             optional
           >
+            <p className="mb-2 text-xs font-medium text-zinc-500 dark:text-zinc-400">
+              Common times
+            </p>
             <div className="mb-3 flex flex-wrap gap-2">
               {PACE_PRESETS.map((preset) => (
                 <button
                   key={preset}
                   type="button"
+                  aria-pressed={values.fiveKTime.trim() === preset}
                   onClick={() => setValue("fiveKTime", preset)}
-                  className={chipClass}
+                  className={
+                    values.fiveKTime.trim() === preset ? pacePresetSelectedClass : pacePresetClass
+                  }
                 >
-                  <PlusIcon className="h-3.5 w-3.5 shrink-0" />
                   <span className="truncate">{preset}</span>
                 </button>
               ))}
@@ -587,7 +598,7 @@ export default function OnboardingWizard({
               onChange={(event) => setValue("fiveKTime", event.target.value)}
             />
             <p className="mt-2 text-xs text-zinc-500 dark:text-zinc-400">
-              Tap a time or type your own as mm:ss.
+              Pick one above or type your own as mm:ss.
             </p>
           </StepHeader>
         );
