@@ -62,10 +62,75 @@ export const VIBE_PROMPTS: VibePrompt[] = [
   },
 ];
 
+const LONG_SUGGESTION_LENGTH = 22;
+
+function upperFirstLetter(value: string): string {
+  return value.replace(/[A-Za-z]/, (letter) => letter.toUpperCase());
+}
+
+function lowerFirstLetter(value: string): string {
+  return value.replace(/[A-Za-z]+/, (word) =>
+    word === word.toUpperCase()
+      ? word
+      : `${word[0].toLowerCase()}${word.slice(1)}`,
+  );
+}
+
+function splitLastAnd(value: string): string[] {
+  const index = value.toLowerCase().lastIndexOf(" and ");
+  if (index === -1) return [value];
+  const before = value.slice(0, index).trim();
+  const after = value.slice(index + 5).trim();
+  return before && after ? [before, after] : [value];
+}
+
+function parseSuggestionList(value: string): string[] {
+  if (/[.!?]$/.test(value)) return [value];
+  if (value.includes(";")) {
+    return value
+      .split(";")
+      .map((item) => item.trim().replace(/^and\s+/i, ""))
+      .filter(Boolean);
+  }
+  if (value.includes(",")) {
+    const parts = value
+      .split(",")
+      .map((item) => item.trim().replace(/^and\s+/i, ""))
+      .filter(Boolean);
+    const last = parts.at(-1);
+    if (!last) return parts;
+    return [...parts.slice(0, -1), ...splitLastAnd(last)];
+  }
+  return splitLastAnd(value);
+}
+
+function shouldUseSemicolons(items: string[]): boolean {
+  return items.some(
+    (item) =>
+      item.length > LONG_SUGGESTION_LENGTH || item.trim().split(/\s+/).length > 3,
+  );
+}
+
+function formatSuggestionList(items: string[]): string {
+  const formatted = items.map((item, index) => {
+    const value = item.trim();
+    return index === 0 ? upperFirstLetter(value) : lowerFirstLetter(value);
+  });
+
+  if (formatted.length <= 2) return formatted.join(" and ");
+
+  const last = formatted.at(-1);
+  if (!last) return formatted.join("");
+
+  const separator = shouldUseSemicolons(formatted) ? "; " : ", ";
+  const finalSeparator = shouldUseSemicolons(formatted) ? "; and " : " and ";
+  return `${formatted.slice(0, -1).join(separator)}${finalSeparator}${last}`;
+}
+
 /**
- * Appends a suggestion chip to an existing free-text value, inserting a sensible
- * joiner and capping the length. Returns the value unchanged when the suggestion
- * is already present (case-insensitive).
+ * Appends a suggestion chip to an existing free-text value, formatting clicked
+ * chips as a natural list and capping the length. Returns the value unchanged
+ * when the suggestion is already present (case-insensitive).
  */
 export function appendSuggestion(
   current: string,
@@ -73,9 +138,13 @@ export function appendSuggestion(
   max: number = MAX_VIBE_LENGTH,
 ): string {
   const value = current.trim();
-  if (value.toLowerCase().includes(suggestion.toLowerCase())) return current;
-  const joiner = value ? (/[.!?]$/.test(value) ? " " : ", ") : "";
-  return `${value}${joiner}${suggestion}`.slice(0, max);
+  const next = suggestion.trim();
+  if (!next || value.toLowerCase().includes(next.toLowerCase())) return current;
+  if (!value) return upperFirstLetter(next).slice(0, max);
+  if (/[.!?]$/.test(value)) {
+    return `${value} ${upperFirstLetter(next)}`.slice(0, max);
+  }
+  return formatSuggestionList([...parseSuggestionList(value), next]).slice(0, max);
 }
 
 export function SparkIcon({ className }: { className?: string }) {
