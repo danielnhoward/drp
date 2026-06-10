@@ -14,7 +14,6 @@ type RealtimeState = {
 };
 
 declare global {
-  // eslint-disable-next-line no-var
   var __runRealtimeState__: RealtimeState | undefined;
 }
 

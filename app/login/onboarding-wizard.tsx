@@ -6,6 +6,7 @@ import {
   useEffect,
   useRef,
   useState,
+  useSyncExternalStore,
   useTransition,
 } from "react";
 
@@ -60,6 +61,163 @@ const ghostBtn =
 
 function vibePromptFor(step: StepId): VibePrompt | undefined {
   return VIBE_PROMPTS.find((prompt) => prompt.name === step);
+}
+
+// Touch devices get native date dropdowns; pointer devices get the typed
+// inputs. Read via useSyncExternalStore so SSR renders the desktop variant
+// and the client reconciles without a setState-in-effect cascade.
+function useIsTouch() {
+  return useSyncExternalStore(
+    (onChange) => {
+      const mq = window.matchMedia("(pointer: coarse)");
+      mq.addEventListener("change", onChange);
+      return () => mq.removeEventListener("change", onChange);
+    },
+    () => window.matchMedia("(pointer: coarse)").matches,
+    () => false,
+  );
+}
+
+const dobSelectClass =
+  "h-11 rounded-lg border border-black/10 bg-white px-3 text-base text-black outline-none focus:border-black/40 dark:border-white/15 dark:bg-zinc-900 dark:text-zinc-50 dark:focus:border-white/50";
+
+const MONTH_NAMES = [
+  "January", "February", "March", "April", "May", "June",
+  "July", "August", "September", "October", "November", "December",
+];
+
+function DobStep({
+  value,
+  onChange,
+}: {
+  value: string;
+  onChange: (v: string) => void;
+}) {
+  const parts = value.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+  const [day, setDay] = useState(parts ? String(parseInt(parts[3], 10)) : "");
+  const [month, setMonth] = useState(parts ? String(parseInt(parts[2], 10)) : "");
+  const [year, setYear] = useState(parts ? parts[1] : "");
+  const isTouch = useIsTouch();
+
+  const dayInputRef = useRef<HTMLInputElement>(null);
+  const mmRef = useRef<HTMLInputElement>(null);
+  const yyyyRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    if (!isTouch) dayInputRef.current?.focus();
+  }, [isTouch]);
+
+  function commit(d: string, m: string, y: string) {
+    const dn = parseInt(d, 10);
+    const mn = parseInt(m, 10);
+    const yn = parseInt(y, 10);
+    if (d && m && y.length === 4 && dn >= 1 && dn <= 31 && mn >= 1 && mn <= 12 && yn >= 1900) {
+      onChange(`${y}-${m.padStart(2, "0")}-${d.padStart(2, "0")}`);
+    } else {
+      onChange("");
+    }
+  }
+
+  function handleDay(raw: string) {
+    const digits = raw.replace(/\D/g, "").slice(0, 2);
+    const n = parseInt(digits, 10);
+    const clamped = digits && n > 31 ? "31" : digits;
+    setDay(clamped);
+    commit(clamped, month, year);
+    if (clamped.length === 2) mmRef.current?.focus();
+  }
+
+  function handleMonth(raw: string) {
+    const digits = raw.replace(/\D/g, "").slice(0, 2);
+    const n = parseInt(digits, 10);
+    const clamped = digits && n > 12 ? "12" : digits;
+    setMonth(clamped);
+    commit(day, clamped, year);
+    if (clamped.length === 2) yyyyRef.current?.focus();
+  }
+
+  function handleYear(raw: string) {
+    const digits = raw.replace(/\D/g, "").slice(0, 4);
+    const n = parseInt(digits, 10);
+    const maxYear = new Date().getFullYear();
+    const clamped = digits.length === 4 && n > maxYear ? String(maxYear) : digits;
+    setYear(clamped);
+    commit(day, month, clamped);
+  }
+
+  if (isTouch) {
+    const currentYear = new Date().getFullYear();
+    return (
+      <div className="flex gap-2">
+        <select
+          className={`${dobSelectClass} w-20 min-w-0`}
+          value={day}
+          onChange={(e) => { const v = e.target.value; setDay(v); commit(v, month, year); }}
+        >
+          <option value="" disabled>DD</option>
+          {Array.from({ length: 31 }, (_, i) => (
+            <option key={i + 1} value={String(i + 1)}>{i + 1}</option>
+          ))}
+        </select>
+        <select
+          className={`${dobSelectClass} flex-1 min-w-0`}
+          value={month}
+          onChange={(e) => { const v = e.target.value; setMonth(v); commit(day, v, year); }}
+        >
+          <option value="" disabled>Month</option>
+          {MONTH_NAMES.map((name, i) => (
+            <option key={i + 1} value={String(i + 1)}>{name}</option>
+          ))}
+        </select>
+        <select
+          className={`${dobSelectClass} w-24 min-w-0`}
+          value={year}
+          onChange={(e) => { const v = e.target.value; setYear(v); commit(day, month, v); }}
+        >
+          <option value="" disabled>YYYY</option>
+          {Array.from({ length: currentYear - 1899 }, (_, i) => {
+            const y = String(currentYear - i);
+            return <option key={y} value={y}>{y}</option>;
+          })}
+        </select>
+      </div>
+    );
+  }
+
+  return (
+    <div className="flex gap-2">
+      <input
+        ref={dayInputRef}
+        className={`${dobSelectClass} w-16 min-w-0`}
+        type="text"
+        inputMode="numeric"
+        maxLength={2}
+        placeholder="DD"
+        value={day}
+        onChange={(e) => handleDay(e.target.value)}
+      />
+      <input
+        ref={mmRef}
+        className={`${dobSelectClass} w-16 min-w-0`}
+        type="text"
+        inputMode="numeric"
+        maxLength={2}
+        placeholder="MM"
+        value={month}
+        onChange={(e) => handleMonth(e.target.value)}
+      />
+      <input
+        ref={yyyyRef}
+        className={`${dobSelectClass} flex-1 min-w-0`}
+        type="text"
+        inputMode="numeric"
+        maxLength={4}
+        placeholder="YYYY"
+        value={year}
+        onChange={(e) => handleYear(e.target.value)}
+      />
+    </div>
+  );
 }
 
 export default function OnboardingWizard({
@@ -431,14 +589,9 @@ export default function OnboardingWizard({
             title={firstName ? `When's your birthday, ${firstName}?` : "When's your birthday?"}
             subtitle="We use your age to help suggest comfortable running partners."
           >
-            <input
-              // The dark theme's global color-scheme draws the native
-              // calendar-picker glyph light so it reads on the dark input.
-              className={fieldClass}
-              type="date"
-              max={today}
+            <DobStep
               value={values.dateOfBirth}
-              onChange={(event) => setValue("dateOfBirth", event.target.value)}
+              onChange={(v) => setValue("dateOfBirth", v)}
             />
           </StepHeader>
         );
