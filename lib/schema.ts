@@ -17,6 +17,7 @@ CREATE TABLE IF NOT EXISTS users (
   -- in before they can use the rest of the site.
   date_of_birth          TEXT NOT NULL,                 -- ISO yyyy-mm-dd; age is derived
   gender                 TEXT NOT NULL,                 -- one of GENDERS in lib/gender.ts
+  pronouns               TEXT,                          -- optional display pronouns
   -- Optional: typical comfortable pace, seconds per km. Collected as a 5k time
   -- in the profile's optional section, so it may be NULL. Older databases
   -- created this column NOT NULL; relaxPaceNotNull rebuilds the table to drop
@@ -104,6 +105,8 @@ export type User = {
   dateOfBirth: string | null;
   /** One of the values in GENDERS (lib/users.ts), or null. */
   gender: string | null;
+  /** Optional display pronouns, or null when unset. */
+  pronouns: string | null;
   /** Typical comfortable pace, in seconds per kilometre, or null. */
   preferredPaceSeconds: number | null;
   /** Optional free text: why they enjoy running with others, or null. */
@@ -126,6 +129,7 @@ export type User = {
 const USER_COLUMN_MIGRATIONS: ReadonlyArray<[string, string]> = [
   ["date_of_birth", "TEXT"],
   ["gender", "TEXT"],
+  ["pronouns", "TEXT"],
   ["preferred_pace_seconds", "INTEGER"],
   ["why_run", "TEXT"],
   ["hobbies", "TEXT"],
@@ -195,6 +199,7 @@ function relaxPaceNotNull(connection: DatabaseSync): void {
         avatar                 TEXT,
         date_of_birth          TEXT NOT NULL,
         gender                 TEXT NOT NULL,
+        pronouns               TEXT,
         preferred_pace_seconds INTEGER,
         why_run                TEXT,
         hobbies                TEXT,
@@ -202,9 +207,9 @@ function relaxPaceNotNull(connection: DatabaseSync): void {
         created_at             TEXT NOT NULL DEFAULT (datetime('now'))
       );
       INSERT INTO users_rebuild
-        (id, email, name, avatar, date_of_birth, gender,
+        (id, email, name, avatar, date_of_birth, gender, pronouns,
          preferred_pace_seconds, why_run, hobbies, interests, created_at)
-      SELECT id, email, name, avatar, date_of_birth, gender,
+      SELECT id, email, name, avatar, date_of_birth, gender, pronouns,
              preferred_pace_seconds, why_run, hobbies, interests, created_at
         FROM users;
       DROP TABLE users;

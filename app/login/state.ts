@@ -8,6 +8,7 @@ export type StepId =
   | "name"
   | "dateOfBirth"
   | "gender"
+  | "pronouns"
   | "photo"
   | "ranBefore"
   | "pace"
@@ -27,6 +28,7 @@ export const STEP_ORDER: StepId[] = [
   "name",
   "dateOfBirth",
   "gender",
+  "pronouns",
   "photo",
   "ranBefore",
   "pace",
@@ -39,6 +41,7 @@ export const STEP_ORDER: StepId[] = [
 // Steps the user can skip. Everything else (email + name/dob/gender) is required
 // before the account is created — matching isProfileComplete in lib/users.ts.
 export const OPTIONAL_STEPS = new Set<StepId>([
+  "pronouns",
   "photo",
   "pace",
   "whyRun",
@@ -53,6 +56,7 @@ export type OnboardingValues = {
   name: string;
   dateOfBirth: string;
   gender: Gender | "";
+  pronouns: string;
   // Whether the user has run before. UI-only: it branches the wizard (No skips
   // the pace step and reframes the next two prompts) but is never persisted.
   ranBefore: "yes" | "no" | "";
@@ -68,6 +72,7 @@ export const INITIAL_VALUES: OnboardingValues = {
   name: "",
   dateOfBirth: "",
   gender: "",
+  pronouns: "",
   ranBefore: "",
   fiveKTime: "",
   whyRun: "",
