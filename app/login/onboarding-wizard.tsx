@@ -45,7 +45,7 @@ type Props = {
 // an oversize selection fails fast in the browser.
 const ACCEPTED_TYPES = "image/jpeg,image/png,image/webp";
 const MAX_BYTES = 5 * 1024 * 1024;
-const NAME_DISPLAY_DELAY_MS = 450;
+const NAME_DISPLAY_DELAY_MS = 200;
 
 const fieldClass =
   "h-11 w-full rounded-lg border border-border bg-surface-2 px-3 text-base text-foreground placeholder:text-muted outline-none transition-colors focus:border-accent";
@@ -239,8 +239,6 @@ export default function OnboardingWizard({
   const [values, setValues] = useState<OnboardingValues>(initialValues);
   const [delayedName, setDelayedName] = useState(initialValues.name);
   const [stepError, setStepError] = useState<string | null>(null);
-  const pendingDelayedName = useRef(initialValues.name);
-  const delayedNameTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // The step list is derived from the answers so far. The email is dropped when
   // it's already settled — a resuming user's row, or one handed over from the
@@ -295,22 +293,14 @@ export default function OnboardingWizard({
     isOptional && !hasOptionalContent ? secondaryBtn : primaryBtn;
 
   useEffect(() => {
-    pendingDelayedName.current = values.name;
-    if (delayedNameTimer.current !== null) return;
-
-    delayedNameTimer.current = setTimeout(() => {
-      delayedNameTimer.current = null;
-      setDelayedName(pendingDelayedName.current);
+    const delayedNameTimer = setTimeout(() => {
+      setDelayedName(values.name);
     }, NAME_DISPLAY_DELAY_MS);
-  }, [values.name]);
 
-  useEffect(() => {
     return () => {
-      if (delayedNameTimer.current !== null) {
-        clearTimeout(delayedNameTimer.current);
-      }
+      clearTimeout(delayedNameTimer);
     };
-  }, []);
+  }, [values.name]);
 
   // Revoke the preview object URL when it's replaced or the component unmounts.
   useEffect(() => {
