@@ -512,47 +512,50 @@ export default function OnboardingWizard({
             title="Help your running partner recognise you"
             subtitle="It does not need to be a running photo. A picture helps the person you are matched with feel like they are meeting a real person, and you can change or remove it later."
           >
-            <div className="flex items-center gap-4">
-              <div className="relative h-24 w-24 shrink-0">
+            <div className="flex flex-col items-center gap-4">
+              <button
+                type="button"
+                onClick={() => fileRef.current?.click()}
+                className="group relative h-40 w-40 shrink-0 rounded-full focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2"
+                aria-label={avatarPreview ? "Change profile picture" : "Upload profile picture"}
+              >
                 {avatarPreview ? (
                   <Image
                     src={avatarPreview}
                     alt="Your selected profile picture"
-                    width={96}
-                    height={96}
+                    width={160}
+                    height={160}
                     unoptimized
-                    className="h-24 w-24 rounded-full border border-black/10 object-cover dark:border-white/15"
+                    className="h-40 w-40 rounded-full border border-black/10 object-cover dark:border-white/15"
                   />
                 ) : (
                   <span
                     aria-hidden="true"
-                    className="flex h-24 w-24 items-center justify-center rounded-full border border-black/10 bg-zinc-100 text-3xl font-semibold text-zinc-500 dark:border-white/15 dark:bg-zinc-800 dark:text-zinc-400"
+                    className="flex h-40 w-40 items-center justify-center rounded-full border border-black/10 bg-zinc-100 text-5xl font-semibold text-zinc-500 dark:border-white/15 dark:bg-zinc-800 dark:text-zinc-400"
                   >
                     {values.name.charAt(0) || "?"}
                   </span>
                 )}
-              </div>
-              <div className="flex flex-col gap-2">
+                {/* Camera badge — bottom-right corner */}
+                <span
+                  aria-hidden="true"
+                  className="absolute bottom-1 right-1 flex h-9 w-9 items-center justify-center rounded-full bg-blue-600 shadow-md ring-2 ring-white dark:ring-zinc-950"
+                >
+                  <CameraIcon className="h-5 w-5 text-white" />
+                </span>
+              </button>
+              {avatarPreview && (
                 <button
                   type="button"
-                  onClick={() => fileRef.current?.click()}
-                  className="inline-flex h-9 items-center rounded-md border border-black/15 px-3 text-sm font-medium hover:bg-zinc-50 dark:border-white/20 dark:hover:bg-zinc-900"
+                  onClick={removeAvatar}
+                  className="inline-flex h-9 items-center rounded-md border border-black/15 px-3 text-sm font-medium text-red-600 hover:bg-zinc-50 dark:border-white/20 dark:text-red-400 dark:hover:bg-zinc-900"
                 >
-                  {avatarPreview ? "Change" : "Choose photo"}
+                  Remove photo
                 </button>
-                {avatarPreview && (
-                  <button
-                    type="button"
-                    onClick={removeAvatar}
-                    className="inline-flex h-9 items-center rounded-md border border-black/15 px-3 text-sm font-medium text-red-600 hover:bg-zinc-50 dark:border-white/20 dark:text-red-400 dark:hover:bg-zinc-900"
-                  >
-                    Remove
-                  </button>
-                )}
-                <p className="text-xs text-zinc-500 dark:text-zinc-400">
-                  JPEG, PNG, or WebP. Up to 5 MB.
-                </p>
-              </div>
+              )}
+              <p className="text-xs text-zinc-500 dark:text-zinc-400">
+                Tap to {avatarPreview ? "change" : "add a photo"} · JPEG, PNG, or WebP · up to 5 MB
+              </p>
             </div>
           </StepHeader>
         );
@@ -752,6 +755,24 @@ function PlusIcon({ className }: { className?: string }) {
     >
       <path d="M12 5v14" />
       <path d="M5 12h14" />
+    </svg>
+  );
+}
+
+function CameraIcon({ className }: { className?: string }) {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth={2}
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      className={className}
+      aria-hidden="true"
+    >
+      <path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z" />
+      <circle cx="12" cy="13" r="3" />
     </svg>
   );
 }
