@@ -19,6 +19,33 @@ export function formatMMSS(seconds: number): string {
 }
 
 /**
+ * Keeps time inputs phone-friendly: users can type digits only and the colon is
+ * inserted as soon as they start typing seconds.
+ */
+export function formatMMSSInput(value: string): string {
+  const cleaned = value.replace(/[^\d:]/g, "");
+
+  if (cleaned.includes(":")) {
+    const [minutesRaw = "", ...secondsParts] = cleaned.split(":");
+    const minutes = minutesRaw.replace(/\D/g, "").slice(0, 2);
+    const seconds = secondsParts.join("").replace(/\D/g, "").slice(0, 2);
+
+    if (!minutes) return seconds;
+    if (cleaned.endsWith(":") && !seconds) return `${minutes}:`;
+    return seconds ? `${minutes}:${seconds}` : minutes;
+  }
+
+  const digits = cleaned.slice(0, 4);
+  if (digits.length <= 2) return digits;
+
+  if (digits.length === 3 && Number(digits.slice(0, 2)) > 59) {
+    return `${digits[0]}:${digits.slice(1)}`;
+  }
+
+  return `${digits.slice(0, 2)}:${digits.slice(2)}`;
+}
+
+/**
  * Converts a 5k time (as collected in the UI) to a comfortable pace in seconds
  * per kilometre, or null when the input is blank. Returns an `error` message
  * when the time is present but malformed. Mirrors how the availability flow

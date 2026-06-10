@@ -11,7 +11,7 @@ import {
 } from "react";
 
 import { GENDERS, GENDER_LABELS } from "@/lib/gender";
-import { MMSS } from "@/lib/profile-fields";
+import { formatMMSSInput, MMSS } from "@/lib/profile-fields";
 import {
   appendSuggestion,
   MAX_VIBE_LENGTH,
@@ -737,7 +737,9 @@ export default function OnboardingWizard({
               pattern="\d{1,2}:[0-5]\d"
               inputMode="numeric"
               value={values.fiveKTime}
-              onChange={(event) => setValue("fiveKTime", event.target.value)}
+              onChange={(event) =>
+                setValue("fiveKTime", formatMMSSInput(event.target.value))
+              }
             />
             <p className="mt-2 text-xs text-muted">
               Tap a time or type your own as mm:ss.
