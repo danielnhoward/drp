@@ -105,7 +105,7 @@ export default function AvatarForm({ name, initialAvatar }: Props) {
         type="button"
         onClick={() => fileRef.current?.click()}
         disabled={pending}
-        className="group relative h-40 w-40 shrink-0 rounded-full focus:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 disabled:opacity-50"
+        className="group relative h-40 w-40 shrink-0 cursor-pointer rounded-full transition hover:brightness-90 focus:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 disabled:cursor-default disabled:opacity-50 disabled:hover:brightness-100"
         aria-label={displayed ? "Change profile picture" : "Upload profile picture"}
       >
         {displayed ? (
@@ -138,7 +138,7 @@ export default function AvatarForm({ name, initialAvatar }: Props) {
           type="button"
           onClick={onRemove}
           disabled={pending || removing}
-          className="inline-flex h-9 items-center rounded-md border border-border px-3 text-sm font-medium text-danger hover:bg-surface-2 disabled:opacity-50"
+          className="inline-flex h-9 cursor-pointer items-center rounded-md border border-border px-3 text-sm font-medium text-danger hover:bg-surface-2 disabled:cursor-default disabled:opacity-50"
         >
           {removing ? "Removing…" : "Remove photo"}
         </button>

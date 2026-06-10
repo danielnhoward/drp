@@ -516,7 +516,7 @@ export default function OnboardingWizard({
               <button
                 type="button"
                 onClick={() => fileRef.current?.click()}
-                className="group relative h-40 w-40 shrink-0 rounded-full focus:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2"
+                className="group relative h-40 w-40 shrink-0 cursor-pointer rounded-full transition hover:brightness-90 focus:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2"
                 aria-label={avatarPreview ? "Change profile picture" : "Upload profile picture"}
               >
                 {avatarPreview ? (
@@ -548,7 +548,7 @@ export default function OnboardingWizard({
                 <button
                   type="button"
                   onClick={removeAvatar}
-                  className="tap inline-flex h-9 items-center rounded-md border border-border px-3 text-sm font-medium text-danger hover:bg-surface-2"
+                  className="tap inline-flex h-9 cursor-pointer items-center rounded-md border border-border px-3 text-sm font-medium text-danger hover:bg-surface-2"
                 >
                   Remove photo
                 </button>
