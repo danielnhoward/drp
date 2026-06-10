@@ -593,8 +593,8 @@ export default function OnboardingWizard({
     <form
       action={formAction}
       onKeyDown={onFormKeyDown}
-      className={`mx-auto flex w-full max-w-md flex-1 flex-col px-6 ${
-        keyboardCompact ? "py-3" : "py-8"
+      className={`mx-auto flex w-full max-w-md min-h-0 flex-1 flex-col px-6 ${
+        keyboardCompact ? "h-[100dvh] max-h-[100dvh] py-3" : "py-8"
       }`}
     >
       {/* Every value travels in the final submit, whichever step we're on. */}
@@ -626,7 +626,7 @@ export default function OnboardingWizard({
       {/* Clip wrapper: the inner step slides in from 64px off-axis, so this
           keeps the overshoot from briefly extending the page. */}
       <div
-        className={`flex flex-1 flex-col overflow-hidden ${
+        className={`flex min-h-0 flex-1 flex-col overflow-hidden ${
           keyboardCompact ? "mt-4" : "mt-8"
         }`}
       >
@@ -634,8 +634,9 @@ export default function OnboardingWizard({
             moving forward, down from above going back. */}
         <div
           key={step}
-          className={`flex flex-1 flex-col ${
-            direction === "next" ? "anim-step-up" : "anim-step-down"
+          className={`flex min-h-0 flex-1 flex-col ${
+            keyboardCompact ? "overflow-y-auto pb-2 pr-1" : ""
+          } ${direction === "next" ? "anim-step-up" : "anim-step-down"
           }`}
         >
           {renderStep()}
@@ -649,8 +650,10 @@ export default function OnboardingWizard({
       </div>
 
       <div
-        className={`flex items-center justify-between gap-3 ${
-          keyboardCompact ? "mt-4 pb-1" : "mt-8"
+        className={`flex shrink-0 items-center justify-between gap-3 ${
+          keyboardCompact
+            ? "mt-3 border-t border-border/60 bg-background/95 pt-3 pb-[calc(env(safe-area-inset-bottom)+0.25rem)]"
+            : "mt-8"
         }`}
       >
         <div>
