@@ -97,15 +97,30 @@ function isEditableElement(element: Element | null): element is HTMLElement {
 }
 
 function usePhoneKeyboardOpen() {
-  const [isOpen, setIsOpen] = useState(false);
+  const [keyboard, setKeyboard] = useState({ isOpen: false, bottomInset: 0 });
 
   useEffect(() => {
     const coarsePointer = window.matchMedia("(pointer: coarse)");
     const phoneWidth = window.matchMedia("(max-width: 640px)");
     const viewport = window.visualViewport;
-    let fullViewportHeight = viewport?.height ?? window.innerHeight;
+    let fullViewportHeight = Math.max(
+      viewport?.height ?? 0,
+      window.innerHeight,
+    );
     let frame = 0;
     let timeout = 0;
+
+    function setKeyboardState(isOpen: boolean, bottomInset: number) {
+      setKeyboard((current) => {
+        if (
+          current.isOpen === isOpen &&
+          current.bottomInset === bottomInset
+        ) {
+          return current;
+        }
+        return { isOpen, bottomInset };
+      });
+    }
 
     function update() {
       const hasEditableFocus = isEditableElement(document.activeElement);
@@ -121,13 +136,16 @@ function usePhoneKeyboardOpen() {
       const viewportShrink = Math.max(0, fullViewportHeight - viewportHeight);
       const viewportSuggestsKeyboard =
         !viewport || viewportGap > 90 || viewportShrink > 90;
-
-      setIsOpen(
+      const nextIsOpen =
         coarsePointer.matches &&
-          phoneWidth.matches &&
-          hasEditableFocus &&
-          viewportSuggestsKeyboard,
-      );
+        phoneWidth.matches &&
+        hasEditableFocus &&
+        viewportSuggestsKeyboard;
+      const bottomInset = nextIsOpen
+        ? Math.round(Math.max(viewportGap, viewportShrink))
+        : 0;
+
+      setKeyboardState(nextIsOpen, bottomInset);
     }
 
     function scheduleUpdate() {
@@ -159,7 +177,7 @@ function usePhoneKeyboardOpen() {
     };
   }, []);
 
-  return isOpen;
+  return keyboard;
 }
 
 const dobSelectClass =
@@ -323,7 +341,8 @@ export default function OnboardingWizard({
       : "preset",
   );
   const [stepError, setStepError] = useState<string | null>(null);
-  const keyboardCompact = usePhoneKeyboardOpen();
+  const keyboard = usePhoneKeyboardOpen();
+  const keyboardCompact = keyboard.isOpen;
 
   // The step list is derived from the answers so far. The email is dropped when
   // it's already settled — a resuming user's row, or one handed over from the
@@ -385,6 +404,11 @@ export default function OnboardingWizard({
     ? "bottom-0 right-0 h-8 w-8"
     : "bottom-1 right-1 h-9 w-9";
   const cameraIconClass = keyboardCompact ? "h-4 w-4" : "h-5 w-5";
+  const compactActionStyle = keyboardCompact
+    ? {
+        bottom: `calc(${keyboard.bottomInset}px + env(safe-area-inset-bottom))`,
+      }
+    : undefined;
 
   useEffect(() => {
     const delayedNameTimer = setTimeout(() => {
@@ -635,7 +659,7 @@ export default function OnboardingWizard({
         <div
           key={step}
           className={`flex min-h-0 flex-1 flex-col ${
-            keyboardCompact ? "overflow-y-auto pb-2 pr-1" : ""
+            keyboardCompact ? "overflow-y-auto pb-24 pr-1" : ""
           } ${direction === "next" ? "anim-step-up" : "anim-step-down"
           }`}
         >
@@ -652,9 +676,10 @@ export default function OnboardingWizard({
       <div
         className={`flex shrink-0 items-center justify-between gap-3 ${
           keyboardCompact
-            ? "mt-3 border-t border-border/60 bg-background/95 pt-3 pb-[calc(env(safe-area-inset-bottom)+0.25rem)]"
+            ? "fixed left-1/2 z-50 w-full max-w-md -translate-x-1/2 border-t border-border/60 bg-background/95 px-6 pt-3 pb-3 shadow-[0_-16px_35px_rgba(0,0,0,0.35)] backdrop-blur"
             : "mt-8"
         }`}
+        style={compactActionStyle}
       >
         <div>
           {stepIndex > 0 && (
@@ -734,7 +759,7 @@ export default function OnboardingWizard({
         return (
           <StepHeader
             compact={keyboardCompact}
-            title={firstName ? `Hi, ${firstName}.` : "What should we call you?"}
+            title={delayedFirstName ? `Hi, ${delayedFirstName}.` : "What should we call you?"}
             subtitle={
               delayedFirstName
                 ? "Lovely to have you here. This is the display name other runners will see, a nickname or first name is perfectly fine."
