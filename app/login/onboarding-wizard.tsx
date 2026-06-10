@@ -6,6 +6,7 @@ import {
   useEffect,
   useRef,
   useState,
+  useSyncExternalStore,
   useTransition,
 } from "react";
 
@@ -62,6 +63,21 @@ function vibePromptFor(step: StepId): VibePrompt | undefined {
   return VIBE_PROMPTS.find((prompt) => prompt.name === step);
 }
 
+// Touch devices get native date dropdowns; pointer devices get the typed
+// inputs. Read via useSyncExternalStore so SSR renders the desktop variant
+// and the client reconciles without a setState-in-effect cascade.
+function useIsTouch() {
+  return useSyncExternalStore(
+    (onChange) => {
+      const mq = window.matchMedia("(pointer: coarse)");
+      mq.addEventListener("change", onChange);
+      return () => mq.removeEventListener("change", onChange);
+    },
+    () => window.matchMedia("(pointer: coarse)").matches,
+    () => false,
+  );
+}
+
 const dobSelectClass =
   "h-11 rounded-lg border border-black/10 bg-white px-3 text-base text-black outline-none focus:border-black/40 dark:border-white/15 dark:bg-zinc-900 dark:text-zinc-50 dark:focus:border-white/50";
 
@@ -81,17 +97,15 @@ function DobStep({
   const [day, setDay] = useState(parts ? String(parseInt(parts[3], 10)) : "");
   const [month, setMonth] = useState(parts ? String(parseInt(parts[2], 10)) : "");
   const [year, setYear] = useState(parts ? parts[1] : "");
-  const [isTouch, setIsTouch] = useState(false);
+  const isTouch = useIsTouch();
 
   const dayInputRef = useRef<HTMLInputElement>(null);
   const mmRef = useRef<HTMLInputElement>(null);
   const yyyyRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
-    const touch = window.matchMedia("(pointer: coarse)").matches;
-    setIsTouch(touch);
-    if (!touch) dayInputRef.current?.focus();
-  }, []);
+    if (!isTouch) dayInputRef.current?.focus();
+  }, [isTouch]);
 
   function commit(d: string, m: string, y: string) {
     const dn = parseInt(d, 10);
