@@ -21,6 +21,8 @@ export type Runner = {
   dateOfBirth: string;
   /** One of the values in GENDERS (lib/gender.ts). */
   gender: string;
+  /** Optional display pronouns, or null when unset. */
+  pronouns: string | null;
   /** Comfortable pace in seconds per kilometre, or null when not set. */
   preferredPaceSeconds: number | null;
   /** Optional free text: why they enjoy running with others, or null. */
@@ -82,6 +84,7 @@ function partnersForRun(runId: number, currentUserId: number): Runner[] {
               users.avatar AS avatar,
               users.date_of_birth AS dateOfBirth,
               users.gender AS gender,
+              users.pronouns AS pronouns,
               users.preferred_pace_seconds AS preferredPaceSeconds,
               users.why_run AS whyRun,
               users.hobbies AS hobbies,
@@ -101,6 +104,7 @@ function partnersForRun(runId: number, currentUserId: number): Runner[] {
     avatar: row.avatar,
     dateOfBirth: row.dateOfBirth,
     gender: row.gender,
+    pronouns: row.pronouns,
     preferredPaceSeconds: row.preferredPaceSeconds,
     whyRun: row.whyRun,
     hobbies: row.hobbies,

@@ -13,6 +13,11 @@ import {
 import { GENDERS, GENDER_LABELS } from "@/lib/gender";
 import { formatMMSSInput, MMSS } from "@/lib/profile-fields";
 import {
+  isPronounOption,
+  MAX_PRONOUNS_LENGTH,
+  PRONOUN_OPTIONS,
+} from "@/lib/pronouns";
+import {
   appendSuggestion,
   MAX_VIBE_LENGTH,
   PACE_PRESETS,
@@ -45,7 +50,7 @@ type Props = {
 // an oversize selection fails fast in the browser.
 const ACCEPTED_TYPES = "image/jpeg,image/png,image/webp";
 const MAX_BYTES = 5 * 1024 * 1024;
-const NAME_DISPLAY_DELAY_MS = 200;
+const NAME_DISPLAY_DELAY_MS = 450;
 
 const fieldClass =
   "h-11 w-full rounded-lg border border-border bg-surface-2 px-3 text-base text-foreground placeholder:text-muted outline-none transition-colors focus:border-accent";
@@ -238,6 +243,11 @@ export default function OnboardingWizard({
   const [direction, setDirection] = useState<"next" | "prev">("next");
   const [values, setValues] = useState<OnboardingValues>(initialValues);
   const [delayedName, setDelayedName] = useState(initialValues.name);
+  const [pronounsMode, setPronounsMode] = useState<"preset" | "other">(
+    initialValues.pronouns.trim() && !isPronounOption(initialValues.pronouns)
+      ? "other"
+      : "preset",
+  );
   const [stepError, setStepError] = useState<string | null>(null);
 
   // The step list is derived from the answers so far. The email is dropped when
@@ -353,6 +363,8 @@ export default function OnboardingWizard({
         return Boolean(avatarPreview);
       case "pace":
         return Boolean(values.fiveKTime.trim());
+      case "pronouns":
+        return Boolean(values.pronouns.trim());
       case "whyRun":
         return Boolean(values.whyRun.trim());
       case "hobbies":
@@ -380,6 +392,14 @@ export default function OnboardingWizard({
       }
       if (result.status === "resume") {
         setValues((current) => ({ ...current, ...result.values }));
+        if (
+          result.values.pronouns?.trim() &&
+          !isPronounOption(result.values.pronouns)
+        ) {
+          setPronounsMode("other");
+        } else {
+          setPronounsMode("preset");
+        }
       }
       advance();
     });
@@ -415,6 +435,9 @@ export default function OnboardingWizard({
   // pace format if one was typed.
   function nextOptional() {
     setStepError(null);
+    if (step === "pronouns" && values.pronouns.length > MAX_PRONOUNS_LENGTH) {
+      return setStepError(`Keep pronouns to ${MAX_PRONOUNS_LENGTH} characters or fewer.`);
+    }
     if (step === "pace") {
       const time = values.fiveKTime.trim();
       if (time && !MMSS.test(time)) {
@@ -486,6 +509,7 @@ export default function OnboardingWizard({
       <input type="hidden" name="name" value={values.name} />
       <input type="hidden" name="dateOfBirth" value={values.dateOfBirth} />
       <input type="hidden" name="gender" value={values.gender} />
+      <input type="hidden" name="pronouns" value={values.pronouns} />
       <input type="hidden" name="fiveKTime" value={values.fiveKTime} />
       <input type="hidden" name="whyRun" value={values.whyRun} />
       <input type="hidden" name="hobbies" value={values.hobbies} />
@@ -659,6 +683,89 @@ export default function OnboardingWizard({
             </div>
           </StepHeader>
         );
+
+      case "pronouns": {
+        const showOtherPronouns =
+          pronounsMode === "other" ||
+          Boolean(values.pronouns.trim() && !isPronounOption(values.pronouns));
+        return (
+          <StepHeader
+            title="What pronouns should runners use for you?"
+            subtitle="This appears on your profile after a match. You can skip it or change it later."
+            optional
+          >
+            <div className="mb-3 flex flex-col gap-2">
+              {PRONOUN_OPTIONS.map((option) => {
+                const selected =
+                  pronounsMode !== "other" &&
+                  values.pronouns.trim().toLowerCase() === option;
+                return (
+                  <button
+                    key={option}
+                    type="button"
+                    disabled={pending}
+                    aria-pressed={selected}
+                    onClick={() => {
+                      setPronounsMode("preset");
+                      setValue("pronouns", option);
+                      advance();
+                    }}
+                    className={`tap flex h-12 items-center rounded-lg border px-4 text-left text-sm font-medium transition-colors ${
+                      selected
+                        ? "border-accent/40 bg-accent/10 text-accent"
+                        : "border-border bg-surface text-foreground hover:border-accent/40"
+                    }`}
+                  >
+                    {option}
+                  </button>
+                );
+              })}
+              <button
+                type="button"
+                disabled={pending}
+                aria-pressed={showOtherPronouns}
+                onClick={() => {
+                  setPronounsMode("other");
+                  if (isPronounOption(values.pronouns)) {
+                    setValue("pronouns", "");
+                  }
+                }}
+                className={`tap flex h-12 items-center rounded-lg border px-4 text-left text-sm font-medium transition-colors ${
+                  showOtherPronouns
+                    ? "border-accent/40 bg-accent/10 text-accent"
+                    : "border-border bg-surface text-foreground hover:border-accent/40"
+                }`}
+              >
+                Other
+              </button>
+            </div>
+            {showOtherPronouns && (
+              <>
+                <input
+                  className={fieldClass}
+                  type="text"
+                  autoComplete="off"
+                  aria-label="Pronouns"
+                  autoFocus
+                  maxLength={MAX_PRONOUNS_LENGTH}
+                  value={values.pronouns}
+                  onChange={(event) =>
+                    setValue(
+                      "pronouns",
+                      event.target.value.slice(0, MAX_PRONOUNS_LENGTH),
+                    )
+                  }
+                />
+                <p className="mt-2 text-right text-xs text-muted">
+                  <span className="font-mono tnum">
+                    {values.pronouns.length}/{MAX_PRONOUNS_LENGTH}
+                  </span>
+                </p>
+              </>
+            )}
+          </StepHeader>
+        );
+      }
 
       case "ranBefore": {
         const options: { value: "yes" | "no"; label: string }[] = [
@@ -860,6 +967,7 @@ export default function OnboardingWizard({
                 label="Gender"
                 value={values.gender ? GENDER_LABELS[values.gender] : ""}
               />
+              <ReviewRow label="Pronouns" value={values.pronouns.trim()} />
             </dl>
             <p className="text-sm text-muted">
               {added.length > 0

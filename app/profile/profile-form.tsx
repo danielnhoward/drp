@@ -4,6 +4,11 @@ import { useActionState, useState } from "react";
 
 import { GENDERS, GENDER_LABELS, type Gender } from "@/lib/gender";
 import { formatMMSS, formatMMSSInput } from "@/lib/profile-fields";
+import {
+  isPronounOption,
+  MAX_PRONOUNS_LENGTH,
+  PRONOUN_OPTIONS,
+} from "@/lib/pronouns";
 import { updateProfileAction, type ProfileFormState } from "./actions";
 import {
   appendSuggestion,
@@ -20,6 +25,8 @@ type Props = {
   // "" only appears as a fallback when the stored value isn't a known Gender
   // - the <select> is `required` so submission still forces a real choice.
   initialGender: Gender | "";
+  /** Optional display pronouns - null when unset. */
+  initialPronouns: string | null;
   /** Comfortable pace in seconds per km, or null when not set (it's optional). */
   initialPreferredPaceSeconds: number | null;
   /** Optional "about me" free text - null when unset. */
@@ -44,6 +51,7 @@ export default function ProfileForm({
   initialName,
   initialDateOfBirth,
   initialGender,
+  initialPronouns,
   initialPreferredPaceSeconds,
   initialWhyRun,
   initialHobbies,
@@ -53,6 +61,18 @@ export default function ProfileForm({
     updateProfileAction,
     INITIAL_STATE,
   );
+  const customPronouns =
+    initialPronouns && !isPronounOption(initialPronouns)
+      ? initialPronouns
+      : null;
+  const [pronounsChoice, setPronounsChoice] = useState(
+    customPronouns ? "other" : (initialPronouns ?? ""),
+  );
+  const [customPronounsValue, setCustomPronounsValue] = useState(
+    customPronouns ?? "",
+  );
+  const submittedPronouns =
+    pronounsChoice === "other" ? customPronounsValue : pronounsChoice;
   const [vibe, setVibe] = useState<Record<VibeFieldName, string>>({
     whyRun: initialWhyRun ?? "",
     hobbies: initialHobbies ?? "",
@@ -94,6 +114,8 @@ export default function ProfileForm({
 
   return (
     <form action={action} className="flex flex-col gap-4">
+      <input type="hidden" name="pronouns" value={submittedPronouns} />
+
       <Field label="Name">
         <input
           className={fieldClass}
@@ -132,6 +154,33 @@ export default function ProfileForm({
             </option>
           ))}
         </select>
+      </Field>
+
+      <Field label="Pronouns">
+        <select
+          className={fieldClass}
+          value={pronounsChoice}
+          onChange={(event) => setPronounsChoice(event.target.value)}
+        >
+          <option value="">Select...</option>
+          {PRONOUN_OPTIONS.map((option) => (
+            <option key={option} value={option}>
+              {option}
+            </option>
+          ))}
+          <option value="other">Other</option>
+        </select>
+        {pronounsChoice === "other" && (
+          <input
+            className={`${fieldClass} mt-2`}
+            type="text"
+            autoComplete="off"
+            aria-label="Pronouns"
+            maxLength={MAX_PRONOUNS_LENGTH}
+            value={customPronounsValue}
+            onChange={(event) => setCustomPronounsValue(event.target.value)}
+          />
+        )}
       </Field>
 
       <section
