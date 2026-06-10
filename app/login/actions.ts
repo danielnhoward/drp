@@ -10,6 +10,7 @@ import {
   paceSecondsFromFiveK,
   parseOptionalText,
 } from "@/lib/profile-fields";
+import { parsePronouns } from "@/lib/pronouns";
 import {
   clearSession,
   createUser,
@@ -17,6 +18,7 @@ import {
   isProfileComplete,
   setSessionUser,
   updateUserAvatar,
+  updateUserPronouns,
   updateUserProfile,
 } from "@/lib/users";
 import type { CompleteState, EmailLookup } from "./state";
@@ -43,6 +45,7 @@ export async function lookupEmailAction(emailRaw: string): Promise<EmailLookup> 
 
   if (isProfileComplete(existing)) {
     await setSessionUser(existing.id);
+    if (!existing.pronouns?.trim()) redirect("/profile/pronouns");
     redirect("/");
   }
 
@@ -55,6 +58,7 @@ export async function lookupEmailAction(emailRaw: string): Promise<EmailLookup> 
       dateOfBirth: existing.dateOfBirth ?? "",
       gender:
         existing.gender && isGender(existing.gender) ? existing.gender : "",
+      pronouns: existing.pronouns ?? "",
       fiveKTime:
         existing.preferredPaceSeconds !== null
           ? formatMMSS(existing.preferredPaceSeconds * 5)
@@ -80,6 +84,7 @@ export async function completeOnboardingAction(
   const name = String(formData.get("name") ?? "").trim();
   const dateOfBirth = String(formData.get("dateOfBirth") ?? "").trim();
   const genderRaw = String(formData.get("gender") ?? "").trim();
+  const pronounsRaw = String(formData.get("pronouns") ?? "");
   const fiveKRaw = String(formData.get("fiveKTime") ?? "").trim();
   const whyRunRaw = String(formData.get("whyRun") ?? "");
   const hobbiesRaw = String(formData.get("hobbies") ?? "");
@@ -101,6 +106,7 @@ export async function completeOnboardingAction(
   // to an existing one) — treat the whole thing as a sign-in.
   if (existing && isProfileComplete(existing)) {
     await setSessionUser(existing.id);
+    if (!existing.pronouns?.trim()) redirect("/profile/pronouns");
     redirect("/");
   }
 
@@ -123,7 +129,9 @@ export async function completeOnboardingAction(
   }
   const gender: Gender = genderRaw;
 
-  // Optional fields — collected as a 5k time / free text, validated leniently.
+  // Optional fields — collected as pronouns / a 5k time / free text, validated leniently.
+  const pronouns = parsePronouns(pronounsRaw);
+  if ("error" in pronouns) return { error: pronouns.error, step: "pronouns" };
   const pace = paceSecondsFromFiveK(fiveKRaw);
   if ("error" in pace) return { error: pace.error, step: "pace" };
   const whyRun = parseOptionalText(whyRunRaw, "why you run with others");
@@ -147,6 +155,7 @@ export async function completeOnboardingAction(
     hobbies: hobbies.value,
     interests: interests.value,
   });
+  updateUserPronouns(userId, pronouns.value);
   await setSessionUser(userId);
 
   // Optional avatar: only now do we have a user id to file it under. The client

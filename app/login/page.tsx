@@ -17,8 +17,12 @@ export default async function LoginPage({
 }) {
   const current = await getCurrentUser();
 
-  // Already finished signing up? Nothing to do here.
-  if (current && isProfileComplete(current)) redirect("/");
+  // Already finished signing up? Nothing to do here, except prompt legacy
+  // complete accounts that predate pronouns to fill that optional page.
+  if (current && isProfileComplete(current)) {
+    if (!current.pronouns?.trim()) redirect("/profile/pronouns");
+    redirect("/");
+  }
 
   // A signed-in user with missing required fields (legacy NULL rows) resumes the
   // wizard with their details prefilled and the email step skipped. A brand-new
@@ -40,6 +44,7 @@ export default async function LoginPage({
         dateOfBirth: current.dateOfBirth ?? "",
         gender:
           current.gender && isGender(current.gender) ? current.gender : "",
+        pronouns: current.pronouns ?? "",
         // UI-only branching flag — not persisted, so a resuming user answers it
         // fresh.
         ranBefore: "",

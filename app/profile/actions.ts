@@ -5,9 +5,11 @@ import { revalidatePath } from "next/cache";
 import { deleteAvatarFile, saveAvatarFile } from "@/lib/avatars";
 import { isGender, type Gender } from "@/lib/gender";
 import { paceSecondsFromFiveK, parseOptionalText } from "@/lib/profile-fields";
+import { parsePronouns } from "@/lib/pronouns";
 import {
   requireUser,
   updateUserAvatar,
+  updateUserPronouns,
   updateUserProfile,
 } from "@/lib/users";
 
@@ -24,6 +26,7 @@ export async function updateProfileAction(
   const name = String(formData.get("name") ?? "").trim();
   const dateOfBirth = String(formData.get("dateOfBirth") ?? "").trim();
   const genderRaw = String(formData.get("gender") ?? "").trim();
+  const pronounsRaw = String(formData.get("pronouns") ?? "");
   const fiveKRaw = String(formData.get("fiveKTime") ?? "").trim();
   const whyRunRaw = String(formData.get("whyRun") ?? "");
   const hobbiesRaw = String(formData.get("hobbies") ?? "");
@@ -42,6 +45,9 @@ export async function updateProfileAction(
   if (!genderRaw) return { error: "Pick a gender." };
   if (!isGender(genderRaw)) return { error: "Pick a valid gender option." };
   const gender: Gender = genderRaw;
+
+  const pronouns = parsePronouns(pronounsRaw);
+  if ("error" in pronouns) return { error: pronouns.error };
 
   // Pace is optional. When provided it's collected as a 5k time and stored as
   // seconds-per-km, mirroring the availability form; a blank field clears it.
@@ -65,6 +71,7 @@ export async function updateProfileAction(
     hobbies: hobbies.value,
     interests: interests.value,
   });
+  updateUserPronouns(user.id, pronouns.value);
 
   revalidatePath("/profile");
   revalidatePath("/");

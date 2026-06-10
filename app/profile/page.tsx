@@ -50,6 +50,7 @@ export default async function ProfilePage() {
         initialName={user.name}
         initialDateOfBirth={user.dateOfBirth}
         initialGender={gender}
+        initialPronouns={user.pronouns}
         initialPreferredPaceSeconds={user.preferredPaceSeconds}
         initialWhyRun={user.whyRun}
         initialHobbies={user.hobbies}
@@ -61,7 +62,7 @@ export default async function ProfilePage() {
       <form action={logoutAction} className="flex justify-center">
         <button
           type="submit"
-          className="btn-ghost tap text-sm font-medium"
+          className="btn-danger tap text-sm font-medium"
         >
           Sign out
         </button>
