@@ -3,7 +3,7 @@
 import { useActionState, useState } from "react";
 
 import { GENDERS, GENDER_LABELS, type Gender } from "@/lib/gender";
-import { formatMMSS } from "@/lib/profile-fields";
+import { formatMMSS, formatMMSSInput } from "@/lib/profile-fields";
 import { updateProfileAction, type ProfileFormState } from "./actions";
 import {
   appendSuggestion,
@@ -288,7 +288,7 @@ function PaceCard({
         pattern="\d{1,2}:[0-5]\d"
         inputMode="numeric"
         value={value}
-        onChange={(event) => onChange(event.target.value)}
+        onChange={(event) => onChange(formatMMSSInput(event.target.value))}
       />
 
       <p className="mt-2 text-xs text-muted">
