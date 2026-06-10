@@ -54,7 +54,7 @@ export default function FinishRun({
       <button
         type="button"
         onClick={openModal}
-        className="mt-3 inline-flex items-center gap-2 rounded-full bg-red-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-red-500"
+        className="mt-3 inline-flex items-center gap-2 rounded-lg bg-accent px-3 py-1.5 text-sm font-medium text-accent-contrast tap transition hover:brightness-110"
       >
         Finish run
       </button>
@@ -62,24 +62,24 @@ export default function FinishRun({
       {open && (
         <div className="fixed inset-0 z-60 flex items-center justify-center">
           <div
-            className="fixed inset-0 z-55 bg-black/40"
+            className="fixed inset-0 z-55 scrim backdrop-blur-sm"
             // Only dismissable by backdrop on the confirm step — don't let a
             // stray tap discard the photo prompt the first finisher just earned.
             onClick={step === "confirm" ? () => setOpen(false) : undefined}
           />
-          <div className="z-60 mx-4 w-full max-w-lg rounded-2xl bg-white p-6 shadow-lg dark:bg-zinc-900">
+          <div className="card anim-pop z-60 mx-4 w-full max-w-lg p-6">
             {step === "confirm" ? (
               <>
                 <h2 className="text-lg font-semibold">Finish run</h2>
-                <p className="mt-2 text-sm text-zinc-600 dark:text-zinc-400">
+                <p className="mt-2 text-sm text-muted">
                   Confirm you want to finish this run.
                 </p>
 
-                <div className="mt-4 flex gap-2">
+                <div className="mt-4 flex justify-end gap-2">
                   <button
                     type="button"
                     onClick={() => setOpen(false)}
-                    className="rounded-md px-3 py-1.5 bg-zinc-100 text-sm text-zinc-700 hover:bg-zinc-200 dark:bg-zinc-800 dark:text-zinc-300"
+                    className="btn-ghost text-sm"
                   >
                     Cancel
                   </button>
@@ -88,7 +88,7 @@ export default function FinishRun({
                     type="button"
                     onClick={confirmFinish}
                     disabled={pending}
-                    className="rounded-md bg-red-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-red-500 disabled:opacity-50"
+                    className="btn-accent text-sm"
                   >
                     {pending ? "Finishing…" : "Confirm finish"}
                   </button>

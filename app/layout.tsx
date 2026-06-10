@@ -1,16 +1,28 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import { Space_Grotesk, Inter, JetBrains_Mono } from "next/font/google";
 import "./globals.css";
 import BottomNav from "./components/bottom-nav";
+import TabTransition from "./components/tab-transition";
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
+// Display face — headings, CTAs, big numbers.
+const spaceGrotesk = Space_Grotesk({
+  variable: "--font-space-grotesk",
   subsets: ["latin"],
+  display: "swap",
 });
 
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
+// Body face.
+const inter = Inter({
+  variable: "--font-inter",
   subsets: ["latin"],
+  display: "swap",
+});
+
+// Tabular numerals for stats / paces / times.
+const jetBrainsMono = JetBrains_Mono({
+  variable: "--font-jetbrains-mono",
+  subsets: ["latin"],
+  display: "swap",
 });
 
 export const metadata: Metadata = {
@@ -26,10 +38,10 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
+      className={`${spaceGrotesk.variable} ${inter.variable} ${jetBrainsMono.variable} h-full bg-background antialiased`}
     >
-      <body className="min-h-full flex flex-col pb-[calc(4rem+env(safe-area-inset-bottom))]">
-        {children}
+      <body className="min-h-full flex flex-col overflow-x-hidden bg-background text-foreground pb-[calc(4rem+env(safe-area-inset-bottom))]">
+        <TabTransition>{children}</TabTransition>
         <BottomNav />
       </body>
     </html>

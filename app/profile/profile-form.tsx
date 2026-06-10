@@ -3,7 +3,7 @@
 import { useActionState, useState } from "react";
 
 import { GENDERS, GENDER_LABELS, type Gender } from "@/lib/gender";
-import { formatMMSS } from "@/lib/profile-fields";
+import { formatMMSS, formatMMSSInput } from "@/lib/profile-fields";
 import { updateProfileAction, type ProfileFormState } from "./actions";
 import {
   appendSuggestion,
@@ -35,10 +35,10 @@ const INITIAL_STATE: ProfileFormState = {};
 const BASE_PROFILE_PERCENT = 60;
 
 const fieldClass =
-  "h-10 rounded-lg border border-black/10 bg-white px-3 text-sm text-black outline-none focus:border-black/40 dark:border-white/15 dark:bg-zinc-900 dark:text-zinc-50 dark:focus:border-white/50";
+  "h-10 rounded-lg border border-border bg-surface-2 px-3 text-sm text-foreground outline-none transition-colors placeholder:text-muted focus:border-accent";
 
 const textareaClass =
-  "mt-3 min-h-24 w-full resize-none rounded-lg border border-black/10 bg-white px-3 py-2 text-sm text-black outline-none focus:border-black/40 dark:border-white/15 dark:bg-zinc-900 dark:text-zinc-50 dark:focus:border-white/50";
+  "mt-3 min-h-24 w-full resize-none rounded-lg border border-border bg-surface-2 px-3 py-2 text-sm text-foreground outline-none transition-colors placeholder:text-muted focus:border-accent";
 
 export default function ProfileForm({
   initialName,
@@ -137,21 +137,21 @@ export default function ProfileForm({
       <section
         id="running-vibe"
         aria-labelledby="running-vibe-title"
-        className="mt-2 flex scroll-mt-24 flex-col gap-3 border-t border-black/10 pt-5 dark:border-white/15"
+        className="mt-2 flex scroll-mt-24 flex-col gap-3 border-t border-border pt-5"
       >
         <div
           className={`rounded-lg border p-4 ${
             isVibeComplete
-              ? "border-emerald-200 bg-emerald-50 dark:border-emerald-900/60 dark:bg-emerald-950/30"
-              : "border-amber-200 bg-amber-50 dark:border-amber-900/60 dark:bg-amber-950/25"
+              ? "border-success/40 bg-success/10"
+              : "border-accent/40 bg-accent/10"
           }`}
         >
           <div className="flex items-start gap-3">
             <span
               className={`mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-lg ${
                 isVibeComplete
-                  ? "bg-emerald-100 text-emerald-800 dark:bg-emerald-900/60 dark:text-emerald-200"
-                  : "bg-amber-100 text-amber-800 dark:bg-amber-900/60 dark:text-amber-200"
+                  ? "bg-success/15 text-success"
+                  : "bg-accent/15 text-accent"
               }`}
             >
               <MeterIcon className="h-5 w-5" />
@@ -160,23 +160,23 @@ export default function ProfileForm({
               <div className="flex items-baseline justify-between gap-3">
                 <h2
                   id="running-vibe-title"
-                  className="text-base font-semibold text-zinc-950 dark:text-zinc-50"
+                  className="text-base font-semibold text-foreground"
                 >
                   Your running vibe
                 </h2>
-                <span className="text-sm font-semibold text-zinc-800 dark:text-zinc-100">
-                  {profilePercent}%
+                <span className="text-sm font-semibold text-foreground">
+                  <span className="font-mono tnum">{profilePercent}%</span>
                 </span>
               </div>
-              <div className="mt-2 h-2 overflow-hidden rounded-full bg-white/80 dark:bg-zinc-950/50">
+              <div className="mt-2 h-2 overflow-hidden rounded-full bg-surface-2">
                 <div
                   className={`h-full rounded-full ${
-                    isVibeComplete ? "bg-emerald-500" : "bg-amber-500"
+                    isVibeComplete ? "bg-success" : "bg-accent"
                   }`}
                   style={{ width: `${profilePercent}%` }}
                 />
               </div>
-              <p className="mt-2 text-sm text-zinc-700 dark:text-zinc-300">
+              <p className="mt-2 text-sm text-muted">
                 {isVibeComplete
                   ? "Nice. Partners will see your easy pace and a little personality before a run."
                   : remainingOptionalCount === 1
@@ -204,16 +204,16 @@ export default function ProfileForm({
       </section>
 
       {state.error && (
-        <p className="text-sm text-red-600 dark:text-red-400">{state.error}</p>
+        <p className="text-sm text-danger">{state.error}</p>
       )}
       {state.ok && !state.error && (
-        <p className="text-sm text-green-700 dark:text-green-400">Saved.</p>
+        <p className="text-sm text-success">Saved.</p>
       )}
 
       <button
         type="submit"
         disabled={pending}
-        className="mt-1 flex h-11 items-center justify-center rounded-full bg-blue-600 text-sm font-medium text-white transition-colors hover:bg-blue-700 disabled:opacity-50"
+        className="mt-1 flex h-11 items-center justify-center rounded-full bg-accent text-sm font-medium text-accent-contrast tap transition-colors hover:brightness-110 disabled:opacity-50"
       >
         {pending ? "Saving..." : "Save profile"}
       </button>
@@ -234,39 +234,37 @@ function PaceCard({
 
   return (
     <section
-      className={`rounded-lg border p-4 ${
-        filled
-          ? "border-emerald-200 bg-white dark:border-emerald-900/60 dark:bg-zinc-900"
-          : "border-black/10 bg-white dark:border-white/15 dark:bg-zinc-900"
+      className={`rounded-lg border p-4 bg-surface ${
+        filled ? "border-success/40" : "border-border"
       }`}
     >
       <div className="flex items-start gap-3">
-        <span className="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-blue-50 text-blue-700 dark:bg-blue-950/50 dark:text-blue-200">
+        <span className="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-accent/15 text-accent">
           <StopwatchIcon className="h-5 w-5" />
         </span>
         <div className="min-w-0 flex-1">
           <div className="flex items-start justify-between gap-3">
             <label
               htmlFor="fiveKTime"
-              className="text-sm font-semibold text-zinc-900 dark:text-zinc-50"
+              className="text-sm font-semibold text-foreground"
             >
               Your conversational 5k time
             </label>
             {filled && (
-              <span className="inline-flex shrink-0 items-center gap-1 rounded-full bg-emerald-50 px-2 py-0.5 text-xs font-medium text-emerald-700 dark:bg-emerald-950/50 dark:text-emerald-300">
+              <span className="inline-flex shrink-0 items-center gap-1 rounded-full bg-success/15 px-2 py-0.5 text-xs font-medium text-success">
                 <CheckIcon className="h-3.5 w-3.5" />
                 Added
               </span>
             )}
           </div>
-          <p className="mt-1 text-sm text-zinc-500 dark:text-zinc-400">
+          <p className="mt-1 text-sm text-muted">
             The time you&apos;d run 5k while chatting the whole way - relaxed, not
             a race.
           </p>
         </div>
       </div>
 
-      <p className="mt-3 text-xs font-medium text-zinc-500 dark:text-zinc-400">
+      <p className="mt-3 text-xs font-medium text-muted">
         Common times
       </p>
       <div className="mt-2 flex flex-wrap gap-2">
@@ -281,11 +279,11 @@ function PaceCard({
               onClick={() => onChange(preset)}
               className={
                 selected
-                  ? "inline-flex min-h-8 max-w-full items-center justify-center rounded-full border border-blue-600 bg-blue-600 px-3.5 py-1 text-center text-sm font-medium text-white transition-colors disabled:opacity-50"
-                  : "inline-flex min-h-8 max-w-full items-center justify-center rounded-full border border-black/15 bg-white px-3.5 py-1 text-center text-sm font-medium text-zinc-700 transition-colors hover:border-blue-300 hover:bg-blue-50 hover:text-blue-800 disabled:opacity-50 dark:border-white/15 dark:bg-zinc-950 dark:text-zinc-300 dark:hover:border-blue-900/80 dark:hover:bg-blue-950/40 dark:hover:text-blue-200"
+                  ? "inline-flex min-h-8 max-w-full items-center justify-center rounded-full border border-accent bg-accent px-3.5 py-1 text-center text-sm font-medium text-accent-contrast tap transition-colors disabled:opacity-50"
+                  : "inline-flex min-h-8 max-w-full items-center justify-center rounded-full border border-border bg-surface-2 px-3.5 py-1 text-center text-sm font-medium text-muted tap transition-colors hover:border-accent/40 hover:bg-accent/10 hover:text-accent disabled:opacity-50"
               }
             >
-              <span className="truncate">{preset}</span>
+              <span className="truncate font-mono tnum">{preset}</span>
             </button>
           );
         })}
@@ -300,10 +298,10 @@ function PaceCard({
         pattern="\d{1,2}:[0-5]\d"
         inputMode="numeric"
         value={value}
-        onChange={(event) => onChange(event.target.value)}
+        onChange={(event) => onChange(formatMMSSInput(event.target.value))}
       />
 
-      <p className="mt-2 text-xs text-zinc-500 dark:text-zinc-400">
+      <p className="mt-2 text-xs text-muted">
         {filled
           ? "Partners see this as your easy, chatty pace."
           : "Pick one above or type your own as mm:ss."}
@@ -330,32 +328,30 @@ function VibePromptCard({
 
   return (
     <section
-      className={`rounded-lg border p-4 ${
-        filled
-          ? "border-emerald-200 bg-white dark:border-emerald-900/60 dark:bg-zinc-900"
-          : "border-black/10 bg-white dark:border-white/15 dark:bg-zinc-900"
+      className={`rounded-lg border p-4 bg-surface ${
+        filled ? "border-success/40" : "border-border"
       }`}
     >
       <div className="flex items-start gap-3">
-        <span className="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-blue-50 text-blue-700 dark:bg-blue-950/50 dark:text-blue-200">
+        <span className="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-accent/15 text-accent">
           <Icon className="h-5 w-5" />
         </span>
         <div className="min-w-0 flex-1">
           <div className="flex items-start justify-between gap-3">
             <label
               htmlFor={prompt.name}
-              className="text-sm font-semibold text-zinc-900 dark:text-zinc-50"
+              className="text-sm font-semibold text-foreground"
             >
               {prompt.title}
             </label>
             {filled && (
-              <span className="inline-flex shrink-0 items-center gap-1 rounded-full bg-emerald-50 px-2 py-0.5 text-xs font-medium text-emerald-700 dark:bg-emerald-950/50 dark:text-emerald-300">
+              <span className="inline-flex shrink-0 items-center gap-1 rounded-full bg-success/15 px-2 py-0.5 text-xs font-medium text-success">
                 <CheckIcon className="h-3.5 w-3.5" />
                 Added
               </span>
             )}
           </div>
-          <p className="mt-1 text-sm text-zinc-500 dark:text-zinc-400">
+          <p className="mt-1 text-sm text-muted">
             {prompt.microcopy}
           </p>
         </div>
@@ -368,7 +364,7 @@ function VibePromptCard({
             type="button"
             disabled={pending}
             onClick={() => onSuggestion(prompt.name, suggestion)}
-            className="inline-flex min-h-8 max-w-full items-center gap-1.5 rounded-full border border-black/10 bg-zinc-50 px-3 py-1 text-left text-xs font-medium text-zinc-700 transition-colors hover:border-blue-200 hover:bg-blue-50 hover:text-blue-800 disabled:opacity-50 dark:border-white/15 dark:bg-zinc-950 dark:text-zinc-300 dark:hover:border-blue-900/80 dark:hover:bg-blue-950/40 dark:hover:text-blue-200"
+            className="inline-flex min-h-8 max-w-full items-center gap-1.5 rounded-full border border-border bg-surface-2 px-3 py-1 text-left text-xs font-medium text-muted tap transition-colors hover:border-accent/40 hover:bg-accent/10 hover:text-accent disabled:opacity-50"
           >
             <PlusIcon className="h-3.5 w-3.5 shrink-0" />
             <span className="truncate">{suggestion}</span>
@@ -387,13 +383,13 @@ function VibePromptCard({
         onChange={(event) => onChange(prompt.name, event.target.value)}
       />
 
-      <div className="mt-2 flex items-center justify-between gap-3 text-xs text-zinc-500 dark:text-zinc-400">
+      <div className="mt-2 flex items-center justify-between gap-3 text-xs text-muted">
         <span>
           {filled
             ? "This now appears in your partner preview."
             : "Pick a chip or write it your way."}
         </span>
-        <span className="shrink-0">
+        <span className="shrink-0 font-mono tnum">
           {value.length}/{MAX_VIBE_LENGTH}
         </span>
       </div>
@@ -416,10 +412,10 @@ function PartnerPreview({
     .filter((item) => item.value);
 
   return (
-    <section className="rounded-lg border border-black/10 bg-zinc-50 p-4 dark:border-white/15 dark:bg-zinc-950/40">
+    <section className="rounded-lg border border-border bg-surface-2 p-4">
       <div className="flex items-center gap-2">
-        <EyeIcon className="h-4 w-4 text-zinc-500 dark:text-zinc-400" />
-        <h3 className="text-sm font-semibold text-zinc-900 dark:text-zinc-50">
+        <EyeIcon className="h-4 w-4 text-muted" />
+        <h3 className="text-sm font-semibold text-foreground">
           Partner preview
         </h3>
       </div>
@@ -428,17 +424,17 @@ function PartnerPreview({
         <dl className="mt-3 flex flex-col gap-3">
           {previewItems.map((item) => (
             <div key={item.label}>
-              <dt className="text-xs font-medium uppercase text-zinc-500 dark:text-zinc-400">
+              <dt className="text-xs font-medium uppercase text-muted">
                 {item.label}
               </dt>
-              <dd className="mt-0.5 whitespace-pre-line text-sm text-zinc-800 dark:text-zinc-200">
+              <dd className="mt-0.5 whitespace-pre-line text-sm text-foreground">
                 {item.value}
               </dd>
             </div>
           ))}
         </dl>
       ) : (
-        <p className="mt-3 text-sm text-zinc-500 dark:text-zinc-400">
+        <p className="mt-3 text-sm text-muted">
           Add one prompt and this turns into the short intro another runner sees.
         </p>
       )}
@@ -457,11 +453,11 @@ function Field({
 }) {
   return (
     <label className="flex flex-col gap-1.5">
-      <span className="text-sm font-medium text-zinc-600 dark:text-zinc-400">
+      <span className="text-sm font-medium text-muted">
         {label}
       </span>
       {hint && (
-        <span className="text-sm font-normal text-zinc-500 dark:text-zinc-400">
+        <span className="text-sm font-normal text-muted">
           {hint}
         </span>
       )}

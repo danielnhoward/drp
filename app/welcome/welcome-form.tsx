@@ -8,7 +8,7 @@ import { lookupEmailAction } from "@/app/login/actions";
 // Mirrors the wizard's email field so the landing input feels like the same
 // form the user is about to continue into.
 const fieldClass =
-  "h-12 w-full rounded-lg border border-black/10 bg-white px-3.5 text-base text-black outline-none transition-colors focus:border-black/40 dark:border-white/15 dark:bg-zinc-900 dark:text-zinc-50 dark:focus:border-white/50";
+  "h-12 w-full rounded-lg border border-border bg-surface-2 px-3.5 text-base text-foreground placeholder:text-muted outline-none transition-colors focus:border-accent";
 
 // One email box for both new and returning runners. It runs the same lookup as
 // the onboarding wizard's first step, then routes accordingly:
@@ -67,12 +67,12 @@ export default function WelcomeForm() {
       <button
         type="submit"
         disabled={pending}
-        className="flex h-12 items-center justify-center rounded-lg bg-blue-600 px-5 text-base font-medium text-white transition-colors hover:bg-blue-700 disabled:opacity-60"
+        className="tap flex h-12 items-center justify-center rounded-lg bg-accent px-5 text-base font-medium text-accent-contrast transition hover:brightness-110 disabled:opacity-60"
       >
         {pending ? "Checking…" : "Continue"}
       </button>
       {error && (
-        <p className="text-sm text-red-600 dark:text-red-400">{error}</p>
+        <p className="text-sm text-danger">{error}</p>
       )}
     </form>
   );

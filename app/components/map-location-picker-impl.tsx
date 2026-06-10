@@ -137,7 +137,7 @@ export default function MapLocationPickerImpl({
 
   return (
     <div className="flex flex-col gap-1.5">
-      <div className="relative h-64 w-full overflow-hidden rounded-xl border border-black/10 dark:border-white/15">
+      <div className="relative h-64 w-full overflow-hidden rounded-xl border border-border">
         <div ref={mapContainerRef} className="absolute inset-0" />
 
         {/* Centre pin overlay. Tip is anchored at the map centre via the
@@ -149,13 +149,13 @@ export default function MapLocationPickerImpl({
         >
           <svg
             viewBox="0 0 24 32"
-            className="h-8 w-6 drop-shadow"
-            fill="#2563eb"
-            stroke="white"
+            className="h-8 w-6 text-accent drop-shadow"
+            fill="currentColor"
+            stroke="var(--color-accent-contrast)"
             strokeWidth={1.5}
           >
             <path d="M12 1c-6 0-11 4.5-11 11 0 8 11 19 11 19s11-11 11-19c0-6.5-5-11-11-11z" />
-            <circle cx="12" cy="12" r="4" fill="white" stroke="none" />
+            <circle cx="12" cy="12" r="4" fill="var(--color-accent-contrast)" stroke="none" />
           </svg>
         </div>
 
@@ -170,7 +170,7 @@ export default function MapLocationPickerImpl({
           }}
           onClick={onButtonClick}
           disabled={locating}
-          className="absolute bottom-3 left-1/2 z-[1000] flex -translate-x-1/2 items-center gap-1.5 rounded-full bg-blue-600 px-4 py-2 text-xs font-medium text-white shadow-lg transition-colors hover:bg-blue-700 disabled:opacity-60 dark:bg-blue-600 dark:hover:bg-blue-700"
+          className="tap absolute bottom-3 left-1/2 z-[1000] flex -translate-x-1/2 items-center gap-1.5 rounded-full bg-accent px-4 py-2 text-xs font-medium text-accent-contrast shadow-lg transition-colors hover:brightness-110 disabled:opacity-60"
         >
           {locating ? (
             <svg
@@ -203,14 +203,14 @@ export default function MapLocationPickerImpl({
         </button>
       </div>
 
-      <div className="flex justify-end text-xs text-zinc-500 dark:text-zinc-400">
-        <span className="tabular-nums">
+      <div className="flex justify-end text-xs text-muted">
+        <span className="font-mono tnum">
           {lat.toFixed(5)}, {lon.toFixed(5)}
         </span>
       </div>
 
       {error ? (
-        <p className="text-xs text-red-600 dark:text-red-400">{error}</p>
+        <p className="text-xs text-danger">{error}</p>
       ) : null}
 
       <input type="hidden" name={nameLat} value={lat} />

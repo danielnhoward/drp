@@ -6,11 +6,12 @@ import {
   useEffect,
   useRef,
   useState,
+  useSyncExternalStore,
   useTransition,
 } from "react";
 
 import { GENDERS, GENDER_LABELS } from "@/lib/gender";
-import { MMSS } from "@/lib/profile-fields";
+import { formatMMSSInput, MMSS } from "@/lib/profile-fields";
 import {
   appendSuggestion,
   MAX_VIBE_LENGTH,
@@ -46,26 +47,183 @@ const ACCEPTED_TYPES = "image/jpeg,image/png,image/webp";
 const MAX_BYTES = 5 * 1024 * 1024;
 
 const fieldClass =
-  "h-11 w-full rounded-lg border border-black/10 bg-white px-3 text-base text-black outline-none focus:border-black/40 dark:border-white/15 dark:bg-zinc-900 dark:text-zinc-50 dark:focus:border-white/50";
+  "h-11 w-full rounded-lg border border-border bg-surface-2 px-3 text-base text-foreground placeholder:text-muted outline-none transition-colors focus:border-accent";
 const textareaClass =
-  "min-h-28 w-full resize-none rounded-lg border border-black/10 bg-white px-3 py-2 text-base text-black outline-none focus:border-black/40 dark:border-white/15 dark:bg-zinc-900 dark:text-zinc-50 dark:focus:border-white/50";
+  "min-h-28 w-full resize-none rounded-lg border border-border bg-surface-2 px-3 py-2 text-base text-foreground placeholder:text-muted outline-none transition-colors focus:border-accent";
 const chipClass =
-  "inline-flex min-h-8 max-w-full items-center gap-1.5 rounded-full border border-black/10 bg-zinc-50 px-3 py-1 text-left text-xs font-medium text-zinc-700 transition-colors hover:border-blue-200 hover:bg-blue-50 hover:text-blue-800 disabled:opacity-50 dark:border-white/15 dark:bg-zinc-950 dark:text-zinc-300 dark:hover:border-blue-900/80 dark:hover:bg-blue-950/40 dark:hover:text-blue-200";
+  "inline-flex min-h-8 max-w-full items-center gap-1.5 rounded-full border border-border bg-surface-2 px-3 py-1 text-left text-xs font-medium text-muted transition-colors hover:border-accent/40 hover:bg-accent/10 hover:text-accent disabled:opacity-50";
 // Pace presets are single-choice quick-fills (they replace the field), so they
 // read as a selectable radio group - no "+" icon, and the active one is filled.
 const pacePresetClass =
-  "inline-flex min-h-8 max-w-full items-center justify-center rounded-full border border-black/15 bg-white px-3.5 py-1 text-center text-sm font-medium text-zinc-700 transition-colors hover:border-blue-300 hover:bg-blue-50 hover:text-blue-800 disabled:opacity-50 dark:border-white/15 dark:bg-zinc-950 dark:text-zinc-300 dark:hover:border-blue-900/80 dark:hover:bg-blue-950/40 dark:hover:text-blue-200";
+  "inline-flex min-h-8 max-w-full items-center justify-center rounded-full border border-border bg-surface-2 px-3.5 py-1 text-center text-sm font-medium text-muted transition-colors hover:border-accent/40 hover:bg-accent/10 hover:text-accent disabled:opacity-50";
 const pacePresetSelectedClass =
-  "inline-flex min-h-8 max-w-full items-center justify-center rounded-full border border-blue-600 bg-blue-600 px-3.5 py-1 text-center text-sm font-medium text-white transition-colors disabled:opacity-50";
+  "inline-flex min-h-8 max-w-full items-center justify-center rounded-full border border-accent bg-accent px-3.5 py-1 text-center text-sm font-medium text-accent-contrast transition-colors disabled:opacity-50";
 const primaryBtn =
-  "inline-flex min-w-24 items-center justify-center rounded-full bg-blue-600 px-5 py-2.5 text-sm font-medium text-white transition-colors hover:bg-blue-700 disabled:opacity-50";
+  "btn-accent tap rounded-full px-5 py-2.5 text-sm font-medium disabled:opacity-50";
 const secondaryBtn =
-  "inline-flex min-w-24 items-center justify-center rounded-full border border-black/15 bg-white px-5 py-2.5 text-sm font-medium text-zinc-800 transition-colors hover:bg-zinc-50 dark:border-white/20 dark:bg-zinc-950 dark:text-zinc-100 dark:hover:bg-zinc-900";
+  "btn-ghost tap rounded-full px-5 py-2.5 text-sm font-medium disabled:opacity-50";
 const ghostBtn =
-  "rounded-full px-4 py-2.5 text-sm font-medium text-zinc-600 transition-colors hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-50";
+  "btn-ghost tap rounded-full px-4 py-2.5 text-sm font-medium";
 
 function vibePromptFor(step: StepId): VibePrompt | undefined {
   return VIBE_PROMPTS.find((prompt) => prompt.name === step);
+}
+
+// Touch devices get native date dropdowns; pointer devices get the typed
+// inputs. Read via useSyncExternalStore so SSR renders the desktop variant
+// and the client reconciles without a setState-in-effect cascade.
+function useIsTouch() {
+  return useSyncExternalStore(
+    (onChange) => {
+      const mq = window.matchMedia("(pointer: coarse)");
+      mq.addEventListener("change", onChange);
+      return () => mq.removeEventListener("change", onChange);
+    },
+    () => window.matchMedia("(pointer: coarse)").matches,
+    () => false,
+  );
+}
+
+const dobSelectClass =
+  "h-11 rounded-lg border border-black/10 bg-white px-3 text-base text-black outline-none focus:border-black/40 dark:border-white/15 dark:bg-zinc-900 dark:text-zinc-50 dark:focus:border-white/50";
+
+const MONTH_NAMES = [
+  "January", "February", "March", "April", "May", "June",
+  "July", "August", "September", "October", "November", "December",
+];
+
+function DobStep({
+  value,
+  onChange,
+}: {
+  value: string;
+  onChange: (v: string) => void;
+}) {
+  const parts = value.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+  const [day, setDay] = useState(parts ? String(parseInt(parts[3], 10)) : "");
+  const [month, setMonth] = useState(parts ? String(parseInt(parts[2], 10)) : "");
+  const [year, setYear] = useState(parts ? parts[1] : "");
+  const isTouch = useIsTouch();
+
+  const dayInputRef = useRef<HTMLInputElement>(null);
+  const mmRef = useRef<HTMLInputElement>(null);
+  const yyyyRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    if (!isTouch) dayInputRef.current?.focus();
+  }, [isTouch]);
+
+  function commit(d: string, m: string, y: string) {
+    const dn = parseInt(d, 10);
+    const mn = parseInt(m, 10);
+    const yn = parseInt(y, 10);
+    if (d && m && y.length === 4 && dn >= 1 && dn <= 31 && mn >= 1 && mn <= 12 && yn >= 1900) {
+      onChange(`${y}-${m.padStart(2, "0")}-${d.padStart(2, "0")}`);
+    } else {
+      onChange("");
+    }
+  }
+
+  function handleDay(raw: string) {
+    const digits = raw.replace(/\D/g, "").slice(0, 2);
+    const n = parseInt(digits, 10);
+    const clamped = digits && n > 31 ? "31" : digits;
+    setDay(clamped);
+    commit(clamped, month, year);
+    if (clamped.length === 2) mmRef.current?.focus();
+  }
+
+  function handleMonth(raw: string) {
+    const digits = raw.replace(/\D/g, "").slice(0, 2);
+    const n = parseInt(digits, 10);
+    const clamped = digits && n > 12 ? "12" : digits;
+    setMonth(clamped);
+    commit(day, clamped, year);
+    if (clamped.length === 2) yyyyRef.current?.focus();
+  }
+
+  function handleYear(raw: string) {
+    const digits = raw.replace(/\D/g, "").slice(0, 4);
+    const n = parseInt(digits, 10);
+    const maxYear = new Date().getFullYear();
+    const clamped = digits.length === 4 && n > maxYear ? String(maxYear) : digits;
+    setYear(clamped);
+    commit(day, month, clamped);
+  }
+
+  if (isTouch) {
+    const currentYear = new Date().getFullYear();
+    return (
+      <div className="flex gap-2">
+        <select
+          className={`${dobSelectClass} w-20 min-w-0`}
+          value={day}
+          onChange={(e) => { const v = e.target.value; setDay(v); commit(v, month, year); }}
+        >
+          <option value="" disabled>DD</option>
+          {Array.from({ length: 31 }, (_, i) => (
+            <option key={i + 1} value={String(i + 1)}>{i + 1}</option>
+          ))}
+        </select>
+        <select
+          className={`${dobSelectClass} flex-1 min-w-0`}
+          value={month}
+          onChange={(e) => { const v = e.target.value; setMonth(v); commit(day, v, year); }}
+        >
+          <option value="" disabled>Month</option>
+          {MONTH_NAMES.map((name, i) => (
+            <option key={i + 1} value={String(i + 1)}>{name}</option>
+          ))}
+        </select>
+        <select
+          className={`${dobSelectClass} w-24 min-w-0`}
+          value={year}
+          onChange={(e) => { const v = e.target.value; setYear(v); commit(day, month, v); }}
+        >
+          <option value="" disabled>YYYY</option>
+          {Array.from({ length: currentYear - 1899 }, (_, i) => {
+            const y = String(currentYear - i);
+            return <option key={y} value={y}>{y}</option>;
+          })}
+        </select>
+      </div>
+    );
+  }
+
+  return (
+    <div className="flex gap-2">
+      <input
+        ref={dayInputRef}
+        className={`${dobSelectClass} w-16 min-w-0`}
+        type="text"
+        inputMode="numeric"
+        maxLength={2}
+        placeholder="DD"
+        value={day}
+        onChange={(e) => handleDay(e.target.value)}
+      />
+      <input
+        ref={mmRef}
+        className={`${dobSelectClass} w-16 min-w-0`}
+        type="text"
+        inputMode="numeric"
+        maxLength={2}
+        placeholder="MM"
+        value={month}
+        onChange={(e) => handleMonth(e.target.value)}
+      />
+      <input
+        ref={yyyyRef}
+        className={`${dobSelectClass} flex-1 min-w-0`}
+        type="text"
+        inputMode="numeric"
+        maxLength={4}
+        placeholder="YYYY"
+        value={year}
+        onChange={(e) => handleYear(e.target.value)}
+      />
+    </div>
+  );
 }
 
 export default function OnboardingWizard({
@@ -329,7 +487,7 @@ export default function OnboardingWizard({
           {renderStep()}
 
           {error && (
-            <p className="mt-4 text-sm text-red-600 dark:text-red-400">
+            <p className="mt-4 text-sm text-danger">
               {error}
             </p>
           )}
@@ -437,14 +595,9 @@ export default function OnboardingWizard({
             title={firstName ? `When's your birthday, ${firstName}?` : "When's your birthday?"}
             subtitle="We use your age to help suggest comfortable running partners."
           >
-            <input
-              // color-scheme lets the browser draw the native calendar-picker
-              // glyph per the active theme: black in light mode, white in dark.
-              className={`${fieldClass} [color-scheme:light_dark]`}
-              type="date"
-              max={today}
+            <DobStep
               value={values.dateOfBirth}
-              onChange={(event) => setValue("dateOfBirth", event.target.value)}
+              onChange={(v) => setValue("dateOfBirth", v)}
             />
           </StepHeader>
         );
@@ -464,10 +617,10 @@ export default function OnboardingWizard({
                     type="button"
                     onClick={() => setValue("gender", option)}
                     aria-pressed={selected}
-                    className={`flex h-12 items-center rounded-lg border px-4 text-left text-sm font-medium transition-colors ${
+                    className={`tap flex h-12 items-center rounded-lg border px-4 text-left text-sm font-medium transition-colors ${
                       selected
-                        ? "border-blue-500 bg-blue-50 text-blue-800 dark:border-blue-500/70 dark:bg-blue-950/40 dark:text-blue-200"
-                        : "border-black/10 bg-white text-zinc-800 hover:border-black/30 dark:border-white/15 dark:bg-zinc-900 dark:text-zinc-100 dark:hover:border-white/40"
+                        ? "border-accent/40 bg-accent/10 text-accent"
+                        : "border-border bg-surface text-foreground hover:border-accent/40"
                     }`}
                   >
                     {GENDER_LABELS[option]}
@@ -499,8 +652,8 @@ export default function OnboardingWizard({
                     aria-pressed={selected}
                     className={`flex h-12 items-center rounded-lg border px-4 text-left text-sm font-medium transition-colors ${
                       selected
-                        ? "border-blue-500 bg-blue-50 text-blue-800 dark:border-blue-500/70 dark:bg-blue-950/40 dark:text-blue-200"
-                        : "border-black/10 bg-white text-zinc-800 hover:border-black/30 dark:border-white/15 dark:bg-zinc-900 dark:text-zinc-100 dark:hover:border-white/40"
+                        ? "border-accent/40 bg-accent/10 text-accent"
+                        : "border-border bg-surface text-foreground hover:border-accent/40"
                     }`}
                   >
                     {option.label}
@@ -527,12 +680,12 @@ export default function OnboardingWizard({
                     width={96}
                     height={96}
                     unoptimized
-                    className="h-24 w-24 rounded-full border border-black/10 object-cover dark:border-white/15"
+                    className="h-24 w-24 rounded-full border border-border object-cover"
                   />
                 ) : (
                   <span
                     aria-hidden="true"
-                    className="flex h-24 w-24 items-center justify-center rounded-full border border-black/10 bg-zinc-100 text-3xl font-semibold text-zinc-500 dark:border-white/15 dark:bg-zinc-800 dark:text-zinc-400"
+                    className="flex h-24 w-24 items-center justify-center rounded-full border border-border bg-surface-2 text-3xl font-semibold text-muted"
                   >
                     {values.name.charAt(0) || "?"}
                   </span>
@@ -542,7 +695,7 @@ export default function OnboardingWizard({
                 <button
                   type="button"
                   onClick={() => fileRef.current?.click()}
-                  className="inline-flex h-9 items-center rounded-md border border-black/15 px-3 text-sm font-medium hover:bg-zinc-50 dark:border-white/20 dark:hover:bg-zinc-900"
+                  className="tap inline-flex h-9 items-center rounded-md border border-border px-3 text-sm font-medium text-foreground hover:bg-surface-2"
                 >
                   {avatarPreview ? "Change" : "Choose photo"}
                 </button>
@@ -550,12 +703,12 @@ export default function OnboardingWizard({
                   <button
                     type="button"
                     onClick={removeAvatar}
-                    className="inline-flex h-9 items-center rounded-md border border-black/15 px-3 text-sm font-medium text-red-600 hover:bg-zinc-50 dark:border-white/20 dark:text-red-400 dark:hover:bg-zinc-900"
+                    className="tap inline-flex h-9 items-center rounded-md border border-border px-3 text-sm font-medium text-danger hover:bg-surface-2"
                   >
                     Remove
                   </button>
                 )}
-                <p className="text-xs text-zinc-500 dark:text-zinc-400">
+                <p className="text-xs text-muted">
                   JPEG, PNG, or WebP. Up to 5 MB.
                 </p>
               </div>
@@ -570,7 +723,7 @@ export default function OnboardingWizard({
             subtitle="The time you could hold a conversation at, not your race-day best. We use it to match you with runners at a similar rhythm."
             optional
           >
-            <p className="mb-2 text-xs font-medium text-zinc-500 dark:text-zinc-400">
+            <p className="mb-2 text-xs font-medium text-muted">
               Common times
             </p>
             <div className="mb-3 flex flex-wrap gap-2">
@@ -595,9 +748,11 @@ export default function OnboardingWizard({
               pattern="\d{1,2}:[0-5]\d"
               inputMode="numeric"
               value={values.fiveKTime}
-              onChange={(event) => setValue("fiveKTime", event.target.value)}
+              onChange={(event) =>
+                setValue("fiveKTime", formatMMSSInput(event.target.value))
+              }
             />
-            <p className="mt-2 text-xs text-zinc-500 dark:text-zinc-400">
+            <p className="mt-2 text-xs text-muted">
               Pick one above or type your own as mm:ss.
             </p>
           </StepHeader>
@@ -646,8 +801,8 @@ export default function OnboardingWizard({
                 setValue(prompt.name, event.target.value.slice(0, MAX_VIBE_LENGTH))
               }
             />
-            <p className="mt-2 text-right text-xs text-zinc-500 dark:text-zinc-400">
-              {value.length}/{MAX_VIBE_LENGTH}
+            <p className="mt-2 text-right text-xs text-muted">
+              <span className="font-mono tnum">{value.length}/{MAX_VIBE_LENGTH}</span>
             </p>
           </StepHeader>
         );
@@ -666,7 +821,7 @@ export default function OnboardingWizard({
             title={firstName ? `You're all set, ${firstName}.` : "You're all set."}
             subtitle="Create your account and we'll start finding runs that fit your schedule. Anything you skipped can be added later from your profile."
           >
-            <dl className="flex flex-col gap-2 rounded-lg border border-black/10 bg-zinc-50 p-4 text-sm dark:border-white/15 dark:bg-zinc-900">
+            <dl className="card flex flex-col gap-2 p-4 text-sm">
               <ReviewRow label="Email" value={values.email} />
               <ReviewRow label="Date of birth" value={values.dateOfBirth} />
               <ReviewRow
@@ -674,7 +829,7 @@ export default function OnboardingWizard({
                 value={values.gender ? GENDER_LABELS[values.gender] : ""}
               />
             </dl>
-            <p className="text-sm text-zinc-600 dark:text-zinc-400">
+            <p className="text-sm text-muted">
               {added.length > 0
                 ? `Also added: ${added.join(", ")}.`
                 : "You skipped the optional extras — no problem, add them anytime."}
@@ -692,8 +847,8 @@ export default function OnboardingWizard({
 function ReviewRow({ label, value }: { label: string; value: string }) {
   return (
     <div className="flex items-baseline justify-between gap-3">
-      <dt className="text-zinc-500 dark:text-zinc-400">{label}</dt>
-      <dd className="font-medium text-zinc-900 dark:text-zinc-50">
+      <dt className="text-muted">{label}</dt>
+      <dd className="font-medium text-foreground">
         {value || "—"}
       </dd>
     </div>
@@ -703,12 +858,13 @@ function ReviewRow({ label, value }: { label: string; value: string }) {
 function Progress({ current, total }: { current: number; total: number }) {
   return (
     <div>
-      <p className="text-xs font-medium text-zinc-500 dark:text-zinc-400">
-        Step {current} of {total}
+      <p className="text-xs font-medium text-muted">
+        Step <span className="font-mono tnum">{current}</span> of{" "}
+        <span className="font-mono tnum">{total}</span>
       </p>
-      <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-black/10 dark:bg-white/15">
+      <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-surface-2">
         <div
-          className="h-full rounded-full bg-blue-600 transition-all"
+          className="h-full rounded-full bg-accent transition-all"
           style={{ width: `${(current / total) * 100}%` }}
         />
       </div>
@@ -731,15 +887,17 @@ function StepHeader({
     <div className="flex flex-col gap-4">
       <div>
         <div className="flex flex-wrap items-center gap-2">
-          <h1 className="text-2xl font-semibold">{title}</h1>
+          <h1 className="text-gradient text-2xl font-semibold tracking-tight">
+            {title}
+          </h1>
           {optional && (
-            <span className="inline-flex shrink-0 items-center rounded-full border border-blue-200 bg-blue-50 px-2 py-0.5 text-xs font-semibold text-blue-700 dark:border-blue-900/60 dark:bg-blue-950/40 dark:text-blue-200">
+            <span className="inline-flex shrink-0 items-center rounded-full border border-accent/40 bg-accent/10 px-2 py-0.5 text-xs font-semibold text-accent">
               Optional
             </span>
           )}
         </div>
         {subtitle && (
-          <p className="mt-2 text-sm text-zinc-600 dark:text-zinc-400">
+          <p className="mt-2 text-sm text-muted">
             {subtitle}
           </p>
         )}
