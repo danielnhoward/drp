@@ -561,7 +561,7 @@ export default function OnboardingWizard({
         return (
           <StepHeader
             title={firstName ? `What's your conversational 5k time, ${firstName}?` : "What's your conversational 5k time?"}
-            subtitle="Think conversational pace, not race-day pace. We use it to match you with runners at a similar rhythm."
+            subtitle="The time you could hold a conversation at, not your race-day best. We use it to match you with runners at a similar rhythm."
             optional
           >
             <div className="mb-3 flex flex-wrap gap-2">
