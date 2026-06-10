@@ -1057,24 +1057,26 @@ export default function OnboardingWizard({
             subtitle={copy.microcopy}
             optional
           >
-            <div className="mb-3 flex flex-wrap gap-2">
-              {prompt.suggestions.map((suggestion) => (
-                <button
-                  key={suggestion}
-                  type="button"
-                  onClick={() =>
-                    setValue(
-                      prompt.name,
-                      appendSuggestion(value, suggestion, MAX_VIBE_LENGTH),
-                    )
-                  }
-                  className={chipClass}
-                >
-                  <PlusIcon className="h-3.5 w-3.5 shrink-0" />
-                  <span className="truncate">{suggestion}</span>
-                </button>
-              ))}
-            </div>
+            {!keyboardCompact && (
+              <div className="mb-3 flex flex-wrap gap-2">
+                {prompt.suggestions.map((suggestion) => (
+                  <button
+                    key={suggestion}
+                    type="button"
+                    onClick={() =>
+                      setValue(
+                        prompt.name,
+                        appendSuggestion(value, suggestion, MAX_VIBE_LENGTH),
+                      )
+                    }
+                    className={chipClass}
+                  >
+                    <PlusIcon className="h-3.5 w-3.5 shrink-0" />
+                    <span className="truncate">{suggestion}</span>
+                  </button>
+                ))}
+              </div>
+            )}
             <textarea
               className={currentTextareaClass}
               rows={keyboardCompact ? 3 : 4}
