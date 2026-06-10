@@ -11,13 +11,11 @@ type NavItem = {
   Icon: (props: SVGProps<SVGSVGElement>) => React.ReactElement;
 };
 
-const items: NavItem[] = [
-  { href: "/profile", label: "Profile", Icon: ProfileIcon },
-  { href: "/", label: "Home", Icon: HomeIcon },
-  { href: "/calendar", label: "Calendar", Icon: CalendarIcon },
-];
-
-export default function BottomNav() {
+export default function BottomNav({
+  coachActive = false,
+}: {
+  coachActive?: boolean;
+}) {
   const pathname = usePathname();
 
   // Routes that aren't part of the signed-in nav surface (landing + login flow,
@@ -30,6 +28,16 @@ export default function BottomNav() {
   ) {
     return null;
   }
+
+  // Beginners in the coach program get a "Coach" tab instead of "Calendar" —
+  // they can't set their own schedule until they graduate.
+  const items: NavItem[] = [
+    { href: "/profile", label: "Profile", Icon: ProfileIcon },
+    { href: "/", label: "Home", Icon: HomeIcon },
+    coachActive
+      ? { href: "/coach", label: "Coach", Icon: CoachIcon }
+      : { href: "/calendar", label: "Calendar", Icon: CalendarIcon },
+  ];
 
   return (
     <nav
@@ -100,6 +108,25 @@ function CalendarIcon(props: SVGProps<SVGSVGElement>) {
     >
       <rect x={3} y={4.5} width={18} height={16} rx={2} />
       <path d="M3 9h18M8 3v3m8-3v3" />
+    </svg>
+  );
+}
+
+function CoachIcon(props: SVGProps<SVGSVGElement>) {
+  // A whistle — the friendly shorthand for a coach.
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth={1.8}
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      {...props}
+    >
+      <path d="M3 11a5 5 0 0 0 5 5h4l5 3v-6.5" />
+      <path d="M22 9.5 17 12V8a2 2 0 0 0-2-2H8a5 5 0 0 0-5 5Z" />
+      <circle cx={8} cy={11} r={1.4} />
     </svg>
   );
 }

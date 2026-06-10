@@ -4,6 +4,7 @@ import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { cache } from "react";
 
+import { estimateFiveKPaceSeconds } from "./coach";
 import { getDb } from "./db";
 import type { Gender } from "./gender";
 import type { User } from "./schema";
@@ -29,11 +30,13 @@ type UserRow = {
   why_run: string | null;
   hobbies: string | null;
   interests: string | null;
+  coach_status: string | null;
+  coach_session_index: number | null;
   created_at: string;
 };
 
 const USER_COLUMNS =
-  "id, email, name, avatar, date_of_birth, gender, pronouns, preferred_pace_seconds, why_run, hobbies, interests, created_at";
+  "id, email, name, avatar, date_of_birth, gender, pronouns, preferred_pace_seconds, why_run, hobbies, interests, coach_status, coach_session_index, created_at";
 
 function rowToUser(row: UserRow): User {
   return {
@@ -48,6 +51,8 @@ function rowToUser(row: UserRow): User {
     whyRun: row.why_run,
     hobbies: row.hobbies,
     interests: row.interests,
+    coachStatus: row.coach_status,
+    coachSessionIndex: row.coach_session_index,
     created_at: row.created_at,
   };
 }
@@ -140,6 +145,41 @@ export function updateUserProfile(userId: number, fields: ProfileUpdate): void {
     fields.interests ?? null,
     userId,
   );
+}
+
+/**
+ * Enrolls a runner in the Couch-to-5K coach program, starting at the first
+ * session. Called when a new user says they haven't run before during onboarding.
+ */
+export function enrollUserInCoaching(userId: number): void {
+  getDb()
+    .prepare(
+      `UPDATE users SET coach_status = 'active', coach_session_index = 0 WHERE id = ?`,
+    )
+    .run(userId);
+}
+
+/** Moves an enrolled runner to a given plan session (see lib/coach.ts). */
+export function setCoachSessionIndex(userId: number, index: number): void {
+  getDb()
+    .prepare(`UPDATE users SET coach_session_index = ? WHERE id = ?`)
+    .run(index, userId);
+}
+
+/**
+ * Marks a runner as graduated from the coach program and seeds the comfortable
+ * 5k pace that normal matching needs — but only if they don't already have one,
+ * so a manually-set pace is never clobbered.
+ */
+export function graduateUser(userId: number): void {
+  getDb()
+    .prepare(
+      `UPDATE users
+          SET coach_status = 'graduated',
+              preferred_pace_seconds = COALESCE(preferred_pace_seconds, ?)
+        WHERE id = ?`,
+    )
+    .run(estimateFiveKPaceSeconds(), userId);
 }
 
 /** Reads the session cookie. Returns the user id, or null if not set. */

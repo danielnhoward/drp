@@ -37,6 +37,18 @@ export function isoToday(): string {
   return isoDateInDays(0);
 }
 
+/**
+ * Whether a local date (yyyy-mm-dd) at an "HH:MM" time is at or before the
+ * current moment — i.e. its start has already passed. Used to keep slots/runs
+ * from being scheduled in the past, including an earlier-than-now time today.
+ * The "T...:00" suffix forces local-time parsing (see {@link formatDate}); a
+ * malformed input parses to NaN and is reported as not-past so the caller's
+ * own format checks surface the real error.
+ */
+export function isPastDateTime(date: string, time: string): boolean {
+  return new Date(`${date}T${time}:00`).getTime() <= Date.now();
+}
+
 /** An ISO date string (yyyy-mm-dd) `days` days from now. */
 export function isoDateInDays(days: number): string {
   const d = new Date();

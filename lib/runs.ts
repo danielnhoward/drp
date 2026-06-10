@@ -1,6 +1,7 @@
 import "server-only";
 
 import type { NewAvailability } from "./availability";
+import { COACH_PLAN } from "./coach";
 import { getDb } from "./db";
 import { isoDateInDays, isoToday } from "./format-date";
 import { getRatingSummaryForUser, type RatingSummary } from "./ratings";
@@ -59,6 +60,10 @@ export type Run = {
   lon: number;
   /** URL of the run's group photo, or null until one is uploaded. */
   photo: string | null;
+  /** Coach plan note for the run, shown on the card; null for ordinary runs. */
+  description: string | null;
+  /** Plan session this coached run came from, or null for ordinary runs. */
+  coachSessionIndex: number | null;
 };
 
 // Row shapes as returned by SQLite (snake_case columns).
@@ -71,6 +76,8 @@ type RunRow = {
   lat: number;
   lon: number;
   photo: string | null;
+  description: string | null;
+  coach_session_index: number | null;
 };
 
 // Returns everyone in the run *except* the current user — the home page header
@@ -196,6 +203,164 @@ export async function scheduleRunForAvailability(
   }
 }
 
+/**
+ * Schedules one coached training run for a beginner working through the
+ * Couch-to-5K program. Unlike {@link scheduleRunForAvailability}, the distance
+ * and plan description come from the program (COACH_PLAN[sessionIndex]) rather
+ * than from an availability slot, the run is *always* created (even with no
+ * partners), and it is not linked to an availability row (availability_id NULL).
+ *
+ * For the demo we mock "matched with similar beginners" by attaching up to
+ * {@link MAX_PARTNERS} other users, preferring those who are themselves in the
+ * coach program. They're cosmetic — the coached finish flow collects difficulty
+ * feedback, not partner ratings.
+ */
+export async function scheduleCoachedRun(
+  hostUserId: number,
+  slot: {
+    date: string;
+    startTime: string;
+    endTime: string;
+    lat: number;
+    lon: number;
+  },
+  sessionIndex: number,
+): Promise<void> {
+  const db = getDb();
+
+  // Clamp defensively so a stale index can never index past the plan.
+  const index = Math.max(0, Math.min(sessionIndex, COACH_PLAN.length - 1));
+  const session = COACH_PLAN[index];
+
+  // Prefer other coach enrollees ("similar beginners"), then fill with anyone.
+  const partners = (
+    db
+      .prepare(
+        `SELECT id FROM users
+          WHERE id != ?
+          ORDER BY (coach_status IS NULL), RANDOM()
+          LIMIT ?`,
+      )
+      .all(hostUserId, MAX_PARTNERS) as { id: number }[]
+  ).map((row) => row.id);
+
+  const time = minutesToTime(
+    (timeToMinutes(slot.startTime) + timeToMinutes(slot.endTime)) / 2,
+  );
+  const meetAt = await reverseGeocode(slot.lat, slot.lon);
+
+  db.exec("BEGIN");
+  try {
+    const { lastInsertRowid } = db
+      .prepare(
+        `INSERT INTO runs (date, time, distance_km, meet_at, lat, lon, description, coach_session_index)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+      )
+      .run(
+        slot.date,
+        time,
+        session.distanceKm,
+        meetAt,
+        slot.lat,
+        slot.lon,
+        session.description,
+        index,
+      );
+    const runId = Number(lastInsertRowid);
+
+    const insertParticipant = db.prepare(
+      "INSERT INTO run_participants (run_id, user_id, position, visible, message) VALUES (?, ?, ?, ?, ?)",
+    );
+    // Host first (position 0), then any mock beginner partners.
+    [hostUserId, ...partners].forEach((userId, position) => {
+      insertParticipant.run(runId, userId, position, 1, null);
+    });
+
+    db.exec("COMMIT");
+  } catch (error) {
+    db.exec("ROLLBACK");
+    throw error;
+  }
+}
+
+/** The plan session a run came from, or null if it isn't a coached run. */
+export function getCoachedRunSession(runId: number): number | null {
+  const row = getDb()
+    .prepare(`SELECT coach_session_index FROM runs WHERE id = ?`)
+    .get(runId) as { coach_session_index: number | null } | undefined;
+  return row?.coach_session_index ?? null;
+}
+
+/** Minimal shape of a beginner's outstanding coached run, for the /coach page. */
+export type PendingCoachedRun = {
+  id: number;
+  date: string;
+  time: string;
+  distanceKm: number;
+  meetAt: string;
+  coachSessionIndex: number;
+};
+
+/**
+ * The current user's coached run that they haven't finished yet, if any. Used by
+ * the /coach page to show "your next run is booked" instead of letting them
+ * schedule a second one mid-session.
+ */
+export function getPendingCoachedRun(userId: number): PendingCoachedRun | null {
+  const row = getDb()
+    .prepare(
+      `SELECT runs.id, runs.date, runs.time, runs.distance_km, runs.meet_at, runs.coach_session_index
+       FROM runs
+       JOIN run_participants ON run_participants.run_id = runs.id
+       WHERE run_participants.user_id = ?
+         AND (run_participants.visible IS NULL OR run_participants.visible = 1)
+         AND runs.coach_session_index IS NOT NULL
+       ORDER BY runs.date ASC, runs.time ASC, runs.id ASC
+       LIMIT 1`,
+    )
+    .get(userId) as
+    | {
+        id: number;
+        date: string | null;
+        time: string;
+        distance_km: number;
+        meet_at: string;
+        coach_session_index: number;
+      }
+    | undefined;
+  if (!row) return null;
+  return {
+    id: row.id,
+    date: row.date ?? isoToday(),
+    time: row.time,
+    distanceKm: row.distance_km,
+    meetAt: row.meet_at,
+    coachSessionIndex: row.coach_session_index,
+  };
+}
+
+/**
+ * The date (yyyy-mm-dd) of the user's most recent coached run, of any
+ * visibility, or null if they have none yet. The coach scheduler uses it to
+ * steer beginners away from booking two coached runs on the same day, nudging a
+ * rest day between sessions.
+ */
+export function getMostRecentCoachedRunDate(userId: number): string | null {
+  const row = getDb()
+    .prepare(
+      `SELECT runs.date AS date
+         FROM runs
+         JOIN run_participants ON run_participants.run_id = runs.id
+        WHERE run_participants.user_id = ?
+          AND runs.coach_session_index IS NOT NULL
+          AND runs.date IS NOT NULL
+        ORDER BY runs.date DESC
+        LIMIT 1`,
+    )
+    .get(userId) as { date: string } | undefined;
+  return row?.date ?? null;
+}
+
 // Availability rows that still need a run, as read back for the backfill below.
 type UnscheduledAvailabilityRow = {
   id: number;
@@ -257,7 +422,7 @@ export async function ensureRunsBackfilled(): Promise<void> {
 export function getRunsWithin24Hours(userId: number): Run[] {
   const rows = getDb()
     .prepare(
-      `SELECT runs.id, runs.date, runs.time, runs.distance_km, runs.meet_at, runs.lat, runs.lon, runs.photo
+      `SELECT runs.id, runs.date, runs.time, runs.distance_km, runs.meet_at, runs.lat, runs.lon, runs.photo, runs.description, runs.coach_session_index
        FROM runs
        JOIN run_participants ON run_participants.run_id = runs.id
        WHERE run_participants.user_id = ?
@@ -281,6 +446,8 @@ export function getRunsWithin24Hours(userId: number): Run[] {
       lat: row.lat,
       lon: row.lon,
       photo: row.photo,
+      description: row.description,
+      coachSessionIndex: row.coach_session_index,
       partners: partnersForRun(row.id, userId),
     }))
     .filter((run) => {

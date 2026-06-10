@@ -14,6 +14,7 @@ import { parsePronouns } from "@/lib/pronouns";
 import {
   clearSession,
   createUser,
+  enrollUserInCoaching,
   findUserByEmail,
   isProfileComplete,
   setSessionUser,
@@ -84,6 +85,7 @@ export async function completeOnboardingAction(
   const name = String(formData.get("name") ?? "").trim();
   const dateOfBirth = String(formData.get("dateOfBirth") ?? "").trim();
   const genderRaw = String(formData.get("gender") ?? "").trim();
+  const ranBefore = String(formData.get("ranBefore") ?? "").trim();
   const pronounsRaw = String(formData.get("pronouns") ?? "");
   const fiveKRaw = String(formData.get("fiveKTime") ?? "").trim();
   const whyRunRaw = String(formData.get("whyRun") ?? "");
@@ -166,6 +168,14 @@ export async function completeOnboardingAction(
     const result = await saveAvatarFile(userId, avatar);
     if ("error" in result) return { error: result.error, step: "photo" };
     updateUserAvatar(userId, result.url);
+  }
+
+  // Beginners ("No, I'm just starting out") start the Couch-to-5K coach program
+  // and land on its quick-schedule page — unless they've already graduated it.
+  if (ranBefore === "no" && existing?.coachStatus !== "graduated") {
+    enrollUserInCoaching(userId);
+    revalidatePath("/coach");
+    redirect("/coach");
   }
 
   revalidatePath("/");

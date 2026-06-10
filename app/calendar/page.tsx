@@ -1,5 +1,7 @@
 import type { SVGProps } from "react";
 
+import { redirect } from "next/navigation";
+
 import { listMyAvailability } from "@/lib/availability";
 import { requireCompleteUser } from "@/lib/users";
 import AvailabilityCard, {
@@ -24,7 +26,10 @@ const KEY_ITEMS: {
 export const dynamic = "force-dynamic";
 
 export default async function CalendarPage() {
-  await requireCompleteUser();
+  const user = await requireCompleteUser();
+  // Beginners still working through the coach program can't set their own
+  // schedule yet — send them back to the guided coach page.
+  if (user.coachStatus === "active") redirect("/coach");
   const slots = await listMyAvailability();
 
   return (

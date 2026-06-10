@@ -3,6 +3,7 @@ import { Space_Grotesk, Inter, JetBrains_Mono } from "next/font/google";
 import "./globals.css";
 import BottomNav from "./components/bottom-nav";
 import TabTransition from "./components/tab-transition";
+import { getCurrentUser } from "@/lib/users";
 
 // Display face — headings, CTAs, big numbers.
 const spaceGrotesk = Space_Grotesk({
@@ -30,11 +31,15 @@ export const metadata: Metadata = {
   description: "RunDezvous — find your running partner.",
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  // Beginners in the coach program see a "Coach" tab in place of "Calendar".
+  // getCurrentUser is memoised per request, so this doesn't add a second query.
+  const user = await getCurrentUser();
+
   return (
     <html
       lang="en"
@@ -42,7 +47,7 @@ export default function RootLayout({
     >
       <body className="min-h-full flex flex-col overflow-x-hidden bg-background text-foreground pb-[calc(4rem+env(safe-area-inset-bottom))]">
         <TabTransition>{children}</TabTransition>
-        <BottomNav />
+        <BottomNav coachActive={user?.coachStatus === "active"} />
       </body>
     </html>
   );
