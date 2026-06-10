@@ -62,8 +62,6 @@ export const VIBE_PROMPTS: VibePrompt[] = [
   },
 ];
 
-const LONG_SUGGESTION_LENGTH = 22;
-
 function upperFirstLetter(value: string): string {
   return value.replace(/[A-Za-z]/, (letter) => letter.toUpperCase());
 }
@@ -104,13 +102,6 @@ function parseSuggestionList(value: string): string[] {
   return splitLastAnd(value);
 }
 
-function shouldUseSemicolons(items: string[]): boolean {
-  return items.some(
-    (item) =>
-      item.length > LONG_SUGGESTION_LENGTH || item.trim().split(/\s+/).length > 3,
-  );
-}
-
 function formatSuggestionList(items: string[]): string {
   const formatted = items.map((item, index) => {
     const value = item.trim();
@@ -122,9 +113,7 @@ function formatSuggestionList(items: string[]): string {
   const last = formatted.at(-1);
   if (!last) return formatted.join("");
 
-  const separator = shouldUseSemicolons(formatted) ? "; " : ", ";
-  const finalSeparator = shouldUseSemicolons(formatted) ? "; and " : " and ";
-  return `${formatted.slice(0, -1).join(separator)}${finalSeparator}${last}`;
+  return `${formatted.slice(0, -1).join(", ")} and ${last}`;
 }
 
 /**
