@@ -274,6 +274,7 @@ export default function OnboardingWizard({
   const isLast = stepIndex === steps.length - 1;
   const isOptional = OPTIONAL_STEPS.has(step);
   const isEmail = step === "email";
+  const isAutoAdvance = step === "gender" || step === "ranBefore";
   const firstName = values.name.trim().split(/\s+/)[0] ?? "";
   const hasOptionalContent = isOptional && optionalStepHasValue(step);
   const advanceButtonLabel = isOptional && !hasOptionalContent ? "Skip" : "Continue";
@@ -294,6 +295,12 @@ export default function OnboardingWizard({
     setValues((current) => ({ ...current, [key]: value }));
   }
 
+  function selectGender(gender: OnboardingValues["gender"]) {
+    setStepError(null);
+    setValue("gender", gender);
+    advance();
+  }
+
   // Answering "No" skips the pace step, so clear any pace already entered (e.g.
   // the user picked Yes, typed a time, then came back and switched to No) — they
   // can no longer see or edit it, and beginners shouldn't submit one.
@@ -304,6 +311,7 @@ export default function OnboardingWizard({
       ranBefore: answer,
       fiveKTime: answer === "no" ? "" : current.fiveKTime,
     }));
+    advance();
   }
 
   function back() {
@@ -428,8 +436,14 @@ export default function OnboardingWizard({
   // step's primary action instead. Textareas keep their newline behaviour.
   function onFormKeyDown(event: React.KeyboardEvent<HTMLFormElement>) {
     if (event.key !== "Enter") return;
-    if ((event.target as HTMLElement).tagName === "TEXTAREA") return;
+    const target = event.target as HTMLElement;
+    if (target.tagName === "TEXTAREA") return;
     if (isLast) return;
+    if (isAutoAdvance) {
+      if (target.tagName === "BUTTON") return;
+      event.preventDefault();
+      return;
+    }
     event.preventDefault();
     if (isEmail) continueFromEmail();
     else if (isOptional) nextOptional();
@@ -509,7 +523,7 @@ export default function OnboardingWizard({
             >
               {emailPending ? "Checking…" : "Continue"}
             </button>
-          ) : isLast ? (
+          ) : isAutoAdvance ? null : isLast ? (
             // Distinct key from the advancing buttons: React mounts this as a
             // fresh, UNFOCUSED element rather than reusing the Continue node, so
             // an Enter carried over from advancing (e.g. held/repeated) can't
@@ -609,7 +623,7 @@ export default function OnboardingWizard({
                   <button
                     key={option}
                     type="button"
-                    onClick={() => setValue("gender", option)}
+                    onClick={() => selectGender(option)}
                     aria-pressed={selected}
                     className={`tap flex h-12 items-center rounded-lg border px-4 text-left text-sm font-medium transition-colors ${
                       selected
