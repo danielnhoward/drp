@@ -29,7 +29,7 @@ export default function RunningVibeNudge({
     <section className="anim-rise mb-4 rounded-2xl border border-accent/30 bg-surface-2 p-4">
       <div className="flex items-start gap-3">
         <span className="glow-pulse mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-accent/15 text-accent">
-          <SparkIcon className="h-5 w-5" />
+          <ChatIcon className="h-5 w-5" />
         </span>
         <div className="min-w-0 flex-1">
           <p className="text-sm font-semibold text-foreground">
@@ -82,20 +82,22 @@ function shouldShowNudge() {
   return !dismissedAt || Date.now() - dismissedAt > DISMISS_MS;
 }
 
-function SparkIcon({ className }: { className?: string }) {
+// A speech bubble with two text lines — the nudge is about giving a matched
+// partner something to talk about, not anything AI-related.
+function ChatIcon({ className }: { className?: string }) {
   return (
     <svg
       viewBox="0 0 24 24"
       fill="none"
       stroke="currentColor"
-      strokeWidth={2}
+      strokeWidth={1.8}
       strokeLinecap="round"
       strokeLinejoin="round"
       className={className}
       aria-hidden="true"
     >
-      <path d="M12 2l1.5 6.5L20 10l-6.5 1.5L12 18l-1.5-6.5L4 10l6.5-1.5L12 2z" />
-      <path d="M19 16l.7 2.3L22 19l-2.3.7L19 22l-.7-2.3L16 19l2.3-.7L19 16z" />
+      <path d="M21 11.5a8.5 8.5 0 0 1-12.1 7.7L3 21l1.8-5.9A8.5 8.5 0 1 1 21 11.5Z" />
+      <path d="M8.5 10.5h7M8.5 13.5h4.5" />
     </svg>
   );
 }
