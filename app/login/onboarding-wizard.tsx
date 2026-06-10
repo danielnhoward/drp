@@ -52,6 +52,12 @@ const textareaClass =
   "min-h-28 w-full resize-none rounded-lg border border-border bg-surface-2 px-3 py-2 text-base text-foreground placeholder:text-muted outline-none transition-colors focus:border-accent";
 const chipClass =
   "inline-flex min-h-8 max-w-full items-center gap-1.5 rounded-full border border-border bg-surface-2 px-3 py-1 text-left text-xs font-medium text-muted transition-colors hover:border-accent/40 hover:bg-accent/10 hover:text-accent disabled:opacity-50";
+// Pace presets are single-choice quick-fills (they replace the field), so they
+// read as a selectable radio group - no "+" icon, and the active one is filled.
+const pacePresetClass =
+  "inline-flex min-h-8 max-w-full items-center justify-center rounded-full border border-border bg-surface-2 px-3.5 py-1 text-center text-sm font-medium text-muted transition-colors hover:border-accent/40 hover:bg-accent/10 hover:text-accent disabled:opacity-50";
+const pacePresetSelectedClass =
+  "inline-flex min-h-8 max-w-full items-center justify-center rounded-full border border-accent bg-accent px-3.5 py-1 text-center text-sm font-medium text-accent-contrast transition-colors disabled:opacity-50";
 const primaryBtn =
   "btn-accent tap rounded-full px-5 py-2.5 text-sm font-medium disabled:opacity-50";
 const secondaryBtn =
@@ -720,15 +726,20 @@ export default function OnboardingWizard({
             subtitle="The time you could hold a conversation at, not your race-day best. We use it to match you with runners at a similar rhythm."
             optional
           >
+            <p className="mb-2 text-xs font-medium text-muted">
+              Common times
+            </p>
             <div className="mb-3 flex flex-wrap gap-2">
               {PACE_PRESETS.map((preset) => (
                 <button
                   key={preset}
                   type="button"
+                  aria-pressed={values.fiveKTime.trim() === preset}
                   onClick={() => setValue("fiveKTime", preset)}
-                  className={chipClass}
+                  className={
+                    values.fiveKTime.trim() === preset ? pacePresetSelectedClass : pacePresetClass
+                  }
                 >
-                  <PlusIcon className="h-3.5 w-3.5 shrink-0" />
                   <span className="truncate">{preset}</span>
                 </button>
               ))}
@@ -745,7 +756,7 @@ export default function OnboardingWizard({
               }
             />
             <p className="mt-2 text-xs text-muted">
-              Tap a time or type your own as mm:ss.
+              Pick one above or type your own as mm:ss.
             </p>
           </StepHeader>
         );

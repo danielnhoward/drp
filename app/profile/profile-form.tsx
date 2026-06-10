@@ -264,19 +264,29 @@ function PaceCard({
         </div>
       </div>
 
-      <div className="mt-3 flex flex-wrap gap-2">
-        {PACE_PRESETS.map((preset) => (
-          <button
-            key={preset}
-            type="button"
-            disabled={pending}
-            onClick={() => onChange(preset)}
-            className="inline-flex min-h-8 max-w-full items-center gap-1.5 rounded-full border border-border bg-surface-2 px-3 py-1 text-left text-xs font-medium text-muted tap transition-colors hover:border-accent/40 hover:bg-accent/10 hover:text-accent disabled:opacity-50"
-          >
-            <PlusIcon className="h-3.5 w-3.5 shrink-0" />
-            <span className="truncate font-mono tnum">{preset}</span>
-          </button>
-        ))}
+      <p className="mt-3 text-xs font-medium text-muted">
+        Common times
+      </p>
+      <div className="mt-2 flex flex-wrap gap-2">
+        {PACE_PRESETS.map((preset) => {
+          const selected = value.trim() === preset;
+          return (
+            <button
+              key={preset}
+              type="button"
+              disabled={pending}
+              aria-pressed={selected}
+              onClick={() => onChange(preset)}
+              className={
+                selected
+                  ? "inline-flex min-h-8 max-w-full items-center justify-center rounded-full border border-accent bg-accent px-3.5 py-1 text-center text-sm font-medium text-accent-contrast tap transition-colors disabled:opacity-50"
+                  : "inline-flex min-h-8 max-w-full items-center justify-center rounded-full border border-border bg-surface-2 px-3.5 py-1 text-center text-sm font-medium text-muted tap transition-colors hover:border-accent/40 hover:bg-accent/10 hover:text-accent disabled:opacity-50"
+              }
+            >
+              <span className="truncate font-mono tnum">{preset}</span>
+            </button>
+          );
+        })}
       </div>
 
       <input
@@ -294,7 +304,7 @@ function PaceCard({
       <p className="mt-2 text-xs text-muted">
         {filled
           ? "Partners see this as your easy, chatty pace."
-          : "Tap a time or type your own as mm:ss."}
+          : "Pick one above or type your own as mm:ss."}
       </p>
     </section>
   );
