@@ -133,6 +133,9 @@ export default function RunnerModal({ runner }: { runner: Runner }) {
                 </h2>
                 <Detail label="Age">{age}</Detail>
                 <Detail label="Gender">{gender}</Detail>
+                {runner.pronouns && (
+                  <Detail label="Pronouns">{runner.pronouns}</Detail>
+                )}
 
                 {fiveKTime && (
                   <Detail label="Conversational 5k">

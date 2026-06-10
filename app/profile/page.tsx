@@ -50,6 +50,7 @@ export default async function ProfilePage() {
         initialName={user.name}
         initialDateOfBirth={user.dateOfBirth}
         initialGender={gender}
+        initialPronouns={user.pronouns}
         initialPreferredPaceSeconds={user.preferredPaceSeconds}
         initialWhyRun={user.whyRun}
         initialHobbies={user.hobbies}

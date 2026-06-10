@@ -24,6 +24,7 @@ type UserRow = {
   avatar: string | null;
   date_of_birth: string | null;
   gender: string | null;
+  pronouns: string | null;
   preferred_pace_seconds: number | null;
   why_run: string | null;
   hobbies: string | null;
@@ -32,7 +33,7 @@ type UserRow = {
 };
 
 const USER_COLUMNS =
-  "id, email, name, avatar, date_of_birth, gender, preferred_pace_seconds, why_run, hobbies, interests, created_at";
+  "id, email, name, avatar, date_of_birth, gender, pronouns, preferred_pace_seconds, why_run, hobbies, interests, created_at";
 
 function rowToUser(row: UserRow): User {
   return {
@@ -42,6 +43,7 @@ function rowToUser(row: UserRow): User {
     avatar: row.avatar,
     dateOfBirth: row.date_of_birth,
     gender: row.gender,
+    pronouns: row.pronouns,
     preferredPaceSeconds: row.preferred_pace_seconds,
     whyRun: row.why_run,
     hobbies: row.hobbies,
@@ -109,6 +111,11 @@ export function createUser(input: NewUser): User {
 /** Sets or clears the user's avatar URL. */
 export function updateUserAvatar(userId: number, avatar: string | null): void {
   getDb().prepare(`UPDATE users SET avatar = ? WHERE id = ?`).run(avatar, userId);
+}
+
+/** Sets or clears the user's display pronouns. */
+export function updateUserPronouns(userId: number, pronouns: string | null): void {
+  getDb().prepare(`UPDATE users SET pronouns = ? WHERE id = ?`).run(pronouns, userId);
 }
 
 /** Persists user-editable profile fields. */
