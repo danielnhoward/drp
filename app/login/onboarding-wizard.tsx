@@ -50,6 +50,8 @@ const fieldClass =
   "h-11 w-full rounded-lg border border-border bg-surface-2 px-3 text-base text-foreground placeholder:text-muted outline-none transition-colors focus:border-accent";
 const textareaClass =
   "min-h-28 w-full resize-none rounded-lg border border-border bg-surface-2 px-3 py-2 text-base text-foreground placeholder:text-muted outline-none transition-colors focus:border-accent";
+const compactTextareaClass =
+  "min-h-20 w-full resize-none rounded-lg border border-border bg-surface-2 px-3 py-2 text-base text-foreground placeholder:text-muted outline-none transition-colors focus:border-accent";
 const chipClass =
   "inline-flex min-h-8 max-w-full items-center gap-1.5 rounded-full border border-border bg-surface-2 px-3 py-1 text-left text-xs font-medium text-muted transition-colors hover:border-accent/40 hover:bg-accent/10 hover:text-accent disabled:opacity-50";
 // Pace presets are single-choice quick-fills (they replace the field), so they
@@ -84,8 +86,80 @@ function useIsTouch() {
   );
 }
 
+function isEditableElement(element: Element | null): element is HTMLElement {
+  return element instanceof HTMLElement && element.matches(editableSelector);
+}
+
+function usePhoneKeyboardOpen() {
+  const [isOpen, setIsOpen] = useState(false);
+
+  useEffect(() => {
+    const coarsePointer = window.matchMedia("(pointer: coarse)");
+    const phoneWidth = window.matchMedia("(max-width: 640px)");
+    const viewport = window.visualViewport;
+    let fullViewportHeight = viewport?.height ?? window.innerHeight;
+    let frame = 0;
+    let timeout = 0;
+
+    function update() {
+      const hasEditableFocus = isEditableElement(document.activeElement);
+      const viewportHeight = viewport?.height ?? window.innerHeight;
+
+      if (viewportHeight > fullViewportHeight || !hasEditableFocus) {
+        fullViewportHeight = Math.max(fullViewportHeight, viewportHeight);
+      }
+
+      const viewportGap = viewport
+        ? Math.max(0, window.innerHeight - viewport.height - viewport.offsetTop)
+        : 0;
+      const viewportShrink = Math.max(0, fullViewportHeight - viewportHeight);
+      const viewportSuggestsKeyboard =
+        !viewport || viewportGap > 90 || viewportShrink > 90;
+
+      setIsOpen(
+        coarsePointer.matches &&
+          phoneWidth.matches &&
+          hasEditableFocus &&
+          viewportSuggestsKeyboard,
+      );
+    }
+
+    function scheduleUpdate() {
+      window.cancelAnimationFrame(frame);
+      frame = window.requestAnimationFrame(update);
+      window.clearTimeout(timeout);
+      timeout = window.setTimeout(update, 260);
+    }
+
+    scheduleUpdate();
+    viewport?.addEventListener("resize", scheduleUpdate);
+    viewport?.addEventListener("scroll", scheduleUpdate);
+    window.addEventListener("resize", scheduleUpdate);
+    coarsePointer.addEventListener("change", scheduleUpdate);
+    phoneWidth.addEventListener("change", scheduleUpdate);
+    document.addEventListener("focusin", scheduleUpdate);
+    document.addEventListener("focusout", scheduleUpdate);
+
+    return () => {
+      window.cancelAnimationFrame(frame);
+      window.clearTimeout(timeout);
+      viewport?.removeEventListener("resize", scheduleUpdate);
+      viewport?.removeEventListener("scroll", scheduleUpdate);
+      window.removeEventListener("resize", scheduleUpdate);
+      coarsePointer.removeEventListener("change", scheduleUpdate);
+      phoneWidth.removeEventListener("change", scheduleUpdate);
+      document.removeEventListener("focusin", scheduleUpdate);
+      document.removeEventListener("focusout", scheduleUpdate);
+    };
+  }, []);
+
+  return isOpen;
+}
+
 const dobSelectClass =
   "h-11 rounded-lg border border-black/10 bg-white px-3 text-base text-black outline-none focus:border-black/40 dark:border-white/15 dark:bg-zinc-900 dark:text-zinc-50 dark:focus:border-white/50";
+const editableSelector =
+  'input:not([type="hidden"]):not([type="file"]), textarea, select';
 
 const MONTH_NAMES = [
   "January", "February", "March", "April", "May", "June",
@@ -237,6 +311,7 @@ export default function OnboardingWizard({
   const [direction, setDirection] = useState<"next" | "prev">("next");
   const [values, setValues] = useState<OnboardingValues>(initialValues);
   const [stepError, setStepError] = useState<string | null>(null);
+  const keyboardCompact = usePhoneKeyboardOpen();
 
   // The step list is derived from the answers so far. The email is dropped when
   // it's already settled — a resuming user's row, or one handed over from the
@@ -286,6 +361,15 @@ export default function OnboardingWizard({
   const advanceButtonLabel = isOptional && !hasOptionalContent ? "Skip" : "Continue";
   const advanceButtonClass =
     isOptional && !hasOptionalContent ? secondaryBtn : primaryBtn;
+  const currentTextareaClass = keyboardCompact
+    ? compactTextareaClass
+    : textareaClass;
+  const avatarSizeClass = keyboardCompact ? "h-28 w-28" : "h-40 w-40";
+  const avatarTextClass = keyboardCompact ? "text-4xl" : "text-5xl";
+  const cameraBadgeClass = keyboardCompact
+    ? "bottom-0 right-0 h-8 w-8"
+    : "bottom-1 right-1 h-9 w-9";
+  const cameraIconClass = keyboardCompact ? "h-4 w-4" : "h-5 w-5";
 
   // Revoke the preview object URL when it's replaced or the component unmounts.
   useEffect(() => {
@@ -293,6 +377,13 @@ export default function OnboardingWizard({
       if (avatarPreview) URL.revokeObjectURL(avatarPreview);
     };
   }, [avatarPreview]);
+
+  useEffect(() => {
+    if (!keyboardCompact) return;
+
+    document.body.classList.add("signup-keyboard-open");
+    return () => document.body.classList.remove("signup-keyboard-open");
+  }, [keyboardCompact]);
 
   function setValue<K extends keyof OnboardingValues>(
     key: K,
@@ -464,7 +555,9 @@ export default function OnboardingWizard({
     <form
       action={formAction}
       onKeyDown={onFormKeyDown}
-      className="mx-auto flex w-full max-w-md flex-1 flex-col px-6 py-8"
+      className={`mx-auto flex w-full max-w-md flex-1 flex-col px-6 ${
+        keyboardCompact ? "py-3" : "py-8"
+      }`}
     >
       {/* Every value travels in the final submit, whichever step we're on. */}
       <input type="hidden" name="email" value={values.email} />
@@ -485,11 +578,19 @@ export default function OnboardingWizard({
         className="sr-only"
       />
 
-      <Progress current={stepIndex + 1} total={steps.length} />
+      <Progress
+        current={stepIndex + 1}
+        total={steps.length}
+        compact={keyboardCompact}
+      />
 
       {/* Clip wrapper: the inner step slides in from 64px off-axis, so this
           keeps the overshoot from briefly extending the page. */}
-      <div className="mt-8 flex flex-1 flex-col overflow-hidden">
+      <div
+        className={`flex flex-1 flex-col overflow-hidden ${
+          keyboardCompact ? "mt-4" : "mt-8"
+        }`}
+      >
         {/* Re-keyed per step so each screen swipes in fresh — up from below
             moving forward, down from above going back. */}
         <div
@@ -508,7 +609,11 @@ export default function OnboardingWizard({
         </div>
       </div>
 
-      <div className="mt-8 flex items-center justify-between gap-3">
+      <div
+        className={`flex items-center justify-between gap-3 ${
+          keyboardCompact ? "mt-4 pb-1" : "mt-8"
+        }`}
+      >
         <div>
           {stepIndex > 0 && (
             <button type="button" onClick={back} className={ghostBtn}>
@@ -568,6 +673,7 @@ export default function OnboardingWizard({
       case "email":
         return (
           <StepHeader
+            compact={keyboardCompact}
             title="What's your email?"
             subtitle="We'll use this to find your account or help you create one."
           >
@@ -585,6 +691,7 @@ export default function OnboardingWizard({
       case "name":
         return (
           <StepHeader
+            compact={keyboardCompact}
             title={firstName ? `Hi, ${firstName}.` : "What should we call you?"}
             subtitle={
               firstName
@@ -606,6 +713,7 @@ export default function OnboardingWizard({
       case "dateOfBirth":
         return (
           <StepHeader
+            compact={keyboardCompact}
             title={firstName ? `When's your birthday, ${firstName}?` : "When's your birthday?"}
             subtitle="We use your age to help suggest comfortable running partners."
           >
@@ -619,6 +727,7 @@ export default function OnboardingWizard({
       case "gender":
         return (
           <StepHeader
+            compact={keyboardCompact}
             title="How do you identify?"
             subtitle="Pick the option that feels right for your profile."
           >
@@ -652,6 +761,7 @@ export default function OnboardingWizard({
         ];
         return (
           <StepHeader
+            compact={keyboardCompact}
             title="Have you run before?"
             subtitle="No experience needed — this just helps us ask the right questions next."
           >
@@ -682,6 +792,7 @@ export default function OnboardingWizard({
       case "photo":
         return (
           <StepHeader
+            compact={keyboardCompact}
             title="Help your running partner recognise you"
             subtitle="It does not need to be a running photo. A picture helps the person you are matched with feel like they are meeting a real person, and you can change or remove it later."
           >
@@ -689,22 +800,22 @@ export default function OnboardingWizard({
               <button
                 type="button"
                 onClick={() => fileRef.current?.click()}
-                className="group relative h-40 w-40 shrink-0 cursor-pointer rounded-full transition hover:brightness-90 focus:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2"
+                className={`group relative shrink-0 cursor-pointer rounded-full transition hover:brightness-90 focus:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 ${avatarSizeClass}`}
                 aria-label={avatarPreview ? "Change profile picture" : "Upload profile picture"}
               >
                 {avatarPreview ? (
                   <Image
                     src={avatarPreview}
                     alt="Your selected profile picture"
-                    width={160}
-                    height={160}
+                    width={keyboardCompact ? 112 : 160}
+                    height={keyboardCompact ? 112 : 160}
                     unoptimized
-                    className="h-40 w-40 rounded-full border border-border object-cover"
+                    className={`${avatarSizeClass} rounded-full border border-border object-cover`}
                   />
                 ) : (
                   <span
                     aria-hidden="true"
-                    className="flex h-40 w-40 items-center justify-center rounded-full border border-border bg-surface-2 text-5xl font-semibold text-muted"
+                    className={`flex items-center justify-center rounded-full border border-border bg-surface-2 font-semibold text-muted ${avatarSizeClass} ${avatarTextClass}`}
                   >
                     {values.name.charAt(0) || "?"}
                   </span>
@@ -712,9 +823,9 @@ export default function OnboardingWizard({
                 {/* Camera badge — bottom-right corner */}
                 <span
                   aria-hidden="true"
-                  className="absolute bottom-1 right-1 flex h-9 w-9 items-center justify-center rounded-full bg-accent shadow-md ring-2 ring-background"
+                  className={`absolute flex items-center justify-center rounded-full bg-accent shadow-md ring-2 ring-background ${cameraBadgeClass}`}
                 >
-                  <CameraIcon className="h-5 w-5 text-accent-contrast" />
+                  <CameraIcon className={`${cameraIconClass} text-accent-contrast`} />
                 </span>
               </button>
               {avatarPreview && (
@@ -736,6 +847,7 @@ export default function OnboardingWizard({
       case "pace":
         return (
           <StepHeader
+            compact={keyboardCompact}
             title={firstName ? `What's your conversational 5k time, ${firstName}?` : "What's your conversational 5k time?"}
             subtitle="The time you could hold a conversation at, not your race-day best. We use it to match you with runners at a similar rhythm."
             optional
@@ -789,7 +901,12 @@ export default function OnboardingWizard({
             ? BEGINNER_VIBE_COPY[step]
             : prompt;
         return (
-          <StepHeader title={copy.title} subtitle={copy.microcopy} optional>
+          <StepHeader
+            compact={keyboardCompact}
+            title={copy.title}
+            subtitle={copy.microcopy}
+            optional
+          >
             <div className="mb-3 flex flex-wrap gap-2">
               {prompt.suggestions.map((suggestion) => (
                 <button
@@ -809,8 +926,8 @@ export default function OnboardingWizard({
               ))}
             </div>
             <textarea
-              className={textareaClass}
-              rows={4}
+              className={currentTextareaClass}
+              rows={keyboardCompact ? 3 : 4}
               maxLength={MAX_VIBE_LENGTH}
               placeholder={copy.placeholder}
               value={value}
@@ -835,6 +952,7 @@ export default function OnboardingWizard({
         ].filter((item): item is string => item !== null);
         return (
           <StepHeader
+            compact={keyboardCompact}
             title={firstName ? `You're all set, ${firstName}.` : "You're all set."}
             subtitle="Create your account and we'll start finding runs that fit your schedule. Anything you skipped can be added later from your profile."
           >
@@ -872,14 +990,26 @@ function ReviewRow({ label, value }: { label: string; value: string }) {
   );
 }
 
-function Progress({ current, total }: { current: number; total: number }) {
+function Progress({
+  current,
+  total,
+  compact = false,
+}: {
+  current: number;
+  total: number;
+  compact?: boolean;
+}) {
   return (
     <div>
-      <p className="text-xs font-medium text-muted">
+      <p className={`${compact ? "text-[11px]" : "text-xs"} font-medium text-muted`}>
         Step <span className="font-mono tnum">{current}</span> of{" "}
         <span className="font-mono tnum">{total}</span>
       </p>
-      <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-surface-2">
+      <div
+        className={`overflow-hidden rounded-full bg-surface-2 ${
+          compact ? "mt-1 h-1" : "mt-2 h-1.5"
+        }`}
+      >
         <div
           className="h-full rounded-full bg-accent transition-all"
           style={{ width: `${(current / total) * 100}%` }}
@@ -893,18 +1023,24 @@ function StepHeader({
   title,
   subtitle,
   optional = false,
+  compact = false,
   children,
 }: {
   title: string;
   subtitle?: string;
   optional?: boolean;
+  compact?: boolean;
   children: React.ReactNode;
 }) {
   return (
-    <div className="flex flex-col gap-4">
+    <div className={`flex flex-col ${compact ? "gap-3" : "gap-4"}`}>
       <div>
         <div className="flex flex-wrap items-center gap-2">
-          <h1 className="text-gradient text-2xl font-semibold tracking-tight">
+          <h1
+            className={`text-gradient font-semibold tracking-tight ${
+              compact ? "text-xl" : "text-2xl"
+            }`}
+          >
             {title}
           </h1>
           {optional && (
@@ -914,7 +1050,7 @@ function StepHeader({
           )}
         </div>
         {subtitle && (
-          <p className="mt-2 text-sm text-muted">
+          <p className={`${compact ? "mt-1 text-xs" : "mt-2 text-sm"} text-muted`}>
             {subtitle}
           </p>
         )}
