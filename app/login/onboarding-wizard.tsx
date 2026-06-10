@@ -50,6 +50,7 @@ type Props = {
 // an oversize selection fails fast in the browser.
 const ACCEPTED_TYPES = "image/jpeg,image/png,image/webp";
 const MAX_BYTES = 5 * 1024 * 1024;
+const NAME_DISPLAY_DELAY_MS = 450;
 
 const fieldClass =
   "h-11 w-full rounded-lg border border-border bg-surface-2 px-3 text-base text-foreground placeholder:text-muted outline-none transition-colors focus:border-accent";
@@ -241,6 +242,7 @@ export default function OnboardingWizard({
   // matching side ("scrolling" forward to the next question / back to the last).
   const [direction, setDirection] = useState<"next" | "prev">("next");
   const [values, setValues] = useState<OnboardingValues>(initialValues);
+  const [delayedName, setDelayedName] = useState(initialValues.name);
   const [pronounsMode, setPronounsMode] = useState<"preset" | "other">(
     initialValues.pronouns.trim() && !isPronounOption(initialValues.pronouns)
       ? "other"
@@ -292,10 +294,23 @@ export default function OnboardingWizard({
   const isEmail = step === "email";
   const isAutoAdvance = step === "gender" || step === "ranBefore";
   const firstName = values.name.trim().split(/\s+/)[0] ?? "";
+  const delayedFirstName = values.name.trim()
+    ? (delayedName.trim().split(/\s+/)[0] ?? "")
+    : "";
   const hasOptionalContent = isOptional && optionalStepHasValue(step);
   const advanceButtonLabel = isOptional && !hasOptionalContent ? "Skip" : "Continue";
   const advanceButtonClass =
     isOptional && !hasOptionalContent ? secondaryBtn : primaryBtn;
+
+  useEffect(() => {
+    const delayedNameTimer = setTimeout(() => {
+      setDelayedName(values.name);
+    }, NAME_DISPLAY_DELAY_MS);
+
+    return () => {
+      clearTimeout(delayedNameTimer);
+    };
+  }, [values.name]);
 
   // Revoke the preview object URL when it's replaced or the component unmounts.
   useEffect(() => {
@@ -609,9 +624,9 @@ export default function OnboardingWizard({
       case "name":
         return (
           <StepHeader
-            title={firstName ? `Hi, ${firstName}.` : "What should we call you?"}
+            title={delayedFirstName ? `Hi, ${delayedFirstName}.` : "What should we call you?"}
             subtitle={
-              firstName
+              delayedFirstName
                 ? "Lovely to have you here. This is the display name other runners will see, a nickname or first name is perfectly fine."
                 : "Pick a display name other runners will see, a nickname or just your first name is perfectly fine."
             }
