@@ -59,10 +59,10 @@ export default function RunPartnersLive({
         <li key={partner.id} className="flex flex-col gap-1.5">
           {partner.message && (
             <div className="relative mt-0.5">
-              <div className="inline-block rounded-2xl border border-black/10 bg-zinc-50 px-3 py-2 text-sm text-zinc-600 dark:border-white/15 dark:bg-zinc-800 dark:text-zinc-400">
+              <div className="inline-block rounded-2xl border border-border bg-surface-2 px-3 py-2 text-sm text-muted">
                 <p className="whitespace-pre-line">{partner.message}</p>
               </div>
-              <div className="absolute -bottom-1 left-3 h-3 w-3 rotate-45 border-b border-r border-black/10 bg-zinc-50 dark:border-white/15 dark:bg-zinc-800" />
+              <div className="absolute -bottom-1 left-3 h-3 w-3 rotate-45 border-b border-r border-border bg-surface-2" />
             </div>
           )}
           <RunnerModal runner={partner} />

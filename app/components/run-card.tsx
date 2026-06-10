@@ -15,15 +15,19 @@ export default function RunCard({
   const myMessage = getRunParticipantMessage(run.id, currentUserId);
 
   return (
-    <div className="rounded-2xl border border-black/10 bg-white p-4 shadow-sm dark:border-white/15 dark:bg-zinc-900">
+    <div className="card hover-lift p-4">
       <div className="flex flex-col gap-4 sm:flex-row">
         {/* Left column: the run details. */}
         <dl className="flex flex-1 flex-col gap-2 text-base">
           <Detail label="Date">{formatDate(run.date)}</Detail>
-          <Detail label="Time">{run.time}</Detail>
-          <Detail label="Distance">{run.distanceKm} km</Detail>
+          <Detail label="Time">
+            <span className="font-mono tnum">{run.time}</span>
+          </Detail>
+          <Detail label="Distance">
+            <span className="font-mono tnum">{run.distanceKm}</span> km
+          </Detail>
           <div>
-            <dt className="text-zinc-500 dark:text-zinc-400">Meet at:</dt>
+            <dt className="text-muted">Meet at:</dt>
             <dd className="font-medium">{run.meetAt}</dd>
           </div>
 
@@ -33,7 +37,7 @@ export default function RunCard({
         {/* Right column: who you're running with, plus the map. */}
         <div className="flex flex-1 flex-col gap-3">
           <div>
-            <p className="text-zinc-500 dark:text-zinc-400">Running with:</p>
+            <p className="text-muted">Running with:</p>
             <RunPartnersLive runId={run.id} initialPartners={run.partners} />
           </div>
 
@@ -63,7 +67,7 @@ function Detail({
 }) {
   return (
     <div className="flex items-baseline gap-1.5">
-      <dt className="text-zinc-500 dark:text-zinc-400">{label}:</dt>
+      <dt className="text-muted">{label}:</dt>
       <dd className="font-medium">{children}</dd>
     </div>
   );

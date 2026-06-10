@@ -26,26 +26,26 @@ export default function RunningVibeNudge({
   }
 
   return (
-    <section className="mb-4 rounded-lg border border-amber-200 bg-amber-50 p-4 dark:border-amber-900/60 dark:bg-amber-950/25">
+    <section className="anim-rise mb-4 rounded-2xl border border-accent/30 bg-surface-2 p-4">
       <div className="flex items-start gap-3">
-        <span className="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-amber-100 text-amber-800 dark:bg-amber-900/60 dark:text-amber-200">
-          <SparkIcon className="h-5 w-5" />
+        <span className="glow-pulse mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-accent/15 text-accent">
+          <ChatIcon className="h-5 w-5" />
         </span>
         <div className="min-w-0 flex-1">
-          <p className="text-sm font-semibold text-zinc-950 dark:text-zinc-50">
+          <p className="text-sm font-semibold text-foreground">
             {missingCount === 3
               ? "Your partner intro is empty."
               : `${missingCount} partner intro prompt${
                   missingCount === 1 ? "" : "s"
                 } left.`}
           </p>
-          <p className="mt-1 text-sm text-zinc-700 dark:text-zinc-300">
+          <p className="mt-1 text-sm text-muted">
             Add a few running-vibe notes so a matched runner has something easy
             to ask you about.
           </p>
           <Link
             href="/profile#running-vibe"
-            className="mt-3 inline-flex h-9 items-center rounded-full bg-blue-600 px-4 text-sm font-medium text-white transition-colors hover:bg-blue-700"
+            className="btn-accent tap mt-3 text-sm"
           >
             Add running vibe
           </Link>
@@ -54,7 +54,7 @@ export default function RunningVibeNudge({
           type="button"
           onClick={dismiss}
           aria-label="Dismiss running vibe reminder"
-          className="-mr-1 -mt-1 rounded-full p-1.5 text-amber-800 transition-colors hover:bg-amber-100 dark:text-amber-200 dark:hover:bg-amber-900/50"
+          className="-mr-1 -mt-1 rounded-full p-1.5 text-muted transition-colors hover:bg-surface-2 hover:text-foreground"
         >
           <CloseIcon className="h-4 w-4" />
         </button>
@@ -82,20 +82,22 @@ function shouldShowNudge() {
   return !dismissedAt || Date.now() - dismissedAt > DISMISS_MS;
 }
 
-function SparkIcon({ className }: { className?: string }) {
+// A speech bubble with two text lines — the nudge is about giving a matched
+// partner something to talk about, not anything AI-related.
+function ChatIcon({ className }: { className?: string }) {
   return (
     <svg
       viewBox="0 0 24 24"
       fill="none"
       stroke="currentColor"
-      strokeWidth={2}
+      strokeWidth={1.8}
       strokeLinecap="round"
       strokeLinejoin="round"
       className={className}
       aria-hidden="true"
     >
-      <path d="M12 2l1.5 6.5L20 10l-6.5 1.5L12 18l-1.5-6.5L4 10l6.5-1.5L12 2z" />
-      <path d="M19 16l.7 2.3L22 19l-2.3.7L19 22l-.7-2.3L16 19l2.3-.7L19 16z" />
+      <path d="M21 11.5a8.5 8.5 0 0 1-12.1 7.7L3 21l1.8-5.9A8.5 8.5 0 1 1 21 11.5Z" />
+      <path d="M8.5 10.5h7M8.5 13.5h4.5" />
     </svg>
   );
 }

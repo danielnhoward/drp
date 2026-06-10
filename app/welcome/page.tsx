@@ -24,10 +24,10 @@ export default async function WelcomePage() {
           <div className="flex flex-col items-center gap-4 text-center">
             <BrandMark className="h-16 w-16 drop-shadow-lg" />
             <div>
-              <h1 className="text-3xl font-semibold tracking-tight">
+              <h1 className="text-gradient text-3xl font-semibold tracking-tight">
                 Welcome to RunDezvous
               </h1>
-              <p className="mt-2 text-base text-zinc-600 dark:text-zinc-400">
+              <p className="mt-2 text-base text-muted">
                 Find a running partner who matches your pace, your patch, and
                 your schedule.
               </p>
@@ -36,7 +36,7 @@ export default async function WelcomePage() {
 
           <div className="flex flex-col gap-3">
             <WelcomeForm />
-            <p className="text-center text-sm text-zinc-500 dark:text-zinc-400">
+            <p className="text-center text-sm text-muted">
               New here or coming back? Pop in your email to get started — we&apos;ll
               find your account or set one up.
             </p>
@@ -44,11 +44,8 @@ export default async function WelcomePage() {
         </div>
       </div>
 
-      <p className="pb-8 text-center text-xs text-zinc-500 dark:text-zinc-500">
-        <Link
-          href="/admin"
-          className="underline hover:text-zinc-700 dark:hover:text-zinc-300"
-        >
+      <p className="pb-8 text-center text-xs text-muted">
+        <Link href="/admin" className="underline hover:text-foreground">
           Admin
         </Link>
       </p>
@@ -76,13 +73,18 @@ function BrandMark({ className }: { className?: string }) {
           x2="86"
           y2="84"
         >
-          <stop offset="0" stopColor="#2DD4FF" />
-          <stop offset="0.5" stopColor="#4D8BFF" />
-          <stop offset="1" stopColor="#7C5CFF" />
+          {/* Token-driven so the mark tracks the theme (incl. light mode). */}
+          <stop offset="0" style={{ stopColor: "var(--accent)" }} />
+          <stop offset="0.5" style={{ stopColor: "var(--accent-mid)" }} />
+          <stop offset="1" style={{ stopColor: "var(--accent-2)" }} />
         </linearGradient>
       </defs>
       <rect x="2" y="2" width="96" height="96" rx="23" fill="url(#rdv-brand-grad)" />
-      <g stroke="#061018" strokeLinecap="round" fill="none">
+      <g
+        style={{ stroke: "var(--accent-contrast)" }}
+        strokeLinecap="round"
+        fill="none"
+      >
         <path d="M14 44 H30" strokeWidth="5.5" opacity="0.92" />
         <path d="M11 56 H26" strokeWidth="5.5" opacity="0.66" />
         <path d="M19 68 H32" strokeWidth="5.5" opacity="0.42" />
@@ -90,7 +92,7 @@ function BrandMark({ className }: { className?: string }) {
       <g transform="rotate(14 56 50)">
         <path
           d="M56 84 C43 64 35 53 35 40 A21 21 0 1 1 77 40 C77 53 69 64 56 84 Z"
-          fill="#061018"
+          style={{ fill: "var(--accent-contrast)" }}
         />
         <circle cx="56" cy="40" r="8" fill="url(#rdv-brand-grad)" />
       </g>
