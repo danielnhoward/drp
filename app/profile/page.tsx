@@ -20,7 +20,7 @@ export default async function ProfilePage() {
   const ratingSummary = getRatingSummaryForUser(user.id);
 
   return (
-    <main className="page-enter mx-auto w-full max-w-md flex-1 px-6 py-8">
+    <main className="mx-auto w-full max-w-md flex-1 px-6 py-8">
       <header className="mb-6">
         <h1 className="text-gradient text-2xl font-semibold tracking-tight">Profile</h1>
         <p className="mt-1 text-sm text-muted">

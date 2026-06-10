@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Space_Grotesk, Inter, JetBrains_Mono } from "next/font/google";
 import "./globals.css";
 import BottomNav from "./components/bottom-nav";
+import TabTransition from "./components/tab-transition";
 
 // Display face — headings, CTAs, big numbers.
 const spaceGrotesk = Space_Grotesk({
@@ -39,8 +40,8 @@ export default function RootLayout({
       lang="en"
       className={`${spaceGrotesk.variable} ${inter.variable} ${jetBrainsMono.variable} h-full bg-background antialiased`}
     >
-      <body className="min-h-full flex flex-col bg-background text-foreground pb-[calc(4rem+env(safe-area-inset-bottom))]">
-        {children}
+      <body className="min-h-full flex flex-col overflow-x-hidden bg-background text-foreground pb-[calc(4rem+env(safe-area-inset-bottom))]">
+        <TabTransition>{children}</TabTransition>
         <BottomNav />
       </body>
     </html>

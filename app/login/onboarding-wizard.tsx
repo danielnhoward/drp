@@ -20,6 +20,7 @@ import {
 } from "@/app/profile/profile-content";
 import { completeOnboardingAction, lookupEmailAction } from "./actions";
 import {
+  BEGINNER_VIBE_COPY,
   INITIAL_COMPLETE_STATE,
   OPTIONAL_STEPS,
   STEP_ORDER,
@@ -31,6 +32,11 @@ type Props = {
   // True when a signed-in user is finishing an incomplete profile: their email
   // is already known, so the wizard drops the "email" step.
   resuming: boolean;
+  // True when a new runner arrived from the landing page with their email
+  // already entered: it's prefilled in initialValues, so the "email" step is
+  // dropped here too (without the resuming label changes — they're still
+  // creating an account, not finishing one).
+  skipEmailStep?: boolean;
   initialValues: OnboardingValues;
 };
 
@@ -47,6 +53,8 @@ const chipClass =
   "inline-flex min-h-8 max-w-full items-center gap-1.5 rounded-full border border-border bg-surface-2 px-3 py-1 text-left text-xs font-medium text-muted transition-colors hover:border-accent/40 hover:bg-accent/10 hover:text-accent disabled:opacity-50";
 const primaryBtn =
   "btn-accent tap rounded-full px-5 py-2.5 text-sm font-medium disabled:opacity-50";
+const secondaryBtn =
+  "btn-ghost tap rounded-full px-5 py-2.5 text-sm font-medium disabled:opacity-50";
 const ghostBtn =
   "btn-ghost tap rounded-full px-4 py-2.5 text-sm font-medium";
 
@@ -54,18 +62,28 @@ function vibePromptFor(step: StepId): VibePrompt | undefined {
   return VIBE_PROMPTS.find((prompt) => prompt.name === step);
 }
 
-export default function OnboardingWizard({ resuming, initialValues }: Props) {
-  // A resuming user already supplied their email; drop that step for them.
-  const steps = resuming
-    ? STEP_ORDER.filter((step) => step !== "email")
-    : STEP_ORDER;
-
+export default function OnboardingWizard({
+  resuming,
+  skipEmailStep = false,
+  initialValues,
+}: Props) {
   const [stepIndex, setStepIndex] = useState(0);
   // Which way the last navigation went, so the incoming step slides in from the
   // matching side ("scrolling" forward to the next question / back to the last).
   const [direction, setDirection] = useState<"next" | "prev">("next");
   const [values, setValues] = useState<OnboardingValues>(initialValues);
   const [stepError, setStepError] = useState<string | null>(null);
+
+  // The step list is derived from the answers so far. The email is dropped when
+  // it's already settled — a resuming user's row, or one handed over from the
+  // landing page (skipEmailStep) — and a beginner who hasn't run before skips
+  // the pace question. "ranBefore" sits before "pace", so changing the answer
+  // never invalidates the current stepIndex.
+  const steps = STEP_ORDER.filter((step) => {
+    if (step === "email" && (resuming || skipEmailStep)) return false;
+    if (step === "pace" && values.ranBefore === "no") return false;
+    return true;
+  });
   const [emailError, setEmailError] = useState<string | null>(null);
 
   const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
@@ -99,6 +117,10 @@ export default function OnboardingWizard({ resuming, initialValues }: Props) {
   const isOptional = OPTIONAL_STEPS.has(step);
   const isEmail = step === "email";
   const firstName = values.name.trim().split(/\s+/)[0] ?? "";
+  const hasOptionalContent = isOptional && optionalStepHasValue(step);
+  const advanceButtonLabel = isOptional && !hasOptionalContent ? "Skip" : "Continue";
+  const advanceButtonClass =
+    isOptional && !hasOptionalContent ? secondaryBtn : primaryBtn;
 
   // Revoke the preview object URL when it's replaced or the component unmounts.
   useEffect(() => {
@@ -114,6 +136,18 @@ export default function OnboardingWizard({ resuming, initialValues }: Props) {
     setValues((current) => ({ ...current, [key]: value }));
   }
 
+  // Answering "No" skips the pace step, so clear any pace already entered (e.g.
+  // the user picked Yes, typed a time, then came back and switched to No) — they
+  // can no longer see or edit it, and beginners shouldn't submit one.
+  function setRanBefore(answer: "yes" | "no") {
+    setStepError(null);
+    setValues((current) => ({
+      ...current,
+      ranBefore: answer,
+      fiveKTime: answer === "no" ? "" : current.fiveKTime,
+    }));
+  }
+
   function back() {
     setStepError(null);
     setDirection("prev");
@@ -124,6 +158,23 @@ export default function OnboardingWizard({ resuming, initialValues }: Props) {
     setStepError(null);
     setDirection("next");
     setStepIndex((index) => Math.min(steps.length - 1, index + 1));
+  }
+
+  function optionalStepHasValue(currentStep: StepId) {
+    switch (currentStep) {
+      case "photo":
+        return Boolean(avatarPreview);
+      case "pace":
+        return Boolean(values.fiveKTime.trim());
+      case "whyRun":
+        return Boolean(values.whyRun.trim());
+      case "hobbies":
+        return Boolean(values.hobbies.trim());
+      case "interests":
+        return Boolean(values.interests.trim());
+      default:
+        return false;
+    }
   }
 
   function continueFromEmail() {
@@ -166,6 +217,9 @@ export default function OnboardingWizard({ resuming, initialValues }: Props) {
     }
     if (step === "gender" && !values.gender) {
       return setStepError("Pick a gender.");
+    }
+    if (step === "ranBefore" && !values.ranBefore) {
+      return setStepError("Let us know if you've run before.");
     }
     advance();
   }
@@ -285,11 +339,6 @@ export default function OnboardingWizard({ resuming, initialValues }: Props) {
           )}
         </div>
         <div className="flex items-center gap-2">
-          {isOptional && !isLast && (
-            <button type="button" onClick={advance} className={ghostBtn}>
-              Skip for now
-            </button>
-          )}
           {isEmail ? (
             // Shares the "advance" key with the Continue button below so the
             // node is reused between advancing steps (focus stays on it).
@@ -326,9 +375,9 @@ export default function OnboardingWizard({ resuming, initialValues }: Props) {
               key="advance"
               type="button"
               onClick={isOptional ? nextOptional : nextRequired}
-              className={primaryBtn}
+              className={advanceButtonClass}
             >
-              Continue
+              {advanceButtonLabel}
             </button>
           )}
         </div>
@@ -361,8 +410,8 @@ export default function OnboardingWizard({ resuming, initialValues }: Props) {
             title={firstName ? `Hi, ${firstName}.` : "What should we call you?"}
             subtitle={
               firstName
-                ? "Lovely to have you here. Other runners will see this name when you're matched."
-                : "This is the name other runners will see."
+                ? "Lovely to have you here. This is the display name other runners will see, a nickname or first name is perfectly fine."
+                : "Pick a display name other runners will see, a nickname or just your first name is perfectly fine."
             }
           >
             <input
@@ -423,11 +472,45 @@ export default function OnboardingWizard({ resuming, initialValues }: Props) {
           </StepHeader>
         );
 
+      case "ranBefore": {
+        const options: { value: "yes" | "no"; label: string }[] = [
+          { value: "yes", label: "Yes, I've run before" },
+          { value: "no", label: "No, I'm just starting out" },
+        ];
+        return (
+          <StepHeader
+            title="Have you run before?"
+            subtitle="No experience needed — this just helps us ask the right questions next."
+          >
+            <div className="flex flex-col gap-2">
+              {options.map((option) => {
+                const selected = values.ranBefore === option.value;
+                return (
+                  <button
+                    key={option.value}
+                    type="button"
+                    onClick={() => setRanBefore(option.value)}
+                    aria-pressed={selected}
+                    className={`flex h-12 items-center rounded-lg border px-4 text-left text-sm font-medium transition-colors ${
+                      selected
+                        ? "border-accent/40 bg-accent/10 text-accent"
+                        : "border-border bg-surface text-foreground hover:border-accent/40"
+                    }`}
+                  >
+                    {option.label}
+                  </button>
+                );
+              })}
+            </div>
+          </StepHeader>
+        );
+      }
+
       case "photo":
         return (
           <StepHeader
-            title="Add a profile photo"
-            subtitle="Totally optional, but it can help your running partner spot you at the meeting point."
+            title="Help your running partner recognise you"
+            subtitle="It does not need to be a running photo. A picture helps the person you are matched with feel like they are meeting a real person, and you can change or remove it later."
           >
             <div className="flex items-center gap-4">
               <div className="relative h-24 w-24 shrink-0">
@@ -477,8 +560,9 @@ export default function OnboardingWizard({ resuming, initialValues }: Props) {
       case "pace":
         return (
           <StepHeader
-            title={firstName ? `What's your easy 5k pace, ${firstName}?` : "What's your easy 5k pace?"}
+            title={firstName ? `What's your conversational 5k pace, ${firstName}?` : "What's your conversation 5k pace?"}
             subtitle="Think conversational pace, not race-day pace. We use it to match you with runners at a similar rhythm."
+            optional
           >
             <div className="mb-3 flex flex-wrap gap-2">
               {PACE_PRESETS.map((preset) => (
@@ -515,8 +599,14 @@ export default function OnboardingWizard({ resuming, initialValues }: Props) {
         const prompt = vibePromptFor(step);
         if (!prompt) return null;
         const value = values[prompt.name];
+        // Beginners (No branch) see reframed copy for whyRun/hobbies while
+        // reusing the same chips and field; interests is shared as-is.
+        const copy =
+          values.ranBefore === "no" && step !== "interests"
+            ? BEGINNER_VIBE_COPY[step]
+            : prompt;
         return (
-          <StepHeader title={prompt.title} subtitle={prompt.microcopy}>
+          <StepHeader title={copy.title} subtitle={copy.microcopy} optional>
             <div className="mb-3 flex flex-wrap gap-2">
               {prompt.suggestions.map((suggestion) => (
                 <button
@@ -539,7 +629,7 @@ export default function OnboardingWizard({ resuming, initialValues }: Props) {
               className={textareaClass}
               rows={4}
               maxLength={MAX_VIBE_LENGTH}
-              placeholder={prompt.placeholder}
+              placeholder={copy.placeholder}
               value={value}
               onChange={(event) =>
                 setValue(prompt.name, event.target.value.slice(0, MAX_VIBE_LENGTH))
@@ -553,7 +643,6 @@ export default function OnboardingWizard({ resuming, initialValues }: Props) {
       }
 
       case "review": {
-        const name = values.name.trim();
         const added = [
           avatarPreview ? "profile photo" : null,
           values.fiveKTime.trim() ? `5k time (${values.fiveKTime.trim()})` : null,
@@ -620,16 +709,27 @@ function Progress({ current, total }: { current: number; total: number }) {
 function StepHeader({
   title,
   subtitle,
+  optional = false,
   children,
 }: {
   title: string;
   subtitle?: string;
+  optional?: boolean;
   children: React.ReactNode;
 }) {
   return (
     <div className="flex flex-col gap-4">
       <div>
-        <h1 className="text-gradient text-2xl font-semibold tracking-tight">{title}</h1>
+        <div className="flex flex-wrap items-center gap-2">
+          <h1 className="text-gradient text-2xl font-semibold tracking-tight">
+            {title}
+          </h1>
+          {optional && (
+            <span className="inline-flex shrink-0 items-center rounded-full border border-accent/40 bg-accent/10 px-2 py-0.5 text-xs font-semibold text-accent">
+              Optional
+            </span>
+          )}
+        </div>
         {subtitle && (
           <p className="mt-2 text-sm text-muted">
             {subtitle}

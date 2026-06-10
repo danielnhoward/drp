@@ -84,7 +84,7 @@ export default function RunMap({
             type="button"
             aria-label="Close map"
             onClick={() => setOpen(false)}
-            className="absolute inset-0 cursor-default bg-background/70 backdrop-blur-sm"
+            className="absolute inset-0 cursor-default scrim backdrop-blur-sm"
           />
 
           <div className="card anim-pop relative z-10 flex w-full max-w-2xl flex-col overflow-hidden">

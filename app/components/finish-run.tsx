@@ -62,7 +62,7 @@ export default function FinishRun({
       {open && (
         <div className="fixed inset-0 z-60 flex items-center justify-center">
           <div
-            className="fixed inset-0 z-55 bg-background/70 backdrop-blur-sm"
+            className="fixed inset-0 z-55 scrim backdrop-blur-sm"
             // Only dismissable by backdrop on the confirm step — don't let a
             // stray tap discard the photo prompt the first finisher just earned.
             onClick={step === "confirm" ? () => setOpen(false) : undefined}

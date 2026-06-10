@@ -28,7 +28,7 @@ export default async function CalendarPage() {
   const slots = await listMyAvailability();
 
   return (
-    <main className="page-enter mx-auto w-full max-w-2xl flex-1 px-4 py-6">
+    <main className="mx-auto w-full max-w-2xl flex-1 px-4 py-6">
       <header className="mb-4">
         <h1 className="text-gradient text-2xl font-semibold tracking-tight">My Schedule</h1>
         <p className="mt-1 text-sm text-muted">

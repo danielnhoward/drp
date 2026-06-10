@@ -16,7 +16,7 @@ export default async function Home() {
   ).length;
 
   return (
-    <main className="mx-auto w-full max-w-2xl flex-1 px-4 py-6 page-enter">
+    <main className="mx-auto w-full max-w-2xl flex-1 px-4 py-6">
       <header className="mb-4">
         <h1 className="text-gradient text-2xl font-semibold tracking-tight">
           Next 24 hours

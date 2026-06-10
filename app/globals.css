@@ -44,6 +44,66 @@
     #7064c0 100%
   );
   --glow-accent: 0 0 16px rgba(56, 174, 207, 0.2);
+
+  /* Elevation — re-valued in light mode for soft, cool shadows */
+  --shadow-card: 0 1px 2px rgba(0, 0, 0, 0.5), 0 8px 22px rgba(0, 0, 0, 0.2);
+  --shadow-elevated: 0 8px 22px rgba(0, 0, 0, 0.3);
+  --shadow-btn: 0 6px 18px rgba(0, 0, 0, 0.25);
+  --scrim: rgba(4, 6, 12, 0.62); /* modal backdrop dim */
+}
+
+/* Light mode — follows the OS setting (prefers-color-scheme). Same token
+   names, re-valued for a clean cool-white surface; every component, utility,
+   gradient, glow and shadow downstream adapts automatically. */
+@media (prefers-color-scheme: light) {
+  :root {
+    color-scheme: light;
+
+    /* Surfaces */
+    --background: #f6f8fb; /* cool near-white canvas */
+    --surface: #ffffff; /* cards */
+    --surface-2: #eef2f8; /* raised / chips / inputs */
+    --border: rgba(15, 27, 50, 0.1); /* slate hairline */
+
+    /* Text */
+    --foreground: #0f1828; /* deep navy ink */
+    --muted: #586379; /* slate secondary text */
+
+    /* Accents — deepened so they stay legible on white (links + fills) */
+    --accent: #1670b5; /* azure blue */
+    --accent-mid: #2f62b2; /* gradient midpoint */
+    --accent-2: #5b4fb0; /* muted violet */
+    --accent-contrast: #ffffff; /* text/icons on accent fills */
+
+    /* Status */
+    --success: #138a52;
+    --danger: #c0392f;
+
+    /* Signature gradient (titles) + restrained glow */
+    --gradient-brand: linear-gradient(
+      120deg,
+      #1670b5 0%,
+      #2f62b2 52%,
+      #5b4fb0 100%
+    );
+    --glow-accent: 0 0 16px rgba(22, 112, 181, 0.18);
+
+    /* Soft, cool elevation instead of heavy black shadows */
+    --shadow-card: 0 1px 2px rgba(15, 27, 50, 0.06),
+      0 10px 24px rgba(15, 27, 50, 0.08);
+    --shadow-elevated: 0 10px 26px rgba(15, 27, 50, 0.12);
+    --shadow-btn: 0 6px 16px rgba(22, 112, 181, 0.22);
+    --scrim: rgba(15, 27, 50, 0.42); /* dim, but lighter than dark mode */
+  }
+
+  body {
+    /* Barely-there cyan wash at the top instead of the dark-mode halo. */
+    background-image: radial-gradient(
+      1100px 520px at 50% -20%,
+      rgba(22, 112, 181, 0.05),
+      transparent 62%
+    );
+  }
 }
 
 /* Map tokens onto Tailwind's colour/font scales so the semantic utilities
@@ -92,7 +152,7 @@ h6 {
 }
 
 ::selection {
-  background: rgba(45, 212, 255, 0.3);
+  background: color-mix(in srgb, var(--accent) 26%, transparent);
   color: var(--foreground);
 }
 
@@ -146,9 +206,7 @@ h6 {
   background-color: var(--surface);
   border: 1px solid var(--border);
   border-radius: 0.75rem;
-  box-shadow:
-    0 1px 2px rgba(0, 0, 0, 0.5),
-    0 8px 22px rgba(0, 0, 0, 0.2);
+  box-shadow: var(--shadow-card);
 }
 
 /* Frosted-glass variant for floating bars / overlays. */
@@ -156,6 +214,11 @@ h6 {
   background-color: color-mix(in srgb, var(--surface) 80%, transparent);
   border: 1px solid var(--border);
   backdrop-filter: blur(12px);
+}
+
+/* Modal/overlay backdrop — dims content in both light and dark. */
+@utility scrim {
+  background-color: var(--scrim);
 }
 
 /* ---------------------------------------------------------------------------
@@ -180,7 +243,7 @@ h6 {
   cursor: pointer;
   &:hover {
     filter: brightness(1.07);
-    box-shadow: 0 6px 18px rgba(0, 0, 0, 0.25);
+    box-shadow: var(--shadow-btn);
   }
   &:active {
     transform: translateY(0.5px);
@@ -260,7 +323,7 @@ h6 {
     border-color 0.2s ease;
   &:hover {
     transform: translateY(-1px);
-    box-shadow: 0 8px 22px rgba(0, 0, 0, 0.3);
+    box-shadow: var(--shadow-elevated);
   }
 }
 
@@ -285,6 +348,15 @@ h6 {
 }
 @utility glow-pulse {
   animation: glow-pulse 3.4s ease-in-out infinite;
+}
+
+/* Tab-switch page transitions: the incoming page slides in from whichever
+   side matches the tab direction (right tab -> from the right, etc.). */
+@utility anim-slide-in-right {
+  animation: slide-in-right 0.3s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+@utility anim-slide-in-left {
+  animation: slide-in-left 0.3s cubic-bezier(0.22, 1, 0.36, 1) both;
 }
 
 /* Staggered reveal delays (pair with anim-rise / anim-fade). */
@@ -342,6 +414,26 @@ h6 {
   from {
     opacity: 0;
     transform: scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+@keyframes slide-in-right {
+  from {
+    opacity: 0;
+    transform: translateX(28px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+@keyframes slide-in-left {
+  from {
+    opacity: 0;
+    transform: translateX(-28px);
   }
   to {
     opacity: 1;
@@ -406,6 +498,8 @@ h6 {
   .anim-rise,
   .anim-fade,
   .anim-pop,
+  .anim-slide-in-left,
+  .anim-slide-in-right,
   .page-enter,
   .glow-pulse,
   .skeleton,

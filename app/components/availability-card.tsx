@@ -1,5 +1,4 @@
 import type { SVGProps } from "react";
-import Link from "next/link";
 
 import type { Availability } from "@/lib/availability";
 import { deleteAvailabilityAction } from "@/app/calendar/actions";
@@ -38,16 +37,8 @@ export default function AvailabilityCard({ slot }: { slot: Availability }) {
           <RunMap lat={slot.lat} lon={slot.lon} label="Run location" />
         </div>
 
-        {/* Right: edit (deferred) and delete actions. */}
+        {/* Right: delete action. */}
         <div className="flex shrink-0 flex-col gap-2">
-          <Link
-            href={`/calendar/${slot.id}/edit`}
-            aria-label="Edit availability"
-            className="tap rounded-full border border-border p-2 text-muted transition-colors hover:bg-surface-2 hover:text-foreground"
-          >
-            <PencilIcon className="h-4 w-4" aria-hidden="true" />
-          </Link>
-
           <form action={deleteAvailabilityAction}>
             <input type="hidden" name="id" value={slot.id} />
             <button
@@ -133,15 +124,6 @@ export function RunnerIcon(props: SVGProps<SVGSVGElement>) {
       <path d="M14 9l-3.5 2 2 2.5V19" />
       <path d="M10.5 11 7 12l-2 3" />
       <path d="m12.5 13.5 3 1.5 2 3.5" />
-    </svg>
-  );
-}
-
-function PencilIcon(props: SVGProps<SVGSVGElement>) {
-  return (
-    <svg {...iconBase} {...props}>
-      <path d="M12 20h9" />
-      <path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z" />
     </svg>
   );
 }

@@ -98,7 +98,7 @@ export default function RunnerModal({ runner }: { runner: Runner }) {
             type="button"
             aria-label="Close profile"
             onClick={() => setOpen(false)}
-            className="absolute inset-0 cursor-pointer bg-background/70 backdrop-blur-sm"
+            className="absolute inset-0 cursor-pointer scrim backdrop-blur-sm"
           />
 
           <div className="card anim-pop relative z-10 max-h-[calc(100vh-2rem)] w-full max-w-sm overflow-y-auto p-6">

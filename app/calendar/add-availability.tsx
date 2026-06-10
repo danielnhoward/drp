@@ -78,7 +78,7 @@ export default function AddAvailability() {
             type="button"
             aria-label="Close"
             onClick={() => setOpen(false)}
-            className="absolute inset-0 cursor-default bg-background/70 backdrop-blur-sm"
+            className="absolute inset-0 cursor-default scrim backdrop-blur-sm"
           />
           {/* Fresh mount each open, so the form's action state starts clean. */}
           <AvailabilityForm onClose={() => setOpen(false)} />
