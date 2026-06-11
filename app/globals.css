@@ -141,6 +141,10 @@ body {
   font-family: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
 }
 
+body.signup-keyboard-open {
+  padding-bottom: env(safe-area-inset-bottom);
+}
+
 /* Display face for headings + big numbers. */
 h1,
 h2,
