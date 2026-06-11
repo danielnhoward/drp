@@ -53,8 +53,8 @@ export type CoachFeedbackState =
   | { error: string };
 
 /**
- * The final, coach-specific step of finishing a coached training run: records
- * how it felt and advances the runner's Couch-to-5K progress. By the time this
+ * The final, coach-specific step of finishing a coached run: records how it
+ * felt and advances the runner's getting-started plan. By the time this
  * runs the run is already finished (finishRunAction) and partners rated, so it
  * doesn't touch the run itself. Returns whether they graduated (and the next
  * plan session otherwise) so the finish UI can show the right follow-up.

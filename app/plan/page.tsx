@@ -31,8 +31,8 @@ export default async function CoachPage() {
           Your plan
         </h1>
         <p className="mt-1 text-sm text-muted">
-          A gentle, step-by-step plan from your first jog to a full 5K, one run
-          at a time.
+          A gentle, step-by-step way into the app — getting a feel for pace and
+          distance, one easy run at a time.
         </p>
       </header>
 
@@ -49,9 +49,9 @@ export default async function CoachPage() {
   );
 }
 
-// One-time welcome shown to a brand-new beginner, setting expectations before
-// they book their first run: how long the program is, that it adapts to them,
-// and how often to run.
+// One-time welcome shown to a brand-new runner, setting expectations before
+// they book their first run: how the plan eases them in, that it adapts to
+// them, and how often to run.
 function CoachWelcome() {
   return (
     <section className="card mb-4 flex flex-col gap-3 border-accent/30 bg-accent/5 p-4">
@@ -63,10 +63,10 @@ function CoachWelcome() {
           <span aria-hidden="true">🗓️</span>
           <span>
             <span className="font-medium text-foreground">
-              {COACH_PLAN_LENGTH} runs
+              {COACH_PLAN_LENGTH} easy runs
             </span>{" "}
-            take you from a gentle walk-jog to a continuous 5K. You book them one
-            at a time, whenever suits you.
+            ease you into the app — getting a feel for pace and distance and how
+            runs get scheduled. You book them one at a time, whenever suits you.
           </span>
         </li>
         <li className="flex gap-2">
@@ -76,15 +76,17 @@ function CoachWelcome() {
             <span className="font-medium text-foreground">
               the plan adapts
             </span>{" "}
-            to you, repeating a session if it was tough.
+            to you, easing off if it was tough.
           </span>
         </li>
         <li className="flex gap-2">
-          <span aria-hidden="true">😴</span>
+          <span aria-hidden="true">🏃</span>
           <span>
-            Aim for about{" "}
-            <span className="font-medium text-foreground">3 runs a week</span>{" "}
-            with a rest day in between — recovery is where the progress happens.
+            By the end you&apos;ll have{" "}
+            <span className="font-medium text-foreground">
+              a comfortable pace
+            </span>{" "}
+            we use to match you with partners — then you set your own runs.
           </span>
         </li>
       </ul>

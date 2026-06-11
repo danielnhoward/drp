@@ -75,13 +75,12 @@ describe("planOutcome", () => {
   });
 
   test("'too easy' only advances one when skipping ahead would more than double the jog", () => {
-    // The ramp grows fast (1→2→3 min jogs), so skipping session 1 would land on
-    // a 3-min jog vs the current 1-min — more than double — and is held to +1.
+    // The ramp grows fast (3→8→20 min jogs), so skipping session 1 would land on
+    // a 20-min jog vs the current 3-min — more than double — and is held to +1.
     expect(planOutcome(0, "easy")).toEqual({ graduated: false, nextIndex: 1 });
-    expect(planOutcome(2, "easy")).toEqual({ graduated: false, nextIndex: 3 });
   });
 
-  test("never skips past the final 5K session before graduating", () => {
+  test("never skips past the final session before graduating", () => {
     // "Too easy" on the penultimate run lands on the final run, not past it.
     expect(planOutcome(LAST - 1, "easy")).toEqual({
       graduated: false,
@@ -177,10 +176,10 @@ describe("coach run queries", () => {
     await scheduleCoachedRun(
       host.id,
       { date: TODAY, startTime: "10:00", endTime: "12:00", lat: 51.5, lon: -0.1 },
-      3,
+      2,
     );
     const runId = (getDb().prepare("SELECT id FROM runs").get() as { id: number }).id;
-    expect(getCoachedRunSession(runId)).toBe(3);
+    expect(getCoachedRunSession(runId)).toBe(2);
     expect(getCoachedRunSession(999999)).toBeNull();
   });
 

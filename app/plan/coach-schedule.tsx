@@ -26,9 +26,8 @@ export default function CoachSchedule({
 
   return (
     <div className="flex flex-col gap-4">
-      {/* The coach's suggestion for this run. Lead with what to actually do —
-          the timed intervals — and keep distance as a rough guide, since the
-          two can otherwise read as conflicting instructions. */}
+      {/* This run's suggestion. Lead with the distance and an easy pace — the
+          point is getting a feel for both, not hitting an exact number. */}
       <section className="card p-4">
         <p className="text-xs font-semibold uppercase tracking-wide text-accent">
           Run {index + 1} of {COACH_PLAN_LENGTH}
@@ -41,10 +40,10 @@ export default function CoachSchedule({
         </p>
         <p className="mt-1 text-sm text-foreground">{session.description}</p>
         <p className="mt-3 text-xs text-muted">
-          Covers about{" "}
-          <span className="font-mono tnum">{session.distanceKm}</span> km · longest
-          jog <span className="font-mono tnum">{session.jogRepMinutes}</span> min.
-          The intervals matter more than the exact distance.
+          About <span className="font-mono tnum">{session.distanceKm}</span> km at
+          an easy pace · longest jog{" "}
+          <span className="font-mono tnum">{session.jogRepMinutes}</span> min. Take
+          it gently — there&apos;s no rush.
         </p>
       </section>
 

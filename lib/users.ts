@@ -148,8 +148,8 @@ export function updateUserProfile(userId: number, fields: ProfileUpdate): void {
 }
 
 /**
- * Enrolls a runner in the Couch-to-5K coach program, starting at the first
- * session. Called when a new user says they haven't run before during onboarding.
+ * Enrolls a runner in the getting-started plan, starting at the first session.
+ * Called when a new user says they haven't run before during onboarding.
  */
 export function enrollUserInCoaching(userId: number): void {
   getDb()
@@ -167,9 +167,9 @@ export function setCoachSessionIndex(userId: number, index: number): void {
 }
 
 /**
- * Marks a runner as graduated from the coach program and seeds the comfortable
- * 5k pace that normal matching needs — but only if they don't already have one,
- * so a manually-set pace is never clobbered.
+ * Marks a runner as graduated from the getting-started plan and seeds the
+ * comfortable pace that normal matching needs — but only if they don't already
+ * have one, so a manually-set pace is never clobbered.
  */
 export function graduateUser(userId: number): void {
   getDb()

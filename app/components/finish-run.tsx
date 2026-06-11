@@ -27,7 +27,7 @@ export default function FinishRun({
   runId,
   partners,
   // Coached runs run the same finish flow (photo + ratings) and then add a
-  // difficulty step that advances the runner's Couch-to-5K plan.
+  // difficulty step that advances the runner's getting-started plan.
   coached = false,
 }: {
   runId: number;
@@ -194,12 +194,12 @@ export default function FinishRun({
             ) : coachResult?.graduated ? (
               <>
                 <h2 className="text-gradient text-xl font-semibold tracking-tight">
-                  You graduated! 🎉
+                  You&apos;re all set! 🎉
                 </h2>
                 <p className="mt-2 text-sm text-muted">
-                  You went from your first jog to a full 5K — incredible work.
-                  We&apos;ve set a comfortable starting pace for you (you can
-                  fine-tune it in your profile any time).
+                  You&apos;ve got a feel for pace and distance and how the app
+                  works — nice going. We&apos;ve set a comfortable pace for you
+                  (you can fine-tune it in your profile any time).
                 </p>
                 <p className="mt-2 text-sm text-muted">
                   From here you&apos;re a regular runner: set your own schedule

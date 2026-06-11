@@ -170,8 +170,8 @@ export async function completeOnboardingAction(
     updateUserAvatar(userId, result.url);
   }
 
-  // Beginners ("No, I'm just starting out") start the Couch-to-5K coach program
-  // and land on its quick-schedule page — unless they've already graduated it.
+  // Beginners ("No, I'm just starting out") start the getting-started plan and
+  // land on its quick-schedule page — unless they've already graduated it.
   if (ranBefore === "no" && existing?.coachStatus !== "graduated") {
     enrollUserInCoaching(userId);
     revalidatePath("/plan");
