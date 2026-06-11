@@ -626,6 +626,8 @@ export default function OnboardingWizard({
       <input type="hidden" name="name" value={values.name} />
       <input type="hidden" name="dateOfBirth" value={values.dateOfBirth} />
       <input type="hidden" name="gender" value={values.gender} />
+      {/* Drives plan enrolment server-side: "no" starts the getting-started plan. */}
+      <input type="hidden" name="ranBefore" value={values.ranBefore} />
       <input type="hidden" name="pronouns" value={values.pronouns} />
       <input type="hidden" name="fiveKTime" value={values.fiveKTime} />
       <input type="hidden" name="whyRun" value={values.whyRun} />

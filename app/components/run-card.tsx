@@ -13,6 +13,7 @@ export default function RunCard({
   currentUserId: number;
 }) {
   const myMessage = getRunParticipantMessage(run.id, currentUserId);
+  const isCoached = run.coachSessionIndex !== null;
 
   return (
     <div className="card hover-lift p-4">
@@ -24,12 +25,22 @@ export default function RunCard({
             <span className="font-mono tnum">{run.time}</span>
           </Detail>
           <Detail label="Distance">
+            {isCoached && "about "}
             <span className="font-mono tnum">{run.distanceKm}</span> km
           </Detail>
           <div>
             <dt className="text-muted">Meet at:</dt>
             <dd className="font-medium">{run.meetAt}</dd>
           </div>
+
+          {isCoached && run.description && (
+            <div className="rounded-lg border border-accent/30 bg-accent/10 p-3">
+              <dt className="text-xs font-semibold uppercase tracking-wide text-accent">
+                Your plan
+              </dt>
+              <dd className="mt-1 text-sm text-foreground">{run.description}</dd>
+            </div>
+          )}
 
           <RunMessageForm runId={run.id} initialMessage={myMessage} />
         </dl>
@@ -45,6 +56,7 @@ export default function RunCard({
           <div className="flex justify-end">
             <FinishRun
               runId={run.id}
+              coached={isCoached}
               partners={run.partners.map(({ id, name, avatar }) => ({
                 id,
                 name,

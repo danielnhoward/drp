@@ -5,6 +5,7 @@ import { revalidatePath } from "next/cache";
 import {
   addRunParticipantMessage,
   finishRun,
+  getCoachedRunSession,
   isRunParticipant,
   getRunParticipantMessage,
   updateRunParticipantMessage,
@@ -13,9 +14,14 @@ import {
   updateRunPhoto,
 } from "@/lib/runs";
 import { publishRunMessageUpdated } from "../../lib/realtime";
+import {
+  DIFFICULTY_OPTIONS,
+  planOutcome,
+  type CoachDifficulty,
+} from "@/lib/coach";
 import { saveRunRatings, type RunRatingInput } from "@/lib/ratings";
 import { saveRunPhotoFile } from "@/lib/run-photos";
-import { requireUser } from "@/lib/users";
+import { graduateUser, requireUser, setCoachSessionIndex } from "@/lib/users";
 
 export type RunPhotoState = { error?: string; ok?: boolean };
 export type RunMessageState = { error?: string; ok?: boolean; message?: string | null };
@@ -40,6 +46,48 @@ export async function finishRunAction(
   }
 
   return { promptForPhoto: false };
+}
+
+export type CoachFeedbackState =
+  | { graduated: boolean; nextSessionIndex: number }
+  | { error: string };
+
+/**
+ * The final, coach-specific step of finishing a coached run: records how it
+ * felt and advances the runner's getting-started plan. By the time this
+ * runs the run is already finished (finishRunAction) and partners rated, so it
+ * doesn't touch the run itself. Returns whether they graduated (and the next
+ * plan session otherwise) so the finish UI can show the right follow-up.
+ */
+export async function recordCoachFeedbackAction(
+  runId: number,
+  difficulty: CoachDifficulty,
+): Promise<CoachFeedbackState> {
+  if (!Number.isFinite(runId)) return { error: "Something went wrong." };
+  if (!DIFFICULTY_OPTIONS.some((option) => option.value === difficulty)) {
+    return { error: "Let us know how the run felt." };
+  }
+
+  const user = await requireUser();
+  if (!isRunParticipant(runId, user.id)) {
+    return { error: "You're not part of this run." };
+  }
+  const session = getCoachedRunSession(runId);
+  if (session === null) return { error: "That isn't a coached run." };
+
+  const { graduated, nextIndex } = planOutcome(session, difficulty);
+  if (graduated) {
+    graduateUser(user.id);
+  } else {
+    setCoachSessionIndex(user.id, nextIndex);
+  }
+
+  // No revalidation here: the result/congrats screen lives on the still-mounted
+  // run card, and revalidating any path invalidates the root layout's soft tag
+  // and refreshes the current "/" route, unmounting the screen before the runner
+  // reads it. The result buttons navigate with a full page load, so home, /plan,
+  // /calendar and the nav all pick up the new state fresh.
+  return { graduated, nextSessionIndex: nextIndex };
 }
 
 /**
@@ -111,8 +159,16 @@ export async function submitRunRatingsAction(
     };
   }
 
-  revalidatePath("/");
-  revalidatePath("/profile");
+  // A coached run continues to a difficulty step (then a result screen) on the
+  // same, still-mounted run card. Any revalidate here invalidates the root
+  // layout's soft tag and refreshes the current "/" route, which would unmount
+  // the card mid-flow — so skip revalidation entirely for coached runs. The
+  // finish is already persisted; the coach result screen navigates with a full
+  // page load, and home/profile are force-dynamic so they refetch on next view.
+  if (getCoachedRunSession(runId) === null) {
+    revalidatePath("/");
+    revalidatePath("/profile");
+  }
   return { ok: true };
 }
 

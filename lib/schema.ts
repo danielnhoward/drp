@@ -28,6 +28,12 @@ CREATE TABLE IF NOT EXISTS users (
   why_run                TEXT,                          -- why they like running with others
   hobbies                TEXT,                          -- recent non-running hobbies
   interests              TEXT,                          -- other interests / talking points
+  -- Couch-to-5K coach state. NULL coach_status = a normal runner who never
+  -- enrolled; 'active' = working through the program (gated off /calendar);
+  -- 'graduated' = finished it. coach_session_index is the plan session they're
+  -- up to (see lib/coach.ts), NULL when not enrolled.
+  coach_status           TEXT,
+  coach_session_index    INTEGER,
   created_at             TEXT NOT NULL DEFAULT (datetime('now'))
 );
 
@@ -44,6 +50,11 @@ CREATE TABLE IF NOT EXISTS runs (
   -- runs created before the per-availability scheduler.
   availability_id INTEGER REFERENCES availability(id) ON DELETE CASCADE,
   photo       TEXT,                     -- URL of the run's group photo, set when the run is finished
+  -- Coaching extras. description holds the plan note shown on the run card;
+  -- coach_session_index marks a run as a coached training run (the plan session
+  -- it came from). Both NULL for ordinary partner runs.
+  description TEXT,
+  coach_session_index INTEGER,
   created_at  TEXT NOT NULL DEFAULT (datetime('now'))
 );
 
@@ -115,6 +126,10 @@ export type User = {
   hobbies: string | null;
   /** Optional free text: other interests / conversation starters, or null. */
   interests: string | null;
+  /** Couch-to-5K coach state: 'active' | 'graduated', or null if never enrolled. */
+  coachStatus: string | null;
+  /** Plan session the runner is up to (lib/coach.ts), or null when not enrolled. */
+  coachSessionIndex: number | null;
   created_at: string;
 };
 
@@ -134,6 +149,8 @@ const USER_COLUMN_MIGRATIONS: ReadonlyArray<[string, string]> = [
   ["why_run", "TEXT"],
   ["hobbies", "TEXT"],
   ["interests", "TEXT"],
+  ["coach_status", "TEXT"],
+  ["coach_session_index", "INTEGER"],
 ];
 
 const AVAILABILITY_COLUMN_MIGRATIONS: ReadonlyArray<[string, string]> = [
@@ -144,6 +161,8 @@ const RUN_COLUMN_MIGRATIONS: ReadonlyArray<[string, string]> = [
   ["date", "TEXT"],
   ["availability_id", "INTEGER REFERENCES availability(id) ON DELETE CASCADE"],
   ["photo", "TEXT"],
+  ["description", "TEXT"],
+  ["coach_session_index", "INTEGER"],
 ];
 
 const RUN_PARTICIPANT_COLUMN_MIGRATIONS: ReadonlyArray<[string, string]> = [
@@ -204,13 +223,17 @@ function relaxPaceNotNull(connection: DatabaseSync): void {
         why_run                TEXT,
         hobbies                TEXT,
         interests              TEXT,
+        coach_status           TEXT,
+        coach_session_index    INTEGER,
         created_at             TEXT NOT NULL DEFAULT (datetime('now'))
       );
       INSERT INTO users_rebuild
         (id, email, name, avatar, date_of_birth, gender, pronouns,
-         preferred_pace_seconds, why_run, hobbies, interests, created_at)
+         preferred_pace_seconds, why_run, hobbies, interests,
+         coach_status, coach_session_index, created_at)
       SELECT id, email, name, avatar, date_of_birth, gender, pronouns,
-             preferred_pace_seconds, why_run, hobbies, interests, created_at
+             preferred_pace_seconds, why_run, hobbies, interests,
+             coach_status, coach_session_index, created_at
         FROM users;
       DROP TABLE users;
       ALTER TABLE users_rebuild RENAME TO users;

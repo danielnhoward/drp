@@ -3,7 +3,7 @@
 import { revalidatePath } from "next/cache";
 
 import { createAvailability, deleteAvailability } from "@/lib/availability";
-import { isoToday } from "@/lib/format-date";
+import { isPastDateTime, isoToday } from "@/lib/format-date";
 
 export type AddAvailabilityState = { error?: string; ok?: boolean };
 
@@ -38,6 +38,10 @@ export async function addAvailabilityAction(
   // Times are "HH:MM" strings, which compare correctly lexicographically.
   if (endTime <= startTime) {
     return { error: "The end time must be after the start time." };
+  }
+  // Reject a window whose start has already passed (e.g. earlier today).
+  if (isPastDateTime(date, startTime)) {
+    return { error: "The start time can't be in the past." };
   }
   if (!Number.isFinite(distanceKm) || distanceKm <= 0) {
     return { error: "Enter a distance greater than 0 km." };

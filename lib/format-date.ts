@@ -37,9 +37,46 @@ export function isoToday(): string {
   return isoDateInDays(0);
 }
 
-/** An ISO date string (yyyy-mm-dd) `days` days from now. */
+/**
+ * Whether a local date (yyyy-mm-dd) at an "HH:MM" time is at or before the
+ * current moment — i.e. its start has already passed. Used to keep slots/runs
+ * from being scheduled in the past, including an earlier-than-now time today.
+ * The "T...:00" suffix forces local-time parsing (see {@link formatDate}); a
+ * malformed input parses to NaN and is reported as not-past so the caller's
+ * own format checks surface the real error.
+ */
+export function isPastDateTime(date: string, time: string): boolean {
+  return new Date(`${date}T${time}:00`).getTime() <= Date.now();
+}
+
+/**
+ * Whether a local date (yyyy-mm-dd) at an "HH:MM" time starts within the next
+ * `hours` from now and hasn't already passed. The home page lists runs starting
+ * within the next 24 hours, so the /plan booked-run card uses this to tell the
+ * user whether their run is visible there yet. Malformed input is treated as
+ * not-soon. The "T...:00" suffix forces local-time parsing (see {@link formatDate}).
+ */
+export function startsWithinHours(
+  date: string,
+  time: string,
+  hours: number,
+): boolean {
+  const start = new Date(`${date}T${time}:00`).getTime();
+  if (Number.isNaN(start)) return false;
+  const now = Date.now();
+  return start > now && start <= now + hours * 60 * 60 * 1000;
+}
+
+/** An ISO date string (yyyy-mm-dd) `days` days from now, in the local time zone. */
 export function isoDateInDays(days: number): string {
   const d = new Date();
   d.setDate(d.getDate() + days);
-  return d.toISOString().slice(0, 10);
+  // Build from local date parts, not toISOString() — that returns UTC, so just
+  // after local midnight in a positive-offset zone (e.g. 00:30 BST = 23:30 UTC
+  // the day before) it would yield yesterday, defaulting date pickers to a past
+  // day that then fails the "can't be in the past" check.
+  const year = d.getFullYear();
+  const month = String(d.getMonth() + 1).padStart(2, "0");
+  const day = String(d.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
 }
