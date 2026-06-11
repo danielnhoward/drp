@@ -1,4 +1,3 @@
-import Link from "next/link";
 import { redirect } from "next/navigation";
 
 import { getCurrentUser, isProfileComplete } from "@/lib/users";
@@ -44,11 +43,6 @@ export default async function WelcomePage() {
         </div>
       </div>
 
-      <p className="pb-8 text-center text-xs text-muted">
-        <Link href="/admin" className="underline hover:text-foreground">
-          Admin
-        </Link>
-      </p>
     </main>
   );
 }
