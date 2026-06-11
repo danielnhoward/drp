@@ -1,6 +1,7 @@
 "use client";
 
 import { useActionState, useEffect, useState } from "react";
+import { createPortal } from "react-dom";
 
 import { isoToday } from "@/lib/format-date";
 import MapLocationPicker from "../components/map-location-picker";
@@ -66,7 +67,10 @@ export default function AddAvailability() {
         </button>
       </div>
 
-      {isOpen && (
+      {/* Portalled to <body> so the backdrop-filter blurs the whole page rather
+          than only this component's subtree. */}
+      {isOpen &&
+        createPortal(
         <div
           role="dialog"
           aria-modal="true"
@@ -82,8 +86,9 @@ export default function AddAvailability() {
           />
           {/* Fresh mount each open, so the form's action state starts clean. */}
           <AvailabilityForm onClose={() => setOpen(false)} />
-        </div>
-      )}
+        </div>,
+          document.body,
+        )}
     </>
   );
 }

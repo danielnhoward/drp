@@ -2,6 +2,7 @@
 
 import Image from "next/image";
 import { useEffect, useState } from "react";
+import { createPortal } from "react-dom";
 
 import RatingBadge from "./rating-badge";
 import type { Runner } from "@/lib/runs";
@@ -86,12 +87,16 @@ export default function RunnerModal({ runner }: { runner: Runner }) {
         </svg>
       </button>
 
-      {open && (
+      {/* Rendered into <body> so the backdrop-filter blurs the whole page.
+          Inline, the dialog is a descendant of the run card, so the blur only
+          samples that card's subtree and leaves the rest of the page sharp. */}
+      {open &&
+        createPortal(
         <div
           role="dialog"
           aria-modal="true"
           aria-label={`${runner.name}'s profile`}
-           className="fixed inset-0 z-60 flex items-center justify-center p-4"
+          className="fixed inset-0 z-60 flex items-center justify-center p-4"
         >
           {/* Backdrop — click to dismiss. */}
           <button
@@ -188,8 +193,9 @@ export default function RunnerModal({ runner }: { runner: Runner }) {
               </div>
             )}
           </div>
-        </div>
-      )}
+        </div>,
+          document.body,
+        )}
     </>
   );
 }
