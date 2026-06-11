@@ -36,7 +36,7 @@ export default async function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  // Beginners in the coach program see a "Coach" tab in place of "Calendar".
+  // Beginners in the coach program see a "Plan" tab in place of "Calendar".
   // getCurrentUser is memoised per request, so this doesn't add a second query.
   const user = await getCurrentUser();
 

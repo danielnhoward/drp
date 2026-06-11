@@ -28,7 +28,7 @@ export default async function CoachPage() {
     <main className="mx-auto w-full max-w-2xl flex-1 px-4 py-6">
       <header className="mb-4">
         <h1 className="text-gradient text-2xl font-semibold tracking-tight">
-          Your coach
+          Your plan
         </h1>
         <p className="mt-1 text-sm text-muted">
           A gentle, step-by-step plan from your first jog to a full 5K, one run
@@ -157,7 +157,7 @@ function CoachRoadmap({ currentIndex }: { currentIndex: number }) {
   return (
     <section className="mt-6">
       <h2 className="mb-1 text-xs font-semibold uppercase tracking-wide text-muted">
-        Your plan
+        All runs
       </h2>
       <p className="mb-2 text-xs text-muted">
         Runs unlock one at a time — finish the run marked{" "}

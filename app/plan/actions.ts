@@ -10,7 +10,7 @@ import { requireUser } from "@/lib/users";
 export type CoachScheduleState = { error?: string };
 
 /**
- * Schedules the beginner's next coached run from the /coach quick-schedule form.
+ * Schedules the beginner's next coached run from the /plan quick-schedule form.
  * Distance and the plan note come from the program (their current session), so
  * the form only collects when (date + window) and where (lat/lon). Mirrors the
  * validation in app/calendar/actions.ts, minus the distance/pace fields.
@@ -66,10 +66,10 @@ export async function scheduleCoachedRunAction(
   );
 
   // Revalidate home (where the run shows once it's within 24h) but return to
-  // /coach, which now shows a "Next run booked" confirmation. Sending the user
+  // /plan, which now shows a "Next run booked" confirmation. Sending the user
   // straight to home was confusing: a run scheduled more than 24h out isn't on
   // the next-24-hours list yet, so home read as "nothing happened".
   revalidatePath("/");
-  revalidatePath("/coach");
-  redirect("/coach");
+  revalidatePath("/plan");
+  redirect("/plan");
 }

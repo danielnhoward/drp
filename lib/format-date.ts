@@ -52,7 +52,7 @@ export function isPastDateTime(date: string, time: string): boolean {
 /**
  * Whether a local date (yyyy-mm-dd) at an "HH:MM" time starts within the next
  * `hours` from now and hasn't already passed. The home page lists runs starting
- * within the next 24 hours, so the /coach booked-run card uses this to tell the
+ * within the next 24 hours, so the /plan booked-run card uses this to tell the
  * user whether their run is visible there yet. Malformed input is treated as
  * not-soon. The "T...:00" suffix forces local-time parsing (see {@link formatDate}).
  */

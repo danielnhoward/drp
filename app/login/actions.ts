@@ -174,8 +174,8 @@ export async function completeOnboardingAction(
   // and land on its quick-schedule page — unless they've already graduated it.
   if (ranBefore === "no" && existing?.coachStatus !== "graduated") {
     enrollUserInCoaching(userId);
-    revalidatePath("/coach");
-    redirect("/coach");
+    revalidatePath("/plan");
+    redirect("/plan");
   }
 
   revalidatePath("/");

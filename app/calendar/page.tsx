@@ -29,7 +29,7 @@ export default async function CalendarPage() {
   const user = await requireCompleteUser();
   // Beginners still working through the coach program can't set their own
   // schedule yet — send them back to the guided coach page.
-  if (user.coachStatus === "active") redirect("/coach");
+  if (user.coachStatus === "active") redirect("/plan");
   const slots = await listMyAvailability();
 
   return (

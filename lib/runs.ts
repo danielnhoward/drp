@@ -291,7 +291,7 @@ export function getCoachedRunSession(runId: number): number | null {
   return row?.coach_session_index ?? null;
 }
 
-/** Minimal shape of a beginner's outstanding coached run, for the /coach page. */
+/** Minimal shape of a beginner's outstanding coached run, for the /plan page. */
 export type PendingCoachedRun = {
   id: number;
   date: string;
@@ -303,7 +303,7 @@ export type PendingCoachedRun = {
 
 /**
  * The current user's coached run that they haven't finished yet, if any. Used by
- * the /coach page to show "your next run is booked" instead of letting them
+ * the /plan page to show "your next run is booked" instead of letting them
  * schedule a second one mid-session.
  */
 export function getPendingCoachedRun(userId: number): PendingCoachedRun | null {

@@ -1,5 +1,5 @@
 // The Couch-to-5K coaching program for absolute beginners. Shared between the
-// server (scheduling + finish actions) and client (the /coach quick-schedule
+// server (scheduling + finish actions) and client (the /plan quick-schedule
 // page and the coached-run finish UI), so this file must stay free of
 // "server-only" imports — like gender.ts / matching.ts, it's pure data + pure
 // functions with no database or cookie access.

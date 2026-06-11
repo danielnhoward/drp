@@ -169,7 +169,7 @@ export default function FinishRun({
               <>
                 <h2 className="text-lg font-semibold">How did that feel?</h2>
                 <p className="mt-2 text-sm text-muted">
-                  Your honest answer helps your coach pick your next run.
+                  Your honest answer helps us pick your next run.
                 </p>
                 <div className="mt-4 flex flex-col gap-2">
                   {DIFFICULTY_OPTIONS.map((option) => (
@@ -240,7 +240,7 @@ export default function FinishRun({
                 <div className="mt-4 flex justify-end">
                   <button
                     type="button"
-                    onClick={() => window.location.assign("/coach")}
+                    onClick={() => window.location.assign("/plan")}
                     className="btn-accent text-sm"
                   >
                     Plan my next run
@@ -251,8 +251,8 @@ export default function FinishRun({
               <>
                 <h2 className="text-lg font-semibold">Nice work! 👏</h2>
                 <p className="mt-2 text-sm text-muted">
-                  That one&apos;s in the bag. Here&apos;s what your coach suggests
-                  next:
+                  That one&apos;s in the bag. Here&apos;s what&apos;s next in your
+                  plan:
                 </p>
                 <div className="mt-3 rounded-lg border border-border bg-surface-2 p-3">
                   <p className="text-sm font-medium text-foreground">
@@ -267,11 +267,11 @@ export default function FinishRun({
                   </p>
                 </div>
                 <div className="mt-4 flex justify-end">
-                  {/* Full-page nav so /coach re-renders with the next session and
+                  {/* Full-page nav so /plan re-renders with the next session and
                       home drops this finished run, with no revalidation needed. */}
                   <button
                     type="button"
-                    onClick={() => window.location.assign("/coach")}
+                    onClick={() => window.location.assign("/plan")}
                     className="btn-accent text-sm"
                   >
                     Plan my next run

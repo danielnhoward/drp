@@ -85,7 +85,7 @@ export async function recordCoachFeedbackAction(
   // No revalidation here: the result/congrats screen lives on the still-mounted
   // run card, and revalidating any path invalidates the root layout's soft tag
   // and refreshes the current "/" route, unmounting the screen before the runner
-  // reads it. The result buttons navigate with a full page load, so home, /coach,
+  // reads it. The result buttons navigate with a full page load, so home, /plan,
   // /calendar and the nav all pick up the new state fresh.
   return { graduated, nextSessionIndex: nextIndex };
 }
