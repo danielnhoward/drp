@@ -2,8 +2,8 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 
 import { COACH_PLAN, COACH_PLAN_LENGTH } from "@/lib/coach";
-import { formatDate } from "@/lib/format-date";
-import { getPendingCoachedRun } from "@/lib/runs";
+import { formatDate, startsWithinHours } from "@/lib/format-date";
+import { getPendingCoachedRun, type PendingCoachedRun } from "@/lib/runs";
 import { requireCompleteUser } from "@/lib/users";
 import CoachSchedule from "./coach-schedule";
 
@@ -39,26 +39,7 @@ export default async function CoachPage() {
       {isStart && <CoachWelcome />}
 
       {pending ? (
-        <section className="card flex flex-col gap-2 p-4">
-          <p className="text-xs font-semibold uppercase tracking-wide text-accent">
-            Next run booked
-          </p>
-          <h2 className="text-lg font-semibold tracking-tight text-foreground">
-            {COACH_PLAN[pending.coachSessionIndex]?.title}
-          </h2>
-          <p className="text-sm text-muted">
-            {formatDate(pending.date)} ·{" "}
-            <span className="font-mono tnum">{pending.time}</span> · about{" "}
-            <span className="font-mono tnum">{pending.distanceKm}</span> km
-          </p>
-          <p className="text-sm text-muted">Meet at {pending.meetAt}</p>
-          <Link
-            href="/"
-            className="tap mt-2 inline-flex h-11 items-center justify-center rounded-full bg-accent px-5 text-sm font-medium text-accent-contrast transition-colors hover:brightness-110"
-          >
-            View on home
-          </Link>
-        </section>
+        <CoachBookedRun pending={pending} />
       ) : (
         <CoachSchedule sessionIndex={sessionIndex} />
       )}
@@ -111,14 +92,77 @@ function CoachWelcome() {
   );
 }
 
+// Confirmation shown after a run is booked (and whenever one is outstanding).
+// Doubles as the post-schedule landing state, so it has to make clear the
+// booking worked even when the run is too far out to appear on home yet — home
+// only lists runs starting within the next 24 hours, which otherwise reads as
+// "nothing happened".
+function CoachBookedRun({ pending }: { pending: PendingCoachedRun }) {
+  const onHomeNow = startsWithinHours(pending.date, pending.time, 24);
+
+  return (
+    <section className="card flex flex-col gap-2 p-4">
+      <p className="text-xs font-semibold uppercase tracking-wide text-accent">
+        Run booked ✓
+      </p>
+      <h2 className="text-lg font-semibold tracking-tight text-foreground">
+        {COACH_PLAN[pending.coachSessionIndex]?.title}
+      </h2>
+      <p className="text-sm text-muted">
+        {formatDate(pending.date)} ·{" "}
+        <span className="font-mono tnum">{pending.time}</span> · about{" "}
+        <span className="font-mono tnum">{pending.distanceKm}</span> km
+      </p>
+      <p className="text-sm text-muted">Meet at {pending.meetAt}</p>
+      {onHomeNow ? (
+        <Link
+          href="/"
+          className="tap mt-2 inline-flex h-11 items-center justify-center rounded-full bg-accent px-5 text-sm font-medium text-accent-contrast transition-colors hover:brightness-110"
+        >
+          View on home
+        </Link>
+      ) : (
+        <p className="mt-2 rounded-lg bg-surface-2 px-3 py-2 text-xs text-muted">
+          You&apos;re all set — it&apos;ll show up on your home page within 24
+          hours of the start, where you can finish it.
+        </p>
+      )}
+    </section>
+  );
+}
+
+// Small lock glyph for not-yet-unlocked sessions in the roadmap. Inline SVG to
+// match the app's no-icon-dependency convention.
+function LockIcon() {
+  return (
+    <svg
+      aria-hidden="true"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      className="h-3.5 w-3.5"
+    >
+      <rect x="5" y="11" width="14" height="9" rx="2" />
+      <path d="M8 11V8a4 4 0 0 1 8 0v3" />
+    </svg>
+  );
+}
+
 // The whole arc at a glance: what's done, what's now, and what's coming. Gives
 // beginners a sense of journey rather than just "Run 3 of 7".
 function CoachRoadmap({ currentIndex }: { currentIndex: number }) {
   return (
     <section className="mt-6">
-      <h2 className="mb-2 text-xs font-semibold uppercase tracking-wide text-muted">
+      <h2 className="mb-1 text-xs font-semibold uppercase tracking-wide text-muted">
         Your plan
       </h2>
+      <p className="mb-2 text-xs text-muted">
+        Runs unlock one at a time — finish the run marked{" "}
+        <span className="font-semibold text-accent">Now</span> to open the next.
+      </p>
       <ol className="card flex flex-col divide-y divide-border p-0">
         {COACH_PLAN.map((session, index) => {
           const state =
@@ -144,7 +188,7 @@ function CoachRoadmap({ currentIndex }: { currentIndex: number }) {
                       : "border border-border text-muted"
                 }`}
               >
-                {state === "done" ? "✓" : index + 1}
+                {state === "done" ? "✓" : state === "upcoming" ? <LockIcon /> : index + 1}
               </span>
               <div className="min-w-0 flex-1">
                 <p
@@ -164,6 +208,11 @@ function CoachRoadmap({ currentIndex }: { currentIndex: number }) {
               {state === "current" && (
                 <span className="shrink-0 rounded-full border border-accent/40 bg-accent/10 px-2 py-0.5 text-xs font-semibold text-accent">
                   Now
+                </span>
+              )}
+              {state === "upcoming" && (
+                <span className="shrink-0 rounded-full border border-border px-2 py-0.5 text-xs font-medium text-muted">
+                  Locked
                 </span>
               )}
             </li>

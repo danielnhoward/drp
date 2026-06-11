@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
 
-import { isPastDateTime } from "@/lib/format-date";
+import { isoDateInDays, isoToday, isPastDateTime } from "@/lib/format-date";
 
 // Anchor "now" at 11:00 local on a reference day so past/future comparisons are
 // deterministic regardless of when the suite runs.
@@ -16,6 +16,31 @@ beforeEach(() => {
 
 afterEach(() => {
   vi.useRealTimers();
+});
+
+describe("isoToday / isoDateInDays", () => {
+  // Anchor just after local midnight. In a positive-offset zone this instant is
+  // still "yesterday" in UTC, so a toISOString()-based implementation would
+  // return the previous day — defaulting the date picker to a past date that
+  // then fails the "can't be in the past" check.
+  function expectedLocalDate(offsetDays: number): string {
+    const d = new Date();
+    d.setDate(d.getDate() + offsetDays);
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(
+      d.getDate(),
+    ).padStart(2, "0")}`;
+  }
+
+  test("isoToday returns the local calendar date just after midnight", () => {
+    vi.setSystemTime(new Date("2026-06-11T00:30:00"));
+    expect(isoToday()).toBe(expectedLocalDate(0));
+  });
+
+  test("isoDateInDays offsets from the local date", () => {
+    vi.setSystemTime(new Date("2026-06-11T00:30:00"));
+    expect(isoDateInDays(1)).toBe(expectedLocalDate(1));
+    expect(isoDateInDays(-1)).toBe(expectedLocalDate(-1));
+  });
 });
 
 describe("isPastDateTime", () => {

@@ -93,7 +93,12 @@ export default function CoachSchedule({
         {/* Not a <Field>: its <label> would capture map clicks (see add-availability.tsx). */}
         <div className="flex flex-col gap-1.5">
           <span className="text-sm font-medium text-muted">Location</span>
-          <MapLocationPicker initialLat={54.5} initialLon={-3} initialZoom={5} />
+          {/* Default to a central, on-the-ground city location so the starting
+              pin reverse-geocodes to a sensible meeting spot. The old wide-UK
+              default (54.5, -3, zoom 5) dropped the pin in the Lake District
+              fells, geocoding to places like "Striding Edge" — a mountain
+              scramble, not a beginner's run. */}
+          <MapLocationPicker initialLat={51.5074} initialLon={-0.1278} initialZoom={12} />
         </div>
 
         {state.error ? (

@@ -65,6 +65,11 @@ export async function scheduleCoachedRunAction(
     user.coachSessionIndex ?? 0,
   );
 
+  // Revalidate home (where the run shows once it's within 24h) but return to
+  // /coach, which now shows a "Next run booked" confirmation. Sending the user
+  // straight to home was confusing: a run scheduled more than 24h out isn't on
+  // the next-24-hours list yet, so home read as "nothing happened".
   revalidatePath("/");
-  redirect("/");
+  revalidatePath("/coach");
+  redirect("/coach");
 }
