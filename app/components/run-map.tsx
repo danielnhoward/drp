@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { createPortal } from "react-dom";
 
 // Builds an OpenStreetMap embed URL centred on the point, with a marker. This
 // needs no API key, so the dummy data renders a real map out of the box. The
@@ -72,7 +73,11 @@ export default function RunMap({
         </a>
       </div>
 
-      {open && (
+      {/* Portalled to <body> so the backdrop-filter blurs the whole page rather
+          than only this card's subtree (a backdrop-filter samples its nearest
+          stacking-context ancestor). */}
+      {open &&
+        createPortal(
         <div
           role="dialog"
           aria-modal="true"
@@ -127,8 +132,9 @@ export default function RunMap({
               </a>
             </div>
           </div>
-        </div>
-      )}
+        </div>,
+          document.body,
+        )}
     </>
   );
 }

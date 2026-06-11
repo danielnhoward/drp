@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
+import { createPortal } from "react-dom";
 
 import {
   COACH_PLAN,
@@ -117,7 +118,10 @@ export default function FinishRun({
         Finish run
       </button>
 
-      {open && (
+      {/* Portalled to <body> so the backdrop-filter blurs the whole page, not
+          just this run card's subtree. */}
+      {open &&
+        createPortal(
         <div className="fixed inset-0 z-60 flex items-center justify-center">
           <div
             className="fixed inset-0 z-55 scrim backdrop-blur-sm"
@@ -280,8 +284,9 @@ export default function FinishRun({
               </>
             )}
           </div>
-        </div>
-      )}
+        </div>,
+          document.body,
+        )}
     </div>
   );
 }
