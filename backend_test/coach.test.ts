@@ -9,8 +9,11 @@ import {
   COACH_PLAN_LENGTH,
   estimateFiveKPaceSeconds,
   planOutcome,
+  skipPlanSession,
 } from "@/lib/coach";
 import {
+  cancelPendingCoachedRunForUser,
+  cancelPendingCoachedRunsForUser,
   getCoachedRunSession,
   getPendingCoachedRun,
   getRunsWithin24Hours,
@@ -20,6 +23,7 @@ import {
   createUser,
   enrollUserInCoaching,
   graduateUser,
+  leaveUserCoaching,
   setCoachSessionIndex,
 } from "@/lib/users";
 
@@ -42,6 +46,14 @@ function participants(runId: number): number[] {
       .prepare("SELECT user_id FROM run_participants WHERE run_id = ? ORDER BY position")
       .all(runId) as { user_id: number }[]
   ).map((p) => p.user_id);
+}
+
+function participantCount(): number {
+  return (
+    getDb().prepare("SELECT COUNT(*) AS c FROM run_participants").get() as {
+      c: number;
+    }
+  ).c;
 }
 
 function userRow(id: number) {
@@ -98,6 +110,111 @@ describe("planOutcome", () => {
   test("clamps an out-of-range stored index", () => {
     expect(planOutcome(999, "right").nextIndex).toBe(LAST);
     expect(planOutcome(-5, "tough").nextIndex).toBe(0);
+  });
+});
+
+describe("planner skip + exit", () => {
+  test("skipPlanSession advances one session, and exits on the final session", () => {
+    expect(skipPlanSession(0)).toEqual({ graduated: false, nextIndex: 1 });
+    expect(skipPlanSession(LAST - 1)).toEqual({
+      graduated: false,
+      nextIndex: LAST,
+    });
+    expect(skipPlanSession(LAST)).toEqual({
+      graduated: true,
+      nextIndex: LAST,
+    });
+  });
+
+  test("skipping a booked planner run advances one session and removes the booking", async () => {
+    const host = createUser(makeFakeUser());
+    enrollUserInCoaching(host.id);
+    await scheduleCoachedRun(
+      host.id,
+      { date: TODAY, startTime: "10:00", endTime: "12:00", lat: 51.5, lon: -0.1 },
+      0,
+    );
+    const runId = (getDb().prepare("SELECT id FROM runs").get() as { id: number }).id;
+
+    const skippedSession = cancelPendingCoachedRunForUser(runId, host.id);
+    expect(skippedSession).toBe(0);
+    const outcome = skipPlanSession(skippedSession ?? 0);
+    expect(outcome).toEqual({ graduated: false, nextIndex: 1 });
+    setCoachSessionIndex(host.id, outcome.nextIndex);
+
+    const row = userRow(host.id);
+    expect(row.coach_status).toBe("active");
+    expect(row.coach_session_index).toBe(1);
+    expect(runCount()).toBe(0);
+    expect(participantCount()).toBe(0);
+    expect(getPendingCoachedRun(host.id)).toBeNull();
+    expect(getRunsWithin24Hours(host.id)).toEqual([]);
+  });
+
+  test("skipping the final planner run exits the guided flow", async () => {
+    const host = createUser(makeFakeUser());
+    enrollUserInCoaching(host.id);
+    setCoachSessionIndex(host.id, LAST);
+    await scheduleCoachedRun(
+      host.id,
+      { date: TODAY, startTime: "10:00", endTime: "12:00", lat: 51.5, lon: -0.1 },
+      LAST,
+    );
+    const runId = (getDb().prepare("SELECT id FROM runs").get() as { id: number }).id;
+
+    const skippedSession = cancelPendingCoachedRunForUser(runId, host.id);
+    expect(skippedSession).toBe(LAST);
+    const outcome = skipPlanSession(skippedSession ?? 0);
+    expect(outcome.graduated).toBe(true);
+    leaveUserCoaching(host.id);
+
+    const row = userRow(host.id);
+    expect(row.coach_status).toBeNull();
+    expect(row.coach_session_index).toBeNull();
+    expect(runCount()).toBe(0);
+    expect(getPendingCoachedRun(host.id)).toBeNull();
+  });
+
+  test("planner cancellation only deletes runs owned by that runner", async () => {
+    const host = createUser(makeFakeUser());
+    const partner = createUser(makeFakeUser());
+    enrollUserInCoaching(host.id);
+    enrollUserInCoaching(partner.id);
+    await scheduleCoachedRun(
+      host.id,
+      { date: TODAY, startTime: "10:00", endTime: "12:00", lat: 51.5, lon: -0.1 },
+      0,
+    );
+    const runId = (getDb().prepare("SELECT id FROM runs").get() as { id: number }).id;
+
+    expect(cancelPendingCoachedRunForUser(runId, partner.id)).toBeNull();
+    expect(runCount()).toBe(1);
+    expect(getPendingCoachedRun(partner.id)).toBeNull();
+    expect(getPendingCoachedRun(host.id)?.id).toBe(runId);
+  });
+
+  test("leaving planner cancels owned pending runs and unlocks normal scheduling", async () => {
+    const host = createUser(makeFakeUser());
+    enrollUserInCoaching(host.id);
+    await scheduleCoachedRun(
+      host.id,
+      { date: TODAY, startTime: "10:00", endTime: "12:00", lat: 51.5, lon: -0.1 },
+      0,
+    );
+    await scheduleCoachedRun(
+      host.id,
+      { date: "2026-06-12", startTime: "10:00", endTime: "12:00", lat: 51.5, lon: -0.1 },
+      1,
+    );
+
+    expect(cancelPendingCoachedRunsForUser(host.id)).toBe(2);
+    leaveUserCoaching(host.id);
+
+    const row = userRow(host.id);
+    expect(row.coach_status).toBeNull();
+    expect(row.coach_session_index).toBeNull();
+    expect(runCount()).toBe(0);
+    expect(participantCount()).toBe(0);
   });
 });
 

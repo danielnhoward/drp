@@ -124,6 +124,20 @@ export function planOutcome(
 }
 
 /**
+ * Explicit "skip this booked run" behavior. Skipping moves to the next session;
+ * skipping the final session exits the guided plan because there is no next run.
+ */
+export function skipPlanSession(
+  currentIndex: number,
+): { graduated: boolean; nextIndex: number } {
+  const current = Math.max(0, Math.min(currentIndex, LAST_SESSION));
+  if (current >= LAST_SESSION) {
+    return { graduated: true, nextIndex: LAST_SESSION };
+  }
+  return { graduated: false, nextIndex: current + 1 };
+}
+
+/**
  * The comfortable pace (seconds/km) we estimate for someone finishing the plan,
  * handed to normal partner matching. Taken from the final session's target pace.
  */

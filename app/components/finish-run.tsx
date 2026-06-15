@@ -247,7 +247,7 @@ export default function FinishRun({
                     onClick={() => window.location.assign("/plan")}
                     className="btn-accent text-sm"
                   >
-                    Plan my next run
+                    Open planner
                   </button>
                 </div>
               </>
@@ -256,7 +256,7 @@ export default function FinishRun({
                 <h2 className="text-lg font-semibold">Nice work! 👏</h2>
                 <p className="mt-2 text-sm text-muted">
                   That one&apos;s in the bag. Here&apos;s what&apos;s next in your
-                  plan:
+                  planner:
                 </p>
                 <div className="mt-3 rounded-lg border border-border bg-surface-2 p-3">
                   <p className="text-sm font-medium text-foreground">
@@ -278,7 +278,7 @@ export default function FinishRun({
                     onClick={() => window.location.assign("/plan")}
                     className="btn-accent text-sm"
                   >
-                    Plan my next run
+                    Open planner
                   </button>
                 </div>
               </>

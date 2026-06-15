@@ -3,11 +3,27 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 
+import { skipPlanSession } from "@/lib/coach";
 import { isPastDateTime, isoToday } from "@/lib/format-date";
-import { getMostRecentCoachedRunDate, scheduleCoachedRun } from "@/lib/runs";
-import { requireUser } from "@/lib/users";
+import {
+  cancelPendingCoachedRunForUser,
+  cancelPendingCoachedRunsForUser,
+  getMostRecentCoachedRunDate,
+  scheduleCoachedRun,
+} from "@/lib/runs";
+import {
+  leaveUserCoaching,
+  requireUser,
+  setCoachSessionIndex,
+} from "@/lib/users";
 
 export type CoachScheduleState = { error?: string };
+
+function revalidatePlannerPaths(): void {
+  revalidatePath("/");
+  revalidatePath("/plan");
+  revalidatePath("/schedule");
+}
 
 /**
  * Schedules the beginner's next coached run from the /plan quick-schedule form.
@@ -72,4 +88,42 @@ export async function scheduleCoachedRunAction(
   revalidatePath("/");
   revalidatePath("/plan");
   redirect("/plan");
+}
+
+export async function skipPlannerRunAction(formData: FormData): Promise<void> {
+  const user = await requireUser();
+  if (user.coachStatus !== "active") redirect("/");
+
+  const runIdRaw = formData.get("runId");
+  let sessionIndex = user.coachSessionIndex ?? 0;
+
+  if (runIdRaw !== null) {
+    const runId = Number(runIdRaw);
+    if (!Number.isInteger(runId) || runId <= 0) redirect("/plan");
+
+    const cancelledSessionIndex = cancelPendingCoachedRunForUser(runId, user.id);
+    if (cancelledSessionIndex === null) redirect("/plan");
+    sessionIndex = cancelledSessionIndex;
+  }
+
+  const outcome = skipPlanSession(sessionIndex);
+  if (outcome.graduated) {
+    leaveUserCoaching(user.id);
+  } else {
+    setCoachSessionIndex(user.id, outcome.nextIndex);
+  }
+
+  revalidatePlannerPaths();
+  redirect(outcome.graduated ? "/schedule" : "/plan");
+}
+
+export async function leavePlannerAction(): Promise<void> {
+  const user = await requireUser();
+  if (user.coachStatus !== "active") redirect("/schedule");
+
+  cancelPendingCoachedRunsForUser(user.id);
+  leaveUserCoaching(user.id);
+
+  revalidatePlannerPaths();
+  redirect("/schedule");
 }

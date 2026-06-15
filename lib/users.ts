@@ -182,6 +182,18 @@ export function graduateUser(userId: number): void {
     .run(estimateFiveKPaceSeconds(), userId);
 }
 
+/** Removes a runner from the guided plan without changing their pace. */
+export function leaveUserCoaching(userId: number): void {
+  getDb()
+    .prepare(
+      `UPDATE users
+          SET coach_status = NULL,
+              coach_session_index = NULL
+        WHERE id = ?`,
+    )
+    .run(userId);
+}
+
 /** Reads the session cookie. Returns the user id, or null if not set. */
 async function getSessionUserId(): Promise<number | null> {
   const value = (await cookies()).get(SESSION_COOKIE)?.value;

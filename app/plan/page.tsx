@@ -6,6 +6,7 @@ import { formatDate, startsWithinHours } from "@/lib/format-date";
 import { getPendingCoachedRun, type PendingCoachedRun } from "@/lib/runs";
 import { requireCompleteUser } from "@/lib/users";
 import CoachSchedule from "./coach-schedule";
+import PlannerControls from "./planner-controls";
 
 // Reads from the database on every request rather than at build time.
 export const dynamic = "force-dynamic";
@@ -28,7 +29,7 @@ export default async function CoachPage() {
     <main className="mx-auto w-full max-w-2xl flex-1 px-4 py-6">
       <header className="mb-4">
         <h1 className="text-gradient text-2xl font-semibold tracking-tight">
-          Your plan
+          Your planner
         </h1>
         <p className="mt-1 text-sm text-muted">
           A gentle, step-by-step way into the app — getting a feel for pace and
@@ -41,7 +42,10 @@ export default async function CoachPage() {
       {pending ? (
         <CoachBookedRun pending={pending} />
       ) : (
-        <CoachSchedule sessionIndex={sessionIndex} />
+        <>
+          <CoachSchedule sessionIndex={sessionIndex} />
+          <PlannerControls className="mt-4" />
+        </>
       )}
 
       <CoachRoadmap currentIndex={currentIndex} />
@@ -74,7 +78,7 @@ function CoachWelcome() {
           <span>
             After each run we ask how it felt —{" "}
             <span className="font-medium text-foreground">
-              the plan adapts
+              the planner adapts
             </span>{" "}
             to you, easing off if it was tough.
           </span>
@@ -129,6 +133,7 @@ function CoachBookedRun({ pending }: { pending: PendingCoachedRun }) {
           hours of the start, where you can finish it.
         </p>
       )}
+      <PlannerControls runId={pending.id} className="mt-2" />
     </section>
   );
 }
@@ -162,7 +167,7 @@ function CoachRoadmap({ currentIndex }: { currentIndex: number }) {
         All runs
       </h2>
       <p className="mb-2 text-xs text-muted">
-        Runs unlock one at a time — finish the run marked{" "}
+        Runs unlock one at a time. Finish or skip the run marked{" "}
         <span className="font-semibold text-accent">Now</span> to open the next.
       </p>
       <ol className="card flex flex-col divide-y divide-border p-0">

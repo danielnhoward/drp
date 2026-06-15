@@ -302,9 +302,9 @@ export type PendingCoachedRun = {
 };
 
 /**
- * The current user's coached run that they haven't finished yet, if any. Used by
- * the /plan page to show "your next run is booked" instead of letting them
- * schedule a second one mid-session.
+ * The current user's own coached run that they haven't finished yet, if any.
+ * Used by the /plan page to show "your next run is booked" instead of letting
+ * them schedule a second one mid-session.
  */
 export function getPendingCoachedRun(userId: number): PendingCoachedRun | null {
   const row = getDb()
@@ -313,6 +313,7 @@ export function getPendingCoachedRun(userId: number): PendingCoachedRun | null {
        FROM runs
        JOIN run_participants ON run_participants.run_id = runs.id
        WHERE run_participants.user_id = ?
+         AND run_participants.position = 0
          AND (run_participants.visible IS NULL OR run_participants.visible = 1)
          AND runs.coach_session_index IS NOT NULL
        ORDER BY runs.date ASC, runs.time ASC, runs.id ASC
@@ -340,6 +341,65 @@ export function getPendingCoachedRun(userId: number): PendingCoachedRun | null {
 }
 
 /**
+ * Cancels a booked coached run owned by the user and returns its session index.
+ * Deleting the run cascades participant rows/ratings and keeps skipped bookings
+ * out of finished-run history.
+ */
+export function cancelPendingCoachedRunForUser(
+  runId: number,
+  userId: number,
+): number | null {
+  const db = getDb();
+  const row = db
+    .prepare(
+      `SELECT runs.coach_session_index
+         FROM runs
+         JOIN run_participants ON run_participants.run_id = runs.id
+        WHERE runs.id = ?
+          AND run_participants.user_id = ?
+          AND run_participants.position = 0
+          AND (run_participants.visible IS NULL OR run_participants.visible = 1)
+          AND runs.coach_session_index IS NOT NULL
+        LIMIT 1`,
+    )
+    .get(runId, userId) as { coach_session_index: number } | undefined;
+  if (!row) return null;
+
+  db.prepare(`DELETE FROM runs WHERE id = ?`).run(runId);
+  return row.coach_session_index;
+}
+
+/** Cancels every visible coached booking owned by the user. */
+export function cancelPendingCoachedRunsForUser(userId: number): number {
+  const db = getDb();
+  const rows = db
+    .prepare(
+      `SELECT runs.id
+         FROM runs
+         JOIN run_participants ON run_participants.run_id = runs.id
+        WHERE run_participants.user_id = ?
+          AND run_participants.position = 0
+          AND (run_participants.visible IS NULL OR run_participants.visible = 1)
+          AND runs.coach_session_index IS NOT NULL`,
+    )
+    .all(userId) as { id: number }[];
+
+  if (rows.length === 0) return 0;
+
+  db.exec("BEGIN");
+  try {
+    const deleteRun = db.prepare(`DELETE FROM runs WHERE id = ?`);
+    for (const row of rows) deleteRun.run(row.id);
+    db.exec("COMMIT");
+  } catch (error) {
+    db.exec("ROLLBACK");
+    throw error;
+  }
+
+  return rows.length;
+}
+
+/**
  * The date (yyyy-mm-dd) of the user's most recent coached run, of any
  * visibility, or null if they have none yet. The coach scheduler uses it to
  * steer beginners away from booking two coached runs on the same day, nudging a
@@ -352,6 +412,7 @@ export function getMostRecentCoachedRunDate(userId: number): string | null {
          FROM runs
          JOIN run_participants ON run_participants.run_id = runs.id
         WHERE run_participants.user_id = ?
+          AND run_participants.position = 0
           AND runs.coach_session_index IS NOT NULL
           AND runs.date IS NOT NULL
         ORDER BY runs.date DESC
