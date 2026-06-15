@@ -7,10 +7,10 @@ const nextConfig: NextConfig = {
   experimental: {
     serverActions: {
       // Image uploads (avatars in lib/avatars.ts, run group photos in
-      // lib/run-photos.ts) are capped at 5 MB; the default 1 MB Server Action
+      // lib/run-photos.ts) are capped at 50 MB; the default 1 MB Server Action
       // body limit would reject them at the edge with an opaque error before
       // our validation runs.
-      bodySizeLimit: "5mb",
+      bodySizeLimit: "50mb",
     },
   },
   images: {

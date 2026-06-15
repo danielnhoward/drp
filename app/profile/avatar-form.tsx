@@ -20,7 +20,7 @@ const INITIAL_STATE: AvatarFormState = {};
 // and an oversize selection fails fast in the browser rather than round-trip
 // to the server.
 const ACCEPTED_TYPES = "image/jpeg,image/png,image/webp";
-const MAX_BYTES = 5 * 1024 * 1024;
+const MAX_BYTES = 50 * 1024 * 1024;
 
 export default function AvatarForm({ name, initialAvatar }: Props) {
   const [state, action, pending] = useActionState(
@@ -62,7 +62,7 @@ export default function AvatarForm({ name, initialAvatar }: Props) {
     }
     if (file.size > MAX_BYTES) {
       setPreview(null);
-      setClientError("Image is too large — keep it under 5 MB.");
+      setClientError("Image is too large — keep it under 50 MB.");
       event.target.value = "";
       return;
     }
@@ -149,7 +149,7 @@ export default function AvatarForm({ name, initialAvatar }: Props) {
         <p className="text-xs text-muted">
           {pending
             ? "Uploading…"
-            : `Tap to ${displayed ? "change" : "add a photo"} · JPEG, PNG, or WebP · up to 5 MB`}
+            : `Tap to ${displayed ? "change" : "add a photo"} · JPEG, PNG, or WebP · up to 50 MB`}
         </p>
       )}
     </section>

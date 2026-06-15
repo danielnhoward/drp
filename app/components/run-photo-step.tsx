@@ -8,7 +8,7 @@ import { uploadRunPhotoAction, type RunPhotoState } from "./run-actions";
 // Mirror lib/run-photos.ts so the picker filters the right types up front and
 // an oversize selection fails fast in the browser instead of round-tripping.
 const ACCEPTED_TYPES = "image/jpeg,image/png,image/webp";
-const MAX_BYTES = 5 * 1024 * 1024;
+const MAX_BYTES = 50 * 1024 * 1024;
 
 const PHOTO_INITIAL: RunPhotoState = {};
 
@@ -127,7 +127,7 @@ export default function RunPhotoStep({
       return;
     }
     if (file.size > MAX_BYTES) {
-      setClientError("Photo is too large — keep it under 5 MB.");
+      setClientError("Photo is too large — keep it under 50 MB.");
       event.target.value = "";
       return;
     }
