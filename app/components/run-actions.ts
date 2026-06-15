@@ -191,6 +191,14 @@ export async function addRunMessageAction(
   const existing = getRunParticipantMessage(id, user.id);
 
   const message = String(formData.get("message") ?? "").trim();
+  if (!message && existing !== null) {
+    const cleared = clearRunParticipantMessage(id, user.id);
+    if (!cleared) return { error: "Unable to clear your message." };
+
+    publishRunMessageUpdated(id, user.id, null);
+    revalidatePath("/");
+    return { ok: true, message: null };
+  }
   if (!message) {
     return { error: "Enter a message." };
   }
