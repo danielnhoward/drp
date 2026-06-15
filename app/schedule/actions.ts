@@ -74,7 +74,7 @@ export async function addAvailabilityAction(
     lon,
   });
 
-  revalidatePath("/calendar");
+  revalidatePath("/schedule");
   return { ok: true };
 }
 
@@ -84,6 +84,6 @@ export async function deleteAvailabilityAction(
   const id = Number(formData.get("id"));
   if (Number.isFinite(id)) {
     await deleteAvailability(id);
-    revalidatePath("/calendar");
+    revalidatePath("/schedule");
   }
 }

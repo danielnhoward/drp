@@ -31,7 +31,7 @@ app/                     App Router routes, layouts, and colocated UI
     page.tsx, onboarding-wizard.tsx, actions.ts, state.ts
   profile/               Profile, avatar upload/removal, running-vibe fields
     page.tsx, profile-form.tsx, avatar-form.tsx, actions.ts, profile-content.tsx
-  calendar/              "My Schedule" availability list and add/delete modal
+  schedule/              "My Schedule" availability list and add/delete modal
     page.tsx, add-availability.tsx, actions.ts
     [id]/edit/page.tsx   Placeholder edit page (updateAvailability exists in lib)
   admin/                 Public recovery/admin user list + impersonation/logout

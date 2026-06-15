@@ -13,7 +13,7 @@ export type CoachScheduleState = { error?: string };
  * Schedules the beginner's next coached run from the /plan quick-schedule form.
  * Distance and the plan note come from the program (their current session), so
  * the form only collects when (date + window) and where (lat/lon). Mirrors the
- * validation in app/calendar/actions.ts, minus the distance/pace fields.
+ * validation in app/schedule/actions.ts, minus the distance/pace fields.
  */
 export async function scheduleCoachedRunAction(
   _prev: CoachScheduleState,

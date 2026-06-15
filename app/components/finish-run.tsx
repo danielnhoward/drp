@@ -210,11 +210,11 @@ export default function FinishRun({
                   and we&apos;ll match you with partners.
                 </p>
                 <div className="mt-4 flex justify-end">
-                  {/* Full-page nav so the bottom tab flips Coach → Calendar and
+                  {/* Full-page nav so the bottom tab flips Coach → Schedule and
                       every route picks up the graduated state. */}
                   <button
                     type="button"
-                    onClick={() => window.location.assign("/calendar")}
+                    onClick={() => window.location.assign("/schedule")}
                     className="btn-accent text-sm"
                   >
                     Explore the schedule

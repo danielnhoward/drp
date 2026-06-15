@@ -25,7 +25,7 @@ const KEY_ITEMS: {
 // Reads from the database on every request rather than at build time.
 export const dynamic = "force-dynamic";
 
-export default async function CalendarPage() {
+export default async function SchedulePage() {
   const user = await requireCompleteUser();
   // Beginners still working through the coach program can't set their own
   // schedule yet — send them back to the guided coach page.
