@@ -30,6 +30,9 @@ export default function RunMessageForm({
   // clears, leaving a stale message on screen after the Clear button is used.
   const [savedMessage, setSavedMessage] = useState<string | null>(initialMessage);
   const [editing, setEditing] = useState<boolean>(initialMessage === null);
+  const [draftMessage, setDraftMessage] = useState(initialMessage ?? "");
+  const [hideAddError, setHideAddError] = useState(false);
+  const canSave = draftMessage.trim().length > 0;
 
   // Close editor when save completes. Depend on the whole `state` object rather
   // than `state.ok`: useActionState returns a fresh object on every submission,
@@ -41,7 +44,9 @@ export default function RunMessageForm({
       // schedule state updates to avoid synchronous setState within the effect
       setTimeout(() => {
         setSavedMessage(state.message ?? null);
+        setDraftMessage(state.message ?? "");
         setEditing(false);
+        setHideAddError(true);
       });
     }
   }, [state]);
@@ -53,7 +58,9 @@ export default function RunMessageForm({
     if (clearState.ok) {
       setTimeout(() => {
         setSavedMessage(null);
+        setDraftMessage("");
         setEditing(false);
+        setHideAddError(true);
       });
     }
   }, [clearState]);
@@ -74,7 +81,10 @@ export default function RunMessageForm({
             <div className="flex gap-2">
               <button
                 type="button"
-                onClick={() => setEditing(true)}
+                onClick={() => {
+                  setDraftMessage(savedMessage);
+                  setEditing(true);
+                }}
                 className="rounded-full border border-border px-3 py-1.5 text-sm font-medium text-foreground transition-colors hover:bg-surface-2 cursor-pointer"
               >
                 Edit
@@ -100,6 +110,7 @@ export default function RunMessageForm({
     <div>
       <form
         action={action}
+        onSubmit={() => setHideAddError(false)}
         className="rounded-2xl border border-dashed border-border bg-surface-2/50 p-3"
       >
         <input type="hidden" name="runId" value={runId} />
@@ -111,14 +122,18 @@ export default function RunMessageForm({
             name="message"
             maxLength={500}
             rows={3}
-            defaultValue={savedMessage ?? undefined}
+            value={draftMessage}
+            onChange={(event) => {
+              setDraftMessage(event.target.value);
+              setHideAddError(true);
+            }}
             placeholder="e.g. I’ll be the one in the blue jacket and I’m happy to chat about trail running."
             className={textareaClass}
             disabled={pending}
           />
         </label>
 
-        {state.error && (
+        {!hideAddError && state.error && (
           <p className="mt-2 text-sm text-danger">{state.error}</p>
         )}
 
@@ -127,6 +142,7 @@ export default function RunMessageForm({
             <button
               type="button"
               onClick={() => {
+                setDraftMessage(savedMessage);
                 setEditing(false);
               }}
               className="rounded-full border border-border px-3 py-1.5 text-sm font-medium text-foreground transition-colors hover:bg-surface-2 cursor-pointer"
@@ -136,26 +152,14 @@ export default function RunMessageForm({
           )}
           <button
             type="submit"
-            disabled={pending}
-            className="rounded-full bg-accent px-3 py-1.5 text-sm font-medium text-accent-contrast transition hover:brightness-110 disabled:opacity-60 cursor-pointer"
+            disabled={pending || !canSave}
+            className="rounded-full bg-accent px-3 py-1.5 text-sm font-medium text-accent-contrast transition hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-60 cursor-pointer"
           >
             {pending ? "Saving…" : "Save message"}
           </button>
         </div>
       </form>
 
-      {savedMessage && (
-        <form action={clearAction} className="mt-2 flex justify-end">
-          <input type="hidden" name="runId" value={runId} />
-          <button
-            type="submit"
-            disabled={clearPending}
-            className="rounded-full border border-border px-3 py-1.5 text-sm font-medium text-foreground transition-colors hover:bg-surface-2 cursor-pointer"
-          >
-            {clearPending ? "Clearing…" : "Clear message"}
-          </button>
-        </form>
-      )}
     </div>
   );
 }
