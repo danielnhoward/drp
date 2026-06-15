@@ -1,4 +1,3 @@
-import Link from "next/link";
 import { redirect } from "next/navigation";
 
 import { isGender } from "@/lib/gender";
@@ -65,15 +64,6 @@ export default async function LoginPage({
         skipEmailStep={skipEmailStep}
         initialValues={initialValues}
       />
-
-      <p className="pb-8 text-center text-xs text-muted">
-        <Link
-          href="/admin"
-          className="underline hover:text-foreground"
-        >
-          Admin
-        </Link>
-      </p>
     </main>
   );
 }
