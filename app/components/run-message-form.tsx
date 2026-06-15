@@ -28,20 +28,24 @@ export default function RunMessageForm({
   const savedMessage = state.ok ? state.message ?? initialMessage : initialMessage;
   const [editing, setEditing] = useState<boolean>(savedMessage === null);
 
-  // Close editor when save completes
+  // Close editor when save completes. Depend on the whole `state` object rather
+  // than `state.ok`: useActionState returns a fresh object on every submission,
+  // so this re-runs after each save. Depending on `state.ok` would only fire on
+  // the first save (false -> true) and silently no-op on subsequent saves, since
+  // the boolean stays `true` and the dependency never changes.
   useEffect(() => {
     if (state.ok) {
       // schedule state update to avoid synchronous setState within effect
       setTimeout(() => setEditing(false));
     }
-  }, [state.ok]);
+  }, [state]);
 
   // Close editor when clear completes
   useEffect(() => {
     if (clearState.ok) {
       setTimeout(() => setEditing(false));
     }
-  }, [clearState.ok]);
+  }, [clearState]);
 
   if (!editing && savedMessage !== null) {
     return (
