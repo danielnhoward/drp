@@ -25,8 +25,11 @@ export default function RunMessageForm({
     INITIAL_STATE,
   );
 
-  const savedMessage = state.ok ? state.message ?? initialMessage : initialMessage;
-  const [editing, setEditing] = useState<boolean>(savedMessage === null);
+  // The currently saved message. Held as local state so that both the save and
+  // clear actions can update it: deriving it from `state` alone would ignore
+  // clears, leaving a stale message on screen after the Clear button is used.
+  const [savedMessage, setSavedMessage] = useState<string | null>(initialMessage);
+  const [editing, setEditing] = useState<boolean>(initialMessage === null);
 
   // Close editor when save completes. Depend on the whole `state` object rather
   // than `state.ok`: useActionState returns a fresh object on every submission,
@@ -35,15 +38,23 @@ export default function RunMessageForm({
   // the boolean stays `true` and the dependency never changes.
   useEffect(() => {
     if (state.ok) {
-      // schedule state update to avoid synchronous setState within effect
-      setTimeout(() => setEditing(false));
+      // schedule state updates to avoid synchronous setState within the effect
+      setTimeout(() => {
+        setSavedMessage(state.message ?? null);
+        setEditing(false);
+      });
     }
   }, [state]);
 
-  // Close editor when clear completes
+  // Close editor when clear completes. Same fresh-object reasoning as the save
+  // effect above, and clear savedMessage so the empty state shows at once rather
+  // than waiting on (or being overridden by) a stale prior save.
   useEffect(() => {
     if (clearState.ok) {
-      setTimeout(() => setEditing(false));
+      setTimeout(() => {
+        setSavedMessage(null);
+        setEditing(false);
+      });
     }
   }, [clearState]);
 
