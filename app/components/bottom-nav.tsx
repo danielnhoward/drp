@@ -29,14 +29,14 @@ export default function BottomNav({
     return null;
   }
 
-  // Beginners in the coach program get a "Plan" tab instead of "Calendar" —
+  // Beginners in the coach program get a "Plan" tab instead of "Schedule" —
   // they can't set their own schedule until they graduate.
   const items: NavItem[] = [
     { href: "/profile", label: "Profile", Icon: ProfileIcon },
     { href: "/", label: "Home", Icon: HomeIcon },
     coachActive
       ? { href: "/plan", label: "Plan", Icon: CoachIcon }
-      : { href: "/calendar", label: "Calendar", Icon: CalendarIcon },
+      : { href: "/schedule", label: "Schedule", Icon: CalendarIcon },
   ];
 
   return (

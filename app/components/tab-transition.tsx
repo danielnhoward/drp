@@ -6,12 +6,13 @@ import { useEffect, useLayoutEffect, useRef } from "react";
 // Order of the bottom-nav tabs, left to right. The slide direction is derived
 // from the change in index: moving to a tab further right slides the incoming
 // page in from the right, and vice-versa.
-const TABS = ["/profile", "/", "/calendar"] as const;
+const TABS = ["/profile", "/", "/schedule"] as const;
 const ANIM_CLASSES = ["anim-fade", "anim-slide-in-left", "anim-slide-in-right"];
 
 function tabIndex(pathname: string): number {
   if (pathname === "/") return TABS.indexOf("/");
-  // Prefix match so nested routes (e.g. /calendar/3/edit) count as their tab.
+  // Prefix match so Schedule nested routes (e.g. /schedule/3/edit) count as
+  // that tab.
   return TABS.findIndex((tab) => tab !== "/" && pathname.startsWith(tab));
 }
 

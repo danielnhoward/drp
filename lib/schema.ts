@@ -29,7 +29,7 @@ CREATE TABLE IF NOT EXISTS users (
   hobbies                TEXT,                          -- recent non-running hobbies
   interests              TEXT,                          -- other interests / talking points
   -- Couch-to-5K coach state. NULL coach_status = a normal runner who never
-  -- enrolled; 'active' = working through the program (gated off /calendar);
+  -- enrolled; 'active' = working through the program (gated off Schedule);
   -- 'graduated' = finished it. coach_session_index is the plan session they're
   -- up to (see lib/coach.ts), NULL when not enrolled.
   coach_status           TEXT,

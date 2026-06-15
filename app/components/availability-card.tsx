@@ -1,7 +1,7 @@
 import type { SVGProps } from "react";
 
 import type { Availability } from "@/lib/availability";
-import { deleteAvailabilityAction } from "@/app/calendar/actions";
+import { deleteAvailabilityAction } from "@/app/schedule/actions";
 import { formatDate } from "@/lib/format-date";
 import RunMap from "./run-map";
 
