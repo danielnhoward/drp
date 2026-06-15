@@ -908,14 +908,14 @@ export default function OnboardingWizard({
 
       case "ranBefore": {
         const options: { value: "yes" | "no"; label: string }[] = [
-          { value: "yes", label: "Yes, I've run before" },
-          { value: "no", label: "No, I'm just starting out" },
+          { value: "yes", label: "Yes, I know what to choose" },
+          { value: "no", label: "Not yet, start with basics" },
         ];
         return (
           <StepHeader
             compact={keyboardCompact}
-            title="Have you run before?"
-            subtitle="No experience needed — this just helps us ask the right questions next."
+            title="Know what kind of run to choose?"
+            subtitle="If pace, distance, or running terms feel unclear, we will guide you through the next steps. That's okay even if you have run before."
           >
             <div className="flex flex-col gap-2">
               {options.map((option) => {
