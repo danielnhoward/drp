@@ -64,8 +64,7 @@ export default function CoachSchedule({
           />
         </Field>
         <p className="-mt-2 text-xs text-muted">
-          Try to leave a rest day since your last run — recovery is part of the
-          plan.
+          Try to leave a rest day since your last run. Recovery matters too.
         </p>
 
         <div className="grid grid-cols-2 gap-3">

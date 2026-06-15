@@ -35,7 +35,7 @@ export default function BottomNav({
     { href: "/profile", label: "Profile", Icon: ProfileIcon },
     { href: "/", label: "Home", Icon: HomeIcon },
     coachActive
-      ? { href: "/plan", label: "Plan", Icon: CoachIcon }
+      ? { href: "/plan", label: "Planner", Icon: CoachIcon }
       : { href: "/schedule", label: "Schedule", Icon: CalendarIcon },
   ];
 

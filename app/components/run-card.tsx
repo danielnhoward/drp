@@ -36,7 +36,7 @@ export default function RunCard({
           {isCoached && run.description && (
             <div className="rounded-lg border border-accent/30 bg-accent/10 p-3">
               <dt className="text-xs font-semibold uppercase tracking-wide text-accent">
-                Your plan
+                Your planner
               </dt>
               <dd className="mt-1 text-sm text-foreground">{run.description}</dd>
             </div>
