@@ -3,7 +3,7 @@
 import { useActionState } from "react";
 
 import { COACH_PLAN, COACH_PLAN_LENGTH } from "@/lib/coach";
-import { isoToday } from "@/lib/format-date";
+import FutureRunWindowFields from "../components/future-run-window-fields";
 import MapLocationPicker from "../components/map-location-picker";
 import { scheduleCoachedRunAction, type CoachScheduleState } from "./actions";
 
@@ -22,7 +22,6 @@ export default function CoachSchedule({
 
   const index = Math.max(0, Math.min(sessionIndex, COACH_PLAN_LENGTH - 1));
   const session = COACH_PLAN[index];
-  const today = isoToday();
 
   return (
     <div className="flex flex-col gap-4">
@@ -53,40 +52,14 @@ export default function CoachSchedule({
           When and where?
         </h3>
 
-        <Field label="Date">
-          <input
-            className={fieldClass}
-            type="date"
-            name="date"
-            defaultValue={today}
-            min={today}
-            required
-          />
-        </Field>
-        <p className="-mt-2 text-xs text-muted">
-          Try to leave a rest day since your last run. Recovery matters too.
-        </p>
-
-        <div className="grid grid-cols-2 gap-3">
-          <Field label="From">
-            <input
-              className={fieldClass}
-              type="time"
-              name="startTime"
-              defaultValue="10:00"
-              required
-            />
-          </Field>
-          <Field label="To">
-            <input
-              className={fieldClass}
-              type="time"
-              name="endTime"
-              defaultValue="13:00"
-              required
-            />
-          </Field>
-        </div>
+        <FutureRunWindowFields
+          fieldClassName={fieldClass}
+          dateHelp={
+            <p className="-mt-2 text-xs text-muted">
+              Try to leave a rest day since your last run. Recovery matters too.
+            </p>
+          }
+        />
 
         {/* Not a <Field>: its <label> would capture map clicks (see add-availability.tsx). */}
         <div className="flex flex-col gap-1.5">
@@ -112,20 +85,5 @@ export default function CoachSchedule({
         </button>
       </form>
     </div>
-  );
-}
-
-function Field({
-  label,
-  children,
-}: {
-  label: string;
-  children: React.ReactNode;
-}) {
-  return (
-    <label className="flex flex-col gap-1.5">
-      <span className="text-sm font-medium text-muted">{label}</span>
-      {children}
-    </label>
   );
 }
