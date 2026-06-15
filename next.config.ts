@@ -12,6 +12,12 @@ const nextConfig: NextConfig = {
       // our validation runs.
       bodySizeLimit: "50mb",
     },
+    // proxy.ts (Next 16's renamed middleware) buffers each request body in
+    // memory so it can be read both there and in the route/action. That buffer
+    // has its own default 10 MB cap, which silently truncates larger uploads
+    // (the opaque "Unexpected end of form" error). Keep it in sync with
+    // bodySizeLimit above so 50 MB uploads survive the proxy gate.
+    proxyClientMaxBodySize: "50mb",
   },
   images: {
     // Allow the dummy profile photos served from randomuser.me. Replace with
