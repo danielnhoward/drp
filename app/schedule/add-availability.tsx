@@ -75,7 +75,7 @@ export default function AddAvailability() {
           role="dialog"
           aria-modal="true"
           aria-label="Add availability"
-          className="fixed inset-0 z-[60] flex items-center justify-center p-4"
+          className="fixed inset-0 z-[60] flex items-end justify-center p-4 sm:items-center"
         >
           {/* Backdrop — click to dismiss. */}
           <button
@@ -116,8 +116,11 @@ function AvailabilityForm({ onClose }: { onClose: () => void }) {
   }, [state.ok, onClose]);
 
   return (
-    <div className="card anim-pop relative z-10 flex max-h-[90vh] w-full max-w-lg flex-col overflow-hidden">
-      <div className="flex items-center justify-between gap-2 border-b border-border p-4">
+    <div
+      className="card anim-pop relative z-10 flex max-h-[calc(100vh_-_2rem)] w-full max-w-lg flex-col overflow-hidden"
+      style={{ maxHeight: "calc(100dvh - 2rem)" }}
+    >
+      <div className="flex shrink-0 items-center justify-between gap-2 border-b border-border p-4">
         <h2 className="text-lg font-semibold tracking-tight text-foreground">Add availability</h2>
         <button
           type="button"
@@ -141,101 +144,106 @@ function AvailabilityForm({ onClose }: { onClose: () => void }) {
 
       <form
         action={formAction}
-        className="flex flex-col gap-4 overflow-y-auto p-4"
+        className="flex min-h-0 flex-1 flex-col"
       >
-        <Field label="Date">
-          <input
-            className={fieldClass}
-            type="date"
-            name="date"
-            defaultValue={today}
-            min={today}
-            required
-          />
-        </Field>
-
-        <div className="grid grid-cols-2 gap-3">
-          <Field label="From">
+        <div className="flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto p-4">
+          <Field label="Date">
             <input
               className={fieldClass}
-              type="time"
-              name="startTime"
-              defaultValue="10:00"
+              type="date"
+              name="date"
+              defaultValue={today}
+              min={today}
               required
             />
           </Field>
-          <Field label="To">
+
+          <div className="grid grid-cols-2 gap-3">
+            <Field label="From">
+              <input
+                className={fieldClass}
+                type="time"
+                name="startTime"
+                defaultValue="10:00"
+                required
+              />
+            </Field>
+            <Field label="To">
+              <input
+                className={fieldClass}
+                type="time"
+                name="endTime"
+                defaultValue="13:00"
+                required
+              />
+            </Field>
+          </div>
+
+          <Field label="Distance (km)">
             <input
               className={fieldClass}
-              type="time"
-              name="endTime"
-              defaultValue="13:00"
+              type="number"
+              name="distanceKm"
+              min={0.5}
+              step={0.5}
+              defaultValue={5}
               required
             />
           </Field>
-        </div>
 
-        <Field label="Distance (km)">
-          <input
-            className={fieldClass}
-            type="number"
-            name="distanceKm"
-            min={0.5}
-            step={0.5}
-            defaultValue={5}
-            required
-          />
-        </Field>
-
-        <div className="flex flex-col gap-1.5">
-          <span className="flex items-baseline justify-between text-sm font-medium text-muted">
-            <span>Pace range (per km)</span>
-            <span className="font-mono tnum tabular-nums text-foreground">
-              {formatMMSS(paceMinSeconds)} – {formatMMSS(paceMaxSeconds)} /km
+          <div className="flex flex-col gap-1.5">
+            <span className="flex items-baseline justify-between text-sm font-medium text-muted">
+              <span>Pace range (per km)</span>
+              <span className="font-mono tnum tabular-nums text-foreground">
+                {formatMMSS(paceMinSeconds)} – {formatMMSS(paceMaxSeconds)} /km
+              </span>
             </span>
-          </span>
-          <RangeSlider
-            min={PACE_MIN_SECONDS}
-            max={PACE_MAX_SECONDS}
-            step={PACE_STEP_SECONDS}
-            values={paceRange}
-            onChange={setPaceRange}
-            nameMin="paceMinSeconds"
-            nameMax="paceMaxSeconds"
-            ariaLabelMin="Fastest pace"
-            ariaLabelMax="Slowest pace"
-          />
-          <span className="flex justify-between text-xs text-muted">
-            <span className="font-mono tnum">{formatMMSS(PACE_MIN_SECONDS)} /km</span>
-            <span className="font-mono tnum">{formatMMSS(PACE_MAX_SECONDS)} /km</span>
-          </span>
+            <RangeSlider
+              min={PACE_MIN_SECONDS}
+              max={PACE_MAX_SECONDS}
+              step={PACE_STEP_SECONDS}
+              values={paceRange}
+              onChange={setPaceRange}
+              nameMin="paceMinSeconds"
+              nameMax="paceMaxSeconds"
+              ariaLabelMin="Fastest pace"
+              ariaLabelMax="Slowest pace"
+            />
+            <span className="flex justify-between text-xs text-muted">
+              <span className="font-mono tnum">{formatMMSS(PACE_MIN_SECONDS)} /km</span>
+              <span className="font-mono tnum">{formatMMSS(PACE_MAX_SECONDS)} /km</span>
+            </span>
+          </div>
+
+          {/* Not a <Field> because Field renders a <label>, which would
+              associate every click inside it (including on the map itself)
+              with the picker's first labelable descendant — the geolocate
+              button — and re-fire it on every pan. */}
+          <div className="flex flex-col gap-1.5">
+            <span className="text-sm font-medium text-muted">
+              Location
+            </span>
+            {/* Centred on the whole of the UK (zoomed out to fit the country)
+                rather than London, so users anywhere in the UK start with their
+                region in view. */}
+            <MapLocationPicker initialLat={54.5} initialLon={-3} initialZoom={5} />
+          </div>
+
         </div>
 
-        {/* Not a <Field> because Field renders a <label>, which would
-            associate every click inside it (including on the map itself)
-            with the picker's first labelable descendant — the geolocate
-            button — and re-fire it on every pan. */}
-        <div className="flex flex-col gap-1.5">
-          <span className="text-sm font-medium text-muted">
-            Location
-          </span>
-          {/* Centred on the whole of the UK (zoomed out to fit the country)
-              rather than London, so users anywhere in the UK start with their
-              region in view. */}
-          <MapLocationPicker initialLat={54.5} initialLon={-3} initialZoom={5} />
+        <div className="shrink-0 border-t border-border bg-surface p-4 pb-[calc(1rem_+_env(safe-area-inset-bottom))]">
+          {state.error ? (
+            <p className="mb-3 text-sm text-danger">{state.error}</p>
+          ) : null}
+
+          <button
+            type="submit"
+            disabled={pending}
+            className="tap flex min-h-12 w-full items-center justify-center rounded-full bg-accent px-4 text-sm font-semibold text-accent-contrast transition-colors hover:brightness-110 disabled:opacity-50"
+          >
+            {pending ? "Saving…" : "Save availability"}
+          </button>
         </div>
-
-        {state.error ? (
-          <p className="text-sm text-danger">{state.error}</p>
-        ) : null}
-
-        <button
-          type="submit"
-          disabled={pending}
-          className="tap mt-1 flex h-11 items-center justify-center rounded-full bg-accent text-sm font-medium text-accent-contrast transition-colors hover:brightness-110 disabled:opacity-50"
-        >
-          {pending ? "Saving…" : "Save availability"}
-        </button>
       </form>
     </div>
   );
