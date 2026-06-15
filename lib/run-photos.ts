@@ -13,11 +13,11 @@ const dataDir = process.env.DATABASE_PATH
 
 const RUN_PHOTO_DIR = join(dataDir, "run-photos");
 
-// 5 MB matches the serverActions.bodySizeLimit in next.config.ts (shared with
+// 50 MB matches the serverActions.bodySizeLimit in next.config.ts (shared with
 // avatar uploads). Keep these in sync — the server action body limit kicks in
 // first, so dropping this without lowering the config makes the error message
 // worse, not better.
-export const MAX_RUN_PHOTO_BYTES = 5 * 1024 * 1024;
+export const MAX_RUN_PHOTO_BYTES = 50 * 1024 * 1024;
 
 // Map of MIME types we accept to the on-disk extension we save them with.
 // Restricting to these three covers every modern browser's <input type="file">
@@ -53,7 +53,7 @@ export async function saveRunPhotoFile(
     return { error: "That file is empty." };
   }
   if (file.size > MAX_RUN_PHOTO_BYTES) {
-    return { error: "Photo is too large — keep it under 5 MB." };
+    return { error: "Photo is too large — keep it under 50 MB." };
   }
 
   await mkdir(RUN_PHOTO_DIR, { recursive: true });

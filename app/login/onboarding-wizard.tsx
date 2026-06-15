@@ -49,7 +49,7 @@ type Props = {
 // Mirror lib/avatars.ts so the file picker filters the right types up front and
 // an oversize selection fails fast in the browser.
 const ACCEPTED_TYPES = "image/jpeg,image/png,image/webp";
-const MAX_BYTES = 5 * 1024 * 1024;
+const MAX_BYTES = 50 * 1024 * 1024;
 const NAME_DISPLAY_DELAY_MS = 450;
 
 const fieldClass =
@@ -578,7 +578,7 @@ export default function OnboardingWizard({
     }
     if (file.size > MAX_BYTES) {
       setAvatarPreview(null);
-      setStepError("Image is too large — keep it under 5 MB.");
+      setStepError("Image is too large — keep it under 50 MB.");
       event.target.value = "";
       return;
     }
@@ -990,7 +990,7 @@ export default function OnboardingWizard({
                 </button>
               )}
               <p className="text-xs text-muted">
-                Tap to {avatarPreview ? "change" : "add a photo"} · JPEG, PNG, or WebP · up to 5 MB
+                Tap to {avatarPreview ? "change" : "add a photo"} · JPEG, PNG, or WebP · up to 50 MB
               </p>
             </div>
           </StepHeader>
