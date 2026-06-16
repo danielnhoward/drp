@@ -28,6 +28,9 @@ export default function RunPhotoStep({
 
   // "idle": choose how to add a photo. "webcam": live camera feed.
   const [mode, setMode] = useState<"idle" | "webcam">("idle");
+  // Which camera the live feed is using: "environment" (rear) for a group shot
+  // or "user" (front) for a selfie. Drives the flip control and selfie mirroring.
+  const [facing, setFacing] = useState<"environment" | "user">("environment");
   const [preview, setPreview] = useState<string | null>(null);
   const [hasFile, setHasFile] = useState(false);
   const [clientError, setClientError] = useState<string | null>(null);
@@ -62,26 +65,42 @@ export default function RunPhotoStep({
     if (videoRef.current) videoRef.current.srcObject = null;
   }
 
-  async function startWebcam() {
+  async function startWebcam(facingMode: "environment" | "user" = "environment") {
     setClientError(null);
     if (!navigator.mediaDevices?.getUserMedia) {
-      setClientError("This browser can't access a camera — choose a file instead.");
+      // getUserMedia is only exposed in a secure context (HTTPS or localhost).
+      // Loaded over a plain-HTTP LAN address — e.g. testing on a phone via the
+      // dev server's IP — the API is missing entirely, no matter what camera
+      // permission the browser has granted, so say what's actually wrong.
+      setClientError(
+        window.isSecureContext
+          ? "This browser can't access the camera — choose a file instead."
+          : "The camera needs a secure (HTTPS) connection. Open this page over HTTPS, or choose a file instead.",
+      );
       return;
     }
     try {
-      // `environment` prefers a rear camera on phones; on a laptop it's just a
-      // hint and falls back to the built-in webcam.
+      // `facingMode` is a hint, not an exact constraint: "environment" prefers a
+      // rear camera and "user" the front (selfie) one, but a laptop with a single
+      // webcam falls back to it either way.
       const stream = await navigator.mediaDevices.getUserMedia({
-        video: { facingMode: "environment" },
+        video: { facingMode },
       });
       streamRef.current = stream;
       if (videoRef.current) videoRef.current.srcObject = stream;
+      setFacing(facingMode);
       setMode("webcam");
     } catch {
       setClientError(
         "Couldn't access the camera. Allow camera access or choose a file instead.",
       );
     }
+  }
+
+  // Switch between the front (selfie) and rear cameras while the feed is live.
+  function flipCamera() {
+    stopWebcam();
+    startWebcam(facing === "user" ? "environment" : "user");
   }
 
   // Stores a chosen/captured image: wires it into the hidden file input so the
@@ -104,6 +123,12 @@ export default function RunPhotoStep({
     canvas.height = video.videoHeight;
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
+    // The selfie feed is mirrored on screen to feel like a mirror; flip the
+    // canvas to match so the saved photo is what the user actually saw.
+    if (facing === "user") {
+      ctx.translate(canvas.width, 0);
+      ctx.scale(-1, 1);
+    }
     ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
     canvas.toBlob(
       (blob) => {
@@ -179,11 +204,13 @@ export default function RunPhotoStep({
           autoPlay
           playsInline
           muted
-          className={
+          className={[
             mode === "webcam" && !preview
               ? "max-h-64 w-full rounded-lg border border-border bg-surface-2 object-cover"
-              : "hidden"
-          }
+              : "hidden",
+            // Mirror the selfie feed so moving left looks like moving left.
+            facing === "user" ? "-scale-x-100" : "",
+          ].join(" ")}
         />
 
         {preview && (
@@ -218,6 +245,32 @@ export default function RunPhotoStep({
             </button>
             <button
               type="button"
+              onClick={flipCamera}
+              aria-label={
+                facing === "user"
+                  ? "Switch to rear camera"
+                  : "Switch to selfie camera"
+              }
+              className="tap inline-flex h-9 items-center justify-center rounded-md border border-border px-3 text-sm font-medium text-foreground hover:bg-surface-2"
+            >
+              <svg
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth={1.8}
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                className="h-4 w-4"
+                aria-hidden="true"
+              >
+                <path d="M16.5 9.5h4v-4" />
+                <path d="M19.9 8.2A8.25 8.25 0 0 0 5.5 6.8" />
+                <path d="M7.5 14.5h-4v4" />
+                <path d="M4.1 15.8a8.25 8.25 0 0 0 14.4 1.4" />
+              </svg>
+            </button>
+            <button
+              type="button"
               onClick={cancelWebcam}
               className="tap inline-flex h-9 items-center justify-center rounded-md border border-border px-3 text-sm font-medium text-foreground hover:bg-surface-2"
             >
@@ -228,10 +281,10 @@ export default function RunPhotoStep({
           <div className="flex gap-2">
             <button
               type="button"
-              onClick={startWebcam}
+              onClick={() => startWebcam("environment")}
               className="tap inline-flex h-9 flex-1 items-center justify-center rounded-md border border-border px-3 text-sm font-medium text-foreground hover:bg-surface-2"
             >
-              Use webcam
+              Take photo
             </button>
             <button
               type="button"
