@@ -1,10 +1,11 @@
 "use client";
 
 import Image from "next/image";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { createPortal } from "react-dom";
 
 import RatingBadge from "./rating-badge";
+import { useModalDismiss } from "./use-modal-dismiss";
 import type { Runner } from "@/lib/runs";
 import { ageFromDateOfBirth } from "@/lib/format-date";
 import { GENDER_LABELS, isGender } from "@/lib/gender";
@@ -17,19 +18,7 @@ export default function RunnerModal({ runner }: { runner: Runner }) {
   const [open, setOpen] = useState(false);
 
   // Close on Escape and lock background scroll while the modal is open.
-  useEffect(() => {
-    if (!open) return;
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") setOpen(false);
-    };
-    document.addEventListener("keydown", onKey);
-    const prevOverflow = document.body.style.overflow;
-    document.body.style.overflow = "hidden";
-    return () => {
-      document.removeEventListener("keydown", onKey);
-      document.body.style.overflow = prevOverflow;
-    };
-  }, [open]);
+  useModalDismiss(open, () => setOpen(false));
 
   const age = ageFromDateOfBirth(runner.dateOfBirth);
   const gender = isGender(runner.gender)
