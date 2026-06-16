@@ -2,7 +2,7 @@
 
 import { useEffect, useState, type ReactNode } from "react";
 
-import { isoToday } from "@/lib/format-date";
+import { isoDateInDays, isoToday } from "@/lib/format-date";
 
 const DEFAULT_START_TIME = "10:00";
 const DEFAULT_DURATION_MINUTES = 3 * 60;
@@ -13,14 +13,18 @@ const LATEST_END_TIME = "23:59";
 type FutureRunWindowFieldsProps = {
   dateHelp?: ReactNode;
   fieldClassName: string;
+  initialDateOffsetDays?: number;
 };
 
 export default function FutureRunWindowFields({
   dateHelp,
   fieldClassName,
+  initialDateOffsetDays = 0,
 }: FutureRunWindowFieldsProps) {
   const [now, setNow] = useState<Date | null>(null);
-  const [selectedDate, setSelectedDate] = useState(() => isoToday());
+  const [selectedDate, setSelectedDate] = useState(() =>
+    isoDateInDays(initialDateOffsetDays),
+  );
   const [selectedStartTime, setSelectedStartTime] = useState(DEFAULT_START_TIME);
   const [selectedEndTime, setSelectedEndTime] = useState(
     addMinutesToTime(DEFAULT_START_TIME, DEFAULT_DURATION_MINUTES),

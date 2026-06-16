@@ -15,8 +15,10 @@ import {
   cancelPendingCoachedRunForUser,
   cancelPendingCoachedRunsForUser,
   getCoachedRunSession,
+  getMostRecentCoachedRunStart,
   getPendingCoachedRun,
   getRunsWithin24Hours,
+  isAfterCoachedRunStart,
   scheduleCoachedRun,
 } from "@/lib/runs";
 import {
@@ -288,6 +290,42 @@ describe("scheduleCoachedRun", () => {
 });
 
 describe("coach run queries", () => {
+  test("coached run ordering allows same-day later runs without a cooldown", () => {
+    const previous = { date: TODAY, time: "11:30" };
+
+    expect(isAfterCoachedRunStart({ date: TODAY, time: "12:00" }, previous)).toBe(
+      true,
+    );
+    expect(isAfterCoachedRunStart({ date: TODAY, time: "11:30" }, previous)).toBe(
+      false,
+    );
+    expect(isAfterCoachedRunStart({ date: TODAY, time: "10:00" }, previous)).toBe(
+      false,
+    );
+    expect(
+      isAfterCoachedRunStart({ date: "2026-06-11", time: "06:00" }, previous),
+    ).toBe(true);
+  });
+
+  test("getMostRecentCoachedRunStart returns the latest coached run time", async () => {
+    const host = createUser(makeFakeUser());
+    await scheduleCoachedRun(
+      host.id,
+      { date: TODAY, startTime: "10:00", endTime: "12:00", lat: 51.5, lon: -0.1 },
+      0,
+    );
+    await scheduleCoachedRun(
+      host.id,
+      { date: TODAY, startTime: "14:00", endTime: "16:00", lat: 51.5, lon: -0.1 },
+      1,
+    );
+
+    expect(getMostRecentCoachedRunStart(host.id)).toEqual({
+      date: TODAY,
+      time: "15:00",
+    });
+  });
+
   test("getCoachedRunSession returns the session for a coached run and null otherwise", async () => {
     const host = createUser(makeFakeUser());
     await scheduleCoachedRun(

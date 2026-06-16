@@ -52,14 +52,7 @@ export default function CoachSchedule({
           When and where?
         </h3>
 
-        <FutureRunWindowFields
-          fieldClassName={fieldClass}
-          dateHelp={
-            <p className="-mt-2 text-xs text-muted">
-              Try to leave a rest day since your last run. Recovery matters too.
-            </p>
-          }
-        />
+        <FutureRunWindowFields fieldClassName={fieldClass} />
 
         {/* Not a <Field>: its <label> would capture map clicks (see add-availability.tsx). */}
         <div className="flex flex-col gap-1.5">
