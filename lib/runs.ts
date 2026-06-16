@@ -399,27 +399,37 @@ export function cancelPendingCoachedRunsForUser(userId: number): number {
   return rows.length;
 }
 
+export type CoachedRunStart = {
+  date: string;
+  time: string;
+};
+
+export function isAfterCoachedRunStart(
+  next: CoachedRunStart,
+  previous: CoachedRunStart,
+): boolean {
+  return `${next.date}T${next.time}` > `${previous.date}T${previous.time}`;
+}
+
 /**
- * The date (yyyy-mm-dd) of the user's most recent coached run, of any
- * visibility, or null if they have none yet. The coach scheduler uses it to
- * steer beginners away from booking two coached runs on the same day, nudging a
- * rest day between sessions.
+ * The latest scheduled time of any coached run the user has booked. This is an
+ * ordering guard only: later same-day runs are allowed.
  */
-export function getMostRecentCoachedRunDate(userId: number): string | null {
+export function getMostRecentCoachedRunStart(userId: number): CoachedRunStart | null {
   const row = getDb()
     .prepare(
-      `SELECT runs.date AS date
+      `SELECT runs.date AS date, runs.time AS time
          FROM runs
          JOIN run_participants ON run_participants.run_id = runs.id
         WHERE run_participants.user_id = ?
           AND run_participants.position = 0
           AND runs.coach_session_index IS NOT NULL
           AND runs.date IS NOT NULL
-        ORDER BY runs.date DESC
+        ORDER BY runs.date DESC, runs.time DESC, runs.id DESC
         LIMIT 1`,
     )
-    .get(userId) as { date: string } | undefined;
-  return row?.date ?? null;
+    .get(userId) as CoachedRunStart | undefined;
+  return row ?? null;
 }
 
 // Availability rows that still need a run, as read back for the backfill below.

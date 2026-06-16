@@ -3,7 +3,7 @@
 import { useActionState, useEffect, useState } from "react";
 import { createPortal } from "react-dom";
 
-import { isoToday } from "@/lib/format-date";
+import FutureRunWindowFields from "../components/future-run-window-fields";
 import MapLocationPicker from "../components/map-location-picker";
 import RangeSlider from "../components/range-slider";
 import { useModalDismiss } from "../components/use-modal-dismiss";
@@ -96,9 +96,6 @@ function AvailabilityForm({ onClose }: { onClose: () => void }) {
   );
   const [paceMinSeconds, paceMaxSeconds] = paceRange;
 
-  // Default the date to today and block earlier dates in the picker.
-  const today = isoToday();
-
   // Close once the slot has been saved.
   useEffect(() => {
     if (state.ok) onClose();
@@ -136,37 +133,12 @@ function AvailabilityForm({ onClose }: { onClose: () => void }) {
         className="flex min-h-0 flex-1 flex-col"
       >
         <div className="flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto p-4">
-          <Field label="Date">
-            <input
-              className={fieldClass}
-              type="date"
-              name="date"
-              defaultValue={today}
-              min={today}
-              required
-            />
-          </Field>
-
-          <div className="grid grid-cols-2 gap-3">
-            <Field label="From">
-              <input
-                className={fieldClass}
-                type="time"
-                name="startTime"
-                defaultValue="10:00"
-                required
-              />
-            </Field>
-            <Field label="To">
-              <input
-                className={fieldClass}
-                type="time"
-                name="endTime"
-                defaultValue="13:00"
-                required
-              />
-            </Field>
-          </div>
+          <FutureRunWindowFields
+            defaultDurationMinutes={2 * 60}
+            fieldClassName={fieldClass}
+            initialDateOffsetDays={1}
+            initialStartTime="09:00"
+          />
 
           <Field label="Distance (km)">
             <input

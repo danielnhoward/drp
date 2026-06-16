@@ -8,9 +8,11 @@ import { isPastDateTime, isoToday } from "@/lib/format-date";
 import {
   cancelPendingCoachedRunForUser,
   cancelPendingCoachedRunsForUser,
-  getMostRecentCoachedRunDate,
+  getMostRecentCoachedRunStart,
+  isAfterCoachedRunStart,
   scheduleCoachedRun,
 } from "@/lib/runs";
+import { minutesToTime, timeToMinutes } from "@/lib/matching";
 import {
   leaveUserCoaching,
   requireUser,
@@ -23,6 +25,10 @@ function revalidatePlannerPaths(): void {
   revalidatePath("/");
   revalidatePath("/plan");
   revalidatePath("/schedule");
+}
+
+function coachedRunTime(startTime: string, endTime: string): string {
+  return minutesToTime((timeToMinutes(startTime) + timeToMinutes(endTime)) / 2);
 }
 
 /**
@@ -66,13 +72,15 @@ export async function scheduleCoachedRunAction(
   if (!latRaw || !lonRaw || !Number.isFinite(lat) || !Number.isFinite(lon)) {
     return { error: "Pick a location on the map." };
   }
-  // Nudge a rest day: don't let a beginner stack a second coached run onto the
-  // same day as their last one.
-  const lastCoachedDate = getMostRecentCoachedRunDate(user.id);
-  if (lastCoachedDate && date <= lastCoachedDate) {
-    return {
-      error: "Give yourself a rest day — pick a date after your last run.",
-    };
+  const previousRunStart = getMostRecentCoachedRunStart(user.id);
+  if (
+    previousRunStart &&
+    !isAfterCoachedRunStart(
+      { date, time: coachedRunTime(startTime, endTime) },
+      previousRunStart,
+    )
+  ) {
+    return { error: "Pick a time after your last coached run." };
   }
 
   await scheduleCoachedRun(
