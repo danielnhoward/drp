@@ -69,8 +69,8 @@ export function saveRunRatings(
     if (!Number.isInteger(rating.ratedUserId) || !expected.has(rating.ratedUserId)) {
       throw new Error("You can only rate partners from this run.");
     }
-    if (!Number.isInteger(rating.stars) || rating.stars < 1 || rating.stars > 5) {
-      throw new Error("Choose a 1 to 5 star rating for every partner.");
+    if (rating.stars !== 1 && rating.stars !== 5) {
+      throw new Error("Give every partner a thumbs up or thumbs down.");
     }
     if (byRatedUser.has(rating.ratedUserId)) {
       throw new Error("Each partner can only be rated once per run.");
