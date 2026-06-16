@@ -9,35 +9,41 @@ export default function AvailabilityCard({ slot }: { slot: Availability }) {
   return (
     <li className="card hover-lift anim-rise p-4">
       <div className="flex items-start gap-3">
-        {/* Left: the slot details. */}
-        <dl className="flex min-w-0 flex-1 flex-col gap-2 text-base">
-          <Detail Icon={CalendarIcon} label="Date">
-            <span className="font-mono tnum">{formatDate(slot.date)}</span>
-          </Detail>
-          <Detail Icon={ClockIcon} label="Availability">
-            <span className="font-mono tnum">
-              {slot.startTime} – {slot.endTime}
-            </span>
-          </Detail>
-          <div className="flex flex-wrap items-center gap-x-6 gap-y-2">
-            <Detail Icon={RouteIcon} label="Distance">
-              <span className="font-mono tnum">{slot.distanceKm} km</span>
+        {/* Details + map. Stacks on narrow phones (details full width above a
+            full-width map) and sits side-by-side from `sm` up, so the slot data
+            is never squeezed under the map on low-width screens. */}
+        <div className="flex min-w-0 flex-1 flex-col gap-3 sm:flex-row sm:items-start">
+          {/* The slot details. */}
+          <dl className="flex min-w-0 flex-1 flex-col gap-2 text-base">
+            <Detail Icon={CalendarIcon} label="Date">
+              <span className="font-mono tnum">{formatDate(slot.date)}</span>
             </Detail>
-            <Detail Icon={RunnerIcon} label="Pace">
+            <Detail Icon={ClockIcon} label="Availability">
               <span className="font-mono tnum">
-                {formatMMSS(slot.paceMinSeconds)} – {formatMMSS(slot.paceMaxSeconds)} /km
+                {slot.startTime} – {slot.endTime}
               </span>
             </Detail>
-          </div>
-        </dl>
+            <div className="flex flex-wrap items-center gap-x-6 gap-y-2">
+              <Detail Icon={RouteIcon} label="Distance">
+                <span className="font-mono tnum">{slot.distanceKm} km</span>
+              </Detail>
+              <Detail Icon={RunnerIcon} label="Pace">
+                <span className="font-mono tnum">
+                  {formatMMSS(slot.paceMinSeconds)} – {formatMMSS(slot.paceMaxSeconds)} /km
+                </span>
+              </Detail>
+            </div>
+          </dl>
 
-        {/* Middle: roughly where they'll be (the meet-up point itself is
-            decided later by matching, not stored on the slot). */}
-        <div className="w-28 shrink-0 sm:w-36">
-          <RunMap lat={slot.lat} lon={slot.lon} label="Run location" />
+          {/* Roughly where they'll be (the meet-up point itself is decided
+              later by matching, not stored on the slot). */}
+          <div className="w-full sm:w-36 sm:shrink-0">
+            <p className="mb-1 text-sm text-muted">Location:</p>
+            <RunMap lat={slot.lat} lon={slot.lon} label="Run location" />
+          </div>
         </div>
 
-        {/* Right: delete action. */}
+        {/* Delete action, anchored top-right on every form factor. */}
         <div className="flex shrink-0 flex-col gap-2">
           <form action={deleteAvailabilityAction}>
             <input type="hidden" name="id" value={slot.id} />
@@ -71,7 +77,7 @@ function Detail({
         aria-hidden="true"
       />
       <span className="sr-only">{label}:</span>
-      <span className="truncate font-medium">{children}</span>
+      <span className="min-w-0 truncate font-medium">{children}</span>
     </div>
   );
 }

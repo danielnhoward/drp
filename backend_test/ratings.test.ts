@@ -43,15 +43,15 @@ describe("run ratings", () => {
 
     saveRunRatings(runId, alice.id, [
       { ratedUserId: bob.id, stars: 5 },
-      { ratedUserId: cara.id, stars: 4 },
+      { ratedUserId: cara.id, stars: 1 },
     ]);
     saveRunRatings(runId, cara.id, [
       { ratedUserId: alice.id, stars: 5 },
-      { ratedUserId: bob.id, stars: 4 },
+      { ratedUserId: bob.id, stars: 5 },
     ]);
 
     expect(getRatingSummaryForUser(bob.id)).toEqual({
-      average: 4.5,
+      average: 5,
       count: 2,
     });
     expect(getRatingSummaryForUser(alice.id)).toEqual({
@@ -66,10 +66,10 @@ describe("run ratings", () => {
     const runId = createRunWithParticipants([alice.id, bob.id]);
 
     saveRunRatings(runId, alice.id, [{ ratedUserId: bob.id, stars: 5 }]);
-    saveRunRatings(runId, alice.id, [{ ratedUserId: bob.id, stars: 3 }]);
+    saveRunRatings(runId, alice.id, [{ ratedUserId: bob.id, stars: 1 }]);
 
     expect(getRatingSummaryForUser(bob.id)).toEqual({
-      average: 3,
+      average: 1,
       count: 1,
     });
   });
