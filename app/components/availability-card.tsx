@@ -34,6 +34,7 @@ export default function AvailabilityCard({ slot }: { slot: Availability }) {
         {/* Middle: roughly where they'll be (the meet-up point itself is
             decided later by matching, not stored on the slot). */}
         <div className="w-28 shrink-0 sm:w-36">
+          <p className="mb-1 text-sm text-muted">Location:</p>
           <RunMap lat={slot.lat} lon={slot.lon} label="Run location" />
         </div>
 
