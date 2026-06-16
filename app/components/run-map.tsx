@@ -1,7 +1,9 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { createPortal } from "react-dom";
+
+import { useModalDismiss } from "./use-modal-dismiss";
 
 // Builds an OpenStreetMap embed URL centred on the point, with a marker. This
 // needs no API key, so the dummy data renders a real map out of the box. The
@@ -24,19 +26,7 @@ export default function RunMap({
   const [open, setOpen] = useState(false);
 
   // Close on Escape and lock background scroll while the modal is open.
-  useEffect(() => {
-    if (!open) return;
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") setOpen(false);
-    };
-    document.addEventListener("keydown", onKey);
-    const prevOverflow = document.body.style.overflow;
-    document.body.style.overflow = "hidden";
-    return () => {
-      document.removeEventListener("keydown", onKey);
-      document.body.style.overflow = prevOverflow;
-    };
-  }, [open]);
+  useModalDismiss(open, () => setOpen(false));
 
   return (
     <>

@@ -52,6 +52,7 @@ export default function RunCard({
             <RunPartnersLive runId={run.id} initialPartners={run.partners} />
           </div>
 
+          <p className="text-muted">Location:</p>
           <RunMap lat={run.lat} lon={run.lon} label={run.meetAt} />
           <div className="flex justify-end">
             <FinishRun

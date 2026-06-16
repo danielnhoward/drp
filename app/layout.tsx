@@ -45,8 +45,18 @@ export default async function RootLayout({
       lang="en"
       className={`${spaceGrotesk.variable} ${inter.variable} ${jetBrainsMono.variable} h-full bg-background antialiased`}
     >
-      <body className="min-h-full flex flex-col overflow-x-hidden bg-background text-foreground pb-[calc(4rem+env(safe-area-inset-bottom))]">
-        <TabTransition>{children}</TabTransition>
+      {/* App shell: the body fills the (dynamic) viewport and never scrolls
+          itself, so the BottomNav stays pinned at the bottom on every form
+          factor. All page scrolling happens inside #app-scroll, which clips
+          horizontal overflow and scrolls only vertically — the nav lives
+          outside it and therefore can't be moved by scrolling. */}
+      <body className="flex h-dvh flex-col overflow-hidden bg-background text-foreground">
+        <div
+          id="app-scroll"
+          className="flex flex-1 flex-col overflow-y-auto overflow-x-hidden"
+        >
+          <TabTransition>{children}</TabTransition>
+        </div>
         <BottomNav coachActive={user?.coachStatus === "active"} />
       </body>
     </html>

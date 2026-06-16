@@ -42,9 +42,11 @@ export default function BottomNav({
   return (
     <nav
       aria-label="Primary"
-      // Fixed to the bottom across all viewports. The safe-area padding keeps
-      // the bar clear of the iOS home indicator on mobile.
-      className="fixed inset-x-0 bottom-0 z-50 glass border-t pb-[env(safe-area-inset-bottom)]"
+      // Sits below the scrollable region as the last flex child of the body
+      // shell, so it's pinned to the bottom on every viewport without being
+      // `position: fixed` — scrolling the content above can never move it. The
+      // safe-area padding keeps the bar clear of the iOS home indicator.
+      className="shrink-0 z-50 glass border-t pb-[env(safe-area-inset-bottom)]"
     >
       {/* Centred, width-capped row so the bar reads as a tab bar on mobile and
           a compact toolbar on wider desktop screens. */}
