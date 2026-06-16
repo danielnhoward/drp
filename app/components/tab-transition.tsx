@@ -56,6 +56,12 @@ export default function TabTransition({
     el.classList.remove(...ANIM_CLASSES);
     el.getBoundingClientRect(); // force reflow so the animation restarts
     el.classList.add(animation);
+
+    // The body shell doesn't scroll — #app-scroll does (see app/layout.tsx) —
+    // so Next's default scroll-to-top on navigation wouldn't reach it. Reset it
+    // here so each page opens at the top rather than inheriting the last
+    // page's scroll position.
+    document.getElementById("app-scroll")?.scrollTo({ top: 0 });
   }, [pathname]);
 
   return (

@@ -6,6 +6,7 @@ import { createPortal } from "react-dom";
 import { isoToday } from "@/lib/format-date";
 import MapLocationPicker from "../components/map-location-picker";
 import RangeSlider from "../components/range-slider";
+import { useModalDismiss } from "../components/use-modal-dismiss";
 import { addAvailabilityAction, type AddAvailabilityState } from "./actions";
 
 // Plausible pace range for the slider, in seconds per kilometre. Lower =
@@ -30,19 +31,7 @@ export default function AddAvailability() {
   const [isOpen, setOpen] = useState(false);
 
   // Close on Escape and lock background scroll while the modal is open.
-  useEffect(() => {
-    if (!isOpen) return;
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") setOpen(false);
-    };
-    document.addEventListener("keydown", onKey);
-    const prevOverflow = document.body.style.overflow;
-    document.body.style.overflow = "hidden";
-    return () => {
-      document.removeEventListener("keydown", onKey);
-      document.body.style.overflow = prevOverflow;
-    };
-  }, [isOpen, setOpen]);
+  useModalDismiss(isOpen, () => setOpen(false));
 
   return (
     <>
