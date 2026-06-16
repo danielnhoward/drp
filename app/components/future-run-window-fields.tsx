@@ -13,21 +13,25 @@ const LATEST_END_TIME = "23:59";
 type FutureRunWindowFieldsProps = {
   dateHelp?: ReactNode;
   fieldClassName: string;
+  defaultDurationMinutes?: number;
   initialDateOffsetDays?: number;
+  initialStartTime?: string;
 };
 
 export default function FutureRunWindowFields({
   dateHelp,
+  defaultDurationMinutes = DEFAULT_DURATION_MINUTES,
   fieldClassName,
   initialDateOffsetDays = 0,
+  initialStartTime = DEFAULT_START_TIME,
 }: FutureRunWindowFieldsProps) {
   const [now, setNow] = useState<Date | null>(null);
   const [selectedDate, setSelectedDate] = useState(() =>
     isoDateInDays(initialDateOffsetDays),
   );
-  const [selectedStartTime, setSelectedStartTime] = useState(DEFAULT_START_TIME);
+  const [selectedStartTime, setSelectedStartTime] = useState(initialStartTime);
   const [selectedEndTime, setSelectedEndTime] = useState(
-    addMinutesToTime(DEFAULT_START_TIME, DEFAULT_DURATION_MINUTES),
+    addMinutesToTime(initialStartTime, defaultDurationMinutes),
   );
   const [endTimeEdited, setEndTimeEdited] = useState(false);
 
@@ -43,9 +47,13 @@ export default function FutureRunWindowFields({
   const date = selectedDate < minDate ? minDate : selectedDate;
   const minStartTime =
     now && date === today && minDate === today ? nextMinuteTime(now) : undefined;
-  const startTime = clampStartTime(selectedStartTime, minStartTime);
+  const startTime = clampStartTime(
+    selectedStartTime,
+    minStartTime,
+    initialStartTime,
+  );
   const minEndTime = addMinutesToTime(startTime, MINIMUM_DURATION_MINUTES);
-  const defaultEndTime = addMinutesToTime(startTime, DEFAULT_DURATION_MINUTES);
+  const defaultEndTime = addMinutesToTime(startTime, defaultDurationMinutes);
   const endTime = normalizeEndTime(
     endTimeEdited ? selectedEndTime : defaultEndTime,
     minEndTime,
@@ -63,7 +71,7 @@ export default function FutureRunWindowFields({
           onChange={(event) => {
             const nextDate = event.target.value;
             setSelectedDate(nextDate < minDate ? minDate : nextDate);
-            setSelectedStartTime(DEFAULT_START_TIME);
+            setSelectedStartTime(initialStartTime);
             setEndTimeEdited(false);
           }}
           required
@@ -81,11 +89,15 @@ export default function FutureRunWindowFields({
             min={minStartTime}
             max={LATEST_START_TIME}
             onChange={(event) => {
-              const nextStart = clampStartTime(event.target.value, minStartTime);
+              const nextStart = clampStartTime(
+                event.target.value,
+                minStartTime,
+                initialStartTime,
+              );
               setSelectedStartTime(nextStart);
               if (!endTimeEdited) {
                 setSelectedEndTime(
-                  addMinutesToTime(nextStart, DEFAULT_DURATION_MINUTES),
+                  addMinutesToTime(nextStart, defaultDurationMinutes),
                 );
               }
             }}
@@ -156,8 +168,12 @@ function nextMinuteTotal(now: Date): number {
   return now.getHours() * 60 + now.getMinutes() + 1;
 }
 
-function clampStartTime(time: string, minTime?: string): string {
-  if (!time) return minTime ?? DEFAULT_START_TIME;
+function clampStartTime(
+  time: string,
+  minTime?: string,
+  fallbackTime = DEFAULT_START_TIME,
+): string {
+  if (!time) return minTime ?? fallbackTime;
   if (minTime && time < minTime) return minTime;
   if (time > LATEST_START_TIME) return LATEST_START_TIME;
   return time;

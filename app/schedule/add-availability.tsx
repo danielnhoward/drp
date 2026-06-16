@@ -145,8 +145,10 @@ function AvailabilityForm({ onClose }: { onClose: () => void }) {
       >
         <div className="flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto p-4">
           <FutureRunWindowFields
+            defaultDurationMinutes={2 * 60}
             fieldClassName={fieldClass}
             initialDateOffsetDays={1}
+            initialStartTime="09:00"
           />
 
           <Field label="Distance (km)">
