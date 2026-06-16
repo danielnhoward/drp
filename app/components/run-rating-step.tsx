@@ -21,14 +21,13 @@ type Props = {
 };
 
 const INITIAL_STATE: RunRatingsState = {};
-const STAR_VALUES = [1, 2, 3, 4, 5] as const;
 
 export default function RunRatingStep({ runId, partners, onComplete }: Props) {
   const [state, action, pending] = useActionState(
     submitRunRatingsAction,
     INITIAL_STATE,
   );
-  const [scores, setScores] = useState<Record<number, number>>({});
+  const [scores, setScores] = useState<Record<number, 1 | 5>>({});
 
   useEffect(() => {
     if (state.ok) onComplete();
@@ -42,7 +41,7 @@ export default function RunRatingStep({ runId, partners, onComplete }: Props) {
     <>
       <h2 className="text-lg font-semibold text-foreground">Rate your run partners</h2>
       <p className="mt-2 text-sm text-muted">
-        Your stars roll into their trust score for future matches.
+        Your rating rolls into their trust score for future matches.
       </p>
 
       <form action={action} className="mt-4 flex flex-col gap-4">
@@ -71,35 +70,38 @@ export default function RunRatingStep({ runId, partners, onComplete }: Props) {
                 value={scores[partner.id] ?? ""}
               />
               <div
-                className="mt-3 flex gap-1"
+                className="mt-3 flex gap-3"
                 role="group"
                 aria-label={`Rating for ${partner.name}`}
               >
-                {STAR_VALUES.map((value) => {
-                  const selected = (scores[partner.id] ?? 0) >= value;
-                  return (
-                    <button
-                      key={value}
-                      type="button"
-                      aria-label={`${value} star rating for ${partner.name}`}
-                      aria-pressed={selected}
-                      disabled={pending}
-                      onClick={() =>
-                        setScores((current) => ({
-                          ...current,
-                          [partner.id]: value,
-                        }))
-                      }
-                      className={`tap flex h-10 w-10 items-center justify-center rounded-lg border transition-colors disabled:opacity-50 ${
-                        selected
-                          ? "border-accent/40 bg-accent/10 text-accent"
-                          : "border-border text-muted hover:bg-surface-2 hover:text-accent"
-                      }`}
-                    >
-                      <StarIcon filled={selected} />
-                    </button>
-                  );
-                })}
+                <button
+                  type="button"
+                  aria-label={`Thumbs up for ${partner.name}`}
+                  aria-pressed={scores[partner.id] === 5}
+                  disabled={pending}
+                  onClick={() => setScores((c) => ({ ...c, [partner.id]: 5 }))}
+                  className={`tap flex h-11 w-11 items-center justify-center rounded-xl border transition-colors disabled:opacity-50 ${
+                    scores[partner.id] === 5
+                      ? "border-green-500/40 bg-green-500/10 text-green-500"
+                      : "border-border text-muted hover:bg-surface-2 hover:text-green-500"
+                  }`}
+                >
+                  <ThumbIcon direction="up" />
+                </button>
+                <button
+                  type="button"
+                  aria-label={`Thumbs down for ${partner.name}`}
+                  aria-pressed={scores[partner.id] === 1}
+                  disabled={pending}
+                  onClick={() => setScores((c) => ({ ...c, [partner.id]: 1 }))}
+                  className={`tap flex h-11 w-11 items-center justify-center rounded-xl border transition-colors disabled:opacity-50 ${
+                    scores[partner.id] === 1
+                      ? "border-danger/40 bg-danger/10 text-danger"
+                      : "border-border text-muted hover:bg-surface-2 hover:text-danger"
+                  }`}
+                >
+                  <ThumbIcon direction="down" />
+                </button>
               </div>
             </section>
           ))
@@ -148,18 +150,19 @@ function PartnerAvatar({ partner }: { partner: RatingPartner }) {
   );
 }
 
-function StarIcon({ filled }: { filled: boolean }) {
+function ThumbIcon({ direction }: { direction: "up" | "down" }) {
   return (
     <svg
       viewBox="0 0 24 24"
       aria-hidden="true"
-      className="h-5 w-5"
-      fill={filled ? "currentColor" : "none"}
+      className={`h-5 w-5 ${direction === "down" ? "rotate-180" : ""}`}
+      fill="none"
       stroke="currentColor"
       strokeWidth={1.8}
+      strokeLinecap="round"
       strokeLinejoin="round"
     >
-      <path d="m12 3.2 2.7 5.5 6.1.9-4.4 4.3 1 6.1-5.4-2.9L6.6 20l1-6.1-4.4-4.3 6.1-.9L12 3.2Z" />
+      <path d="M7 10v12M15 5.88 14 10h5.83a2 2 0 0 1 1.92 2.56l-2.33 8A2 2 0 0 1 17.5 22H4a2 2 0 0 1-2-2v-8a2 2 0 0 1 2-2h2.76a2 2 0 0 0 1.79-1.11L12 2a3.13 3.13 0 0 1 3 3.88Z" />
     </svg>
   );
 }
